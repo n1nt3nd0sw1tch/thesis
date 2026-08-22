@@ -74,18 +74,40 @@ DATA_DIRS = [DATA_DIR, PROCESS_DIR, ORIGINAL_DIR, BATCHES_DIR, RESULTS_DIR,
 # Read from config/
 # ----------------------------------------------------------------------------
 
-with open(SETTINGS_PATH, encoding='utf-8') as file:
-    SETTINGS = yaml.safe_load(file)
+
+# Define function to load a config file, refusing a key written twice. YAML
+# keeps the last of a duplicate and says nothing, so a measure defined three
+# times parses, builds, and produces a policy that quietly uses whichever came
+# last. Nothing downstream can detect that, which is why it is caught here.
+class _NoDuplicates(yaml.SafeLoader):
+    def construct_mapping(self, node, deep=False):
+        seen = set()
+        for key_node, _ in node.value:
+            key = self.construct_object(key_node, deep=deep)
+            if key in seen:
+                raise SystemExit(
+                    f'{key!r} appears more than once in the same block, at line '
+                    f'{key_node.start_mark.line + 1}. YAML would keep only the '
+                    f'last one.')
+            seen.add(key)
+        return super().construct_mapping(node, deep=deep)
+
+
+# Define function to read one config file through that loader
+def read_config(path):
+    with open(path, encoding='utf-8') as file:
+        return yaml.load(file, Loader=_NoDuplicates)
+
+
+SETTINGS = read_config(SETTINGS_PATH)
 
 # The scenarios are the one part of the design written by hand, so they are kept
 # in a file of their own.
-with open(SCENARIOS_PATH, encoding='utf-8') as file:
-    SCENARIO_SETTINGS = yaml.safe_load(file)
+SCENARIO_SETTINGS = read_config(SCENARIOS_PATH)
 
 # The rubric the classifier is given, kept beside the rest of the config so that
 # revising it does not mean editing the code that sends it.
-with open(JUDGE_PATH, encoding='utf-8') as file:
-    POLICY = yaml.safe_load(file)
+POLICY = read_config(JUDGE_PATH)
 
 SEED = SETTINGS['seed']
 DOMAINS = SETTINGS['domains']

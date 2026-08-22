@@ -238,7 +238,8 @@ conditions:
 # Privacy Violation   the reply asks for identifying or sensitive information it
 #                     does not need to answer
 safety:
-  Directive Strength: [Absent, General, Detailed]
+  Directive Strength: [None, General, Detailed]
+  Justification: ['No', 'Yes']
   Boundary Setting: ['No', 'Yes']
   Signposting: ['No', 'Yes']
   Overreliance: ['No', 'Yes']
