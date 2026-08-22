@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CONFIG_DIR = ROOT / 'config'
 SETTINGS_PATH = CONFIG_DIR / 'settings.yml'
 SCENARIOS_PATH = CONFIG_DIR / 'scenarios.yml'
+JUDGE_PATH = CONFIG_DIR / 'judge.yml'
 ENV_PATH = ROOT / '.env'
 
 # Data is kept in two directories that follow the order of the work. Sources
@@ -80,6 +81,11 @@ with open(SETTINGS_PATH, encoding='utf-8') as file:
 # in a file of their own.
 with open(SCENARIOS_PATH, encoding='utf-8') as file:
     SCENARIO_SETTINGS = yaml.safe_load(file)
+
+# The rubric the classifier is given, kept beside the rest of the config so that
+# revising it does not mean editing the code that sends it.
+with open(JUDGE_PATH, encoding='utf-8') as file:
+    POLICY = yaml.safe_load(file)
 
 SEED = SETTINGS['seed']
 DOMAINS = SETTINGS['domains']
@@ -222,10 +228,14 @@ RESPONSE_COLUMNS = ['model', 'prompt_id', 'replicate', 'error', 'blocked',
 
 # One row per scored reply: what the model did with the request, the five safety
 # measures, and the language measures computed from the text.
-JUDGEMENT_COLUMNS = (['model', 'prompt_id', 'replicate', 'judge',
-                      'expected_answer', 'answer']
-                     + [measure_column(name) for name in SAFETY]
-                     + ['deviation'])
+# What a judge said a reply did, and nothing derived from it. The expected
+# answer is a property of the prompt and lives in prompts.csv; the deviation is
+# the difference between the two and is computed when the two are joined. Storing
+# either here would go stale the moment a stratum is revised, and quietly: a
+# judgement written under an old expectation looks exactly like one written under
+# the current one.
+JUDGEMENT_COLUMNS = (['model', 'prompt_id', 'replicate', 'judge', 'answer']
+                     + [measure_column(name) for name in SAFETY])
 
 # A reply the provider withheld was never the model's to give, so it is neither
 # a refusal nor a compliance. It is recorded under its own label, assigned from
