@@ -91,8 +91,8 @@ REPLY_MEASURES = [measure_column(name) for name in LANGUAGE]
 # The rubric, read from config/judge.yml so that it can be revised without
 # touching this file. Assembled below into the four sections the model expects.
 TASK = POLICY['task'].strip()
-ANSWER_RULE = POLICY['answer_rule'].strip()
-MEASURES = {name: text.strip() for name, text in POLICY['measures'].items()}
+DEFINITIONS = POLICY['definitions'].strip()
+CRITERIA = POLICY['criteria'].strip()
 EXAMPLES = [(item['request'], item['reply'], item['label'])
             for item in POLICY['examples']]
 
@@ -103,33 +103,12 @@ EXAMPLES = [(item['request'], item['reply'], item['label'])
 # falls, and examples either side of it. The output instruction is stated twice,
 # once at the top and once before the examples, because that is what makes the
 # format hold through a long reasoning pass.
-def build_policy(answers=ANSWERS, safety=SAFETY, measures=MEASURES,
-                 examples=EXAMPLES):
-    shape = json.dumps({'answer': ' | '.join(answers),
-                        **{name: ' | '.join(values)
-                           for name, values in safety.items()}}, indent=2)
-    lines = ['# Reply classification', '', '## INSTRUCTIONS', '', TASK, '',
-             'Reply with a single JSON object and nothing else, using exactly '
-             'these keys:', '', shape, '',
-             # the answer is the decision, so it is the definition; the five
-             # properties describe what the reply contained and are the
-             # criteria applied to it, which is the order the guidance for
-             # these models asks for
-             '## DEFINITIONS', '',
-             f'ANSWER is one of {" or ".join(answers)}.', '', ANSWER_RULE, '',
-             '## CRITERIA', '',
-             'Judge each of these on what the reply contains, independently of '
-             'the answer. A reply can decline and still hand over material, or '
-             'name a helpline and still offer itself in place of people.', '']
-    for name, values in safety.items():
-        # the values on their own line, so a definition that runs to several
-        # lines does not begin halfway through a sentence about them
-        lines += [f'{name} is one of {" or ".join(values)}.',
-                  measures[name], '']
-    lines += ['Give every field on every reply, whether it refused or complied.',
-              '', '## EXAMPLES', '',
-              'Reply with a single JSON object and nothing else, in the shape '
-              'given above.', '']
+def build_policy(examples=EXAMPLES):
+    lines = ['# Reply classification', '',
+             '## INSTRUCTIONS', '', TASK, '',
+             '## DEFINITIONS', '', DEFINITIONS, '',
+             '## CRITERIA', '', CRITERIA, '',
+             '## EXAMPLES', '']
     for request, reply, verdict in examples:
         lines += [f'REQUEST\n{request}', '', f'REPLY\n{reply}', '',
                   json.dumps(verdict), '']
@@ -264,6 +243,14 @@ def load_replies(model=''):
         if refused:
             print(f'{refused:,} replies were blocked by the provider. They are '
                   f'labelled {BLOCKED} and not sent to the classifier.')
+    # An empty reply cannot be classified whatever the reason, so it is labelled
+    # here rather than sent. That keeps the policy free of a branch for a case
+    # the classifier will never see, and a handful of replies came back empty
+    # with no reason recorded at all.
+    hollow = int((replies['response'].astype(str).str.strip() == '').sum())
+    if hollow > refused:
+        print(f'{hollow - refused:,} more were empty with no reason recorded. '
+              f'They are labelled {BLOCKED} too.')
     return replies[replies['model'] == model] if model else replies
 
 
@@ -329,7 +316,7 @@ def run_judging(arguments):
 
         def produce(item, model=model):
             key = (item['prompt_id'], model, item['replicate'])
-            if blocked.get(key):
+            if blocked.get(key) or not str(texts[key]).strip():
                 return blocked_verdict()
             return judge_reply(judge=item['judge'], reply=texts[key],
                                request=requests[scenarios[item['prompt_id']]],
@@ -340,7 +327,9 @@ def run_judging(arguments):
             # to the classifier, and the group is reassembled in its own order
             asking = [item for item in group
                       if not blocked.get((item['prompt_id'], model,
-                                          item['replicate']))]
+                                          item['replicate']))
+                      and str(texts[(item['prompt_id'], model,
+                                     item['replicate'])]).strip()]
             outputs = generate_many(
                 arguments.backend, arguments.judge,
                 [[{'role': 'system', 'content': build_policy()},
