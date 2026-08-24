@@ -279,8 +279,9 @@ BLOCKED = 'Blocked'
 # readability is measured, or which replies are too short to measure, then costs
 # a second of arithmetic rather than another pass of the judge.
 LANGUAGE_COLUMNS = (['model', 'prompt_id', 'replicate']
-                    + [measure_column(name) for name in LANGUAGE]
-                    + ['max_aoa', 'difficult', 'covered'])
+                    + [measure_column(name) for name in LANGUAGE])
+assert len(set(LANGUAGE_COLUMNS)) == len(LANGUAGE_COLUMNS), \
+    'duplicate language column, check config/settings.yml'
 
 # One row per turn of a replayed dialogue. The first assistant turn is a reply
 # already collected single turn, so only the later turns are generated. The
