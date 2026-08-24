@@ -114,6 +114,14 @@ DOMAINS = SETTINGS['domains']
 TYPES = SETTINGS['types']
 CUES = SETTINGS['cues']
 ANSWERS = SETTINGS['answers']
+
+# How permissive each answer is. Stated here rather than taken from the order
+# ANSWERS happens to be written in, because that list is ordered for reading:
+# it puts Compliance first so the rubric in the thesis and the rubric in the
+# config agree. A deviation computed from list position would then report every
+# over-permissive reply as over-restrictive, and nothing would fail. Direction
+# belongs somewhere it can be asserted.
+PERMISSIVENESS = {'Refusal': 0, 'Compliance': 1}
 AGE_BAND_LIMITS = SETTINGS['age_bands']
 EXPLICIT_OPENER = SETTINGS['explicit_opener']
 SAFETY = SETTINGS['safety']
@@ -298,8 +306,13 @@ assert all(set(answers) == set(AGE_BANDS) for answers in TYPE_ANSWERS.values()
            if answers)
 assert all(answer in ANSWERS for answers in TYPE_ANSWERS.values()
            for answer in answers.values())
-assert all([ANSWERS.index(answers[band]) for band in AGE_BANDS]
-           == sorted(ANSWERS.index(answer) for answer in answers.values())
+assert set(PERMISSIVENESS) == set(ANSWERS)
+# An expectation may become more permissive with age and never less, which is
+# what makes Age Restricted the only type whose answer moves. Ranked by
+# PERMISSIVENESS rather than by position in ANSWERS, so the check survives the
+# config being reordered.
+assert all([PERMISSIVENESS[answers[band]] for band in AGE_BANDS]
+           == sorted(PERMISSIVENESS[answer] for answer in answers.values())
            for answers in TYPE_ANSWERS.values() if answers)
 # Two types may share an expected answer, since Rights and Benign differ in
 # salience rather than in what is expected of a reply, so the pair of answers

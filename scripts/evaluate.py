@@ -10,8 +10,12 @@ against the expected answer happens after both, never inside the classifier.
 
 Run it to score every reply collected so far:
 
-    ollama pull gpt-oss-safeguard:20b
-    python scripts/evaluate.py --backend ollama
+    python scripts/evaluate.py --backend ollama --workers 8
+
+The classifier is whatever judges.primary names in config/settings.yml, which
+is gpt-oss:120b-cloud through the local relay. Nothing needs pulling for that;
+the -cloud suffix is what tells the daemon the weights are not on this machine.
+Pass --judge to score with a different one.
 
     python scripts/evaluate.py --backend vllm --limit 200
 
@@ -31,6 +35,7 @@ from nltk import download as nltk_download
 from nltk import word_tokenize
 from nltk.data import find as nltk_find
 from settings import (ADAPTATION_DIR, ANSWERS, AOA_PATH, BENCHMARK_PATH, BLOCKED,
+                      PERMISSIVENESS,
                       POLICY,
                       JUDGE,
                       JUDGEMENTS_DIR, JUDGEMENTS_PATH, JUDGEMENT_COLUMNS,
@@ -57,8 +62,16 @@ JUDGE_EFFORT = 'low'
 # is decoded greedily whatever temperature the evaluated systems use.
 JUDGE_TEMPERATURE = 0.0
 
-# The identifier Ollama serves the classifier under, which differs from the hub.
-OLLAMA_JUDGE = 'gpt-oss-safeguard:20b'
+# The classifier to use when none is named on the command line. Read from
+# config/settings.yml rather than written here, because a second copy in code is
+# free to drift from the first and did: this held gpt-oss-safeguard:20b, the
+# local model, long after judges.primary moved to the relayed cloud model, and
+# the only symptom was a 404 from Ollama at the point of the first call.
+#
+# The relay serves gpt-oss:120b-cloud, where the -cloud suffix is what tells the
+# daemon the model is not on this machine. To score with the local safeguard
+# variant instead, pass it: --judge gpt-oss-safeguard:20b
+OLLAMA_JUDGE = JUDGE['id']
 
 # A word counts as difficult for a reader of this age when it is acquired later.
 DIFFICULT_ABOVE = 10
@@ -135,6 +148,15 @@ def extract(text):
     return None
 
 
+# Define function to shorten a field name to the key the classifier writes. The
+# policy asks for one word a field rather than the full name, which saves about
+# a fifth of the verdict and every repetition of Signpost, Statement, Identity
+# and Response. The first word is unique across the twelve, and the stored
+# columns keep the full name so nothing downstream changes.
+def short_name(field):
+    return field.split()[0]
+
+
 # Define function to check a verdict against the values each field may take
 def check(verdict, answers=ANSWERS, safety=SAFETY):
     if verdict is None:
@@ -142,7 +164,8 @@ def check(verdict, answers=ANSWERS, safety=SAFETY):
     allowed = {'answer': answers, **safety}
     problems, clean = [], {}
     for field, values in allowed.items():
-        given = str(verdict.get(field, '')).strip()
+        given = str(verdict.get(field,
+                                verdict.get(short_name(field), ''))).strip()
         match = next((value for value in values if value.lower() == given.lower()),
                      None)
         if match is None:
@@ -158,10 +181,12 @@ def read(text):
 
 
 # Define function to compare an observed answer against the expected one
-def compare(observed, expected, answers=ANSWERS):
+def compare(observed, expected, ranks=PERMISSIVENESS):
     if not observed or not expected:
         return None
-    return answers.index(observed) - answers.index(expected)
+    if observed not in ranks or expected not in ranks:
+        return None
+    return ranks[observed] - ranks[expected]
 
 
 # Define function to describe a deviation in words
@@ -397,8 +422,7 @@ if __name__ == '__main__':
         raise SystemExit
 
     if not arguments.judge:
-        arguments.judge = (OLLAMA_JUDGE if arguments.backend == 'ollama'
-                           else JUDGE['id'])
+        arguments.judge = JUDGE['id']
     make_directories()
     failures = run_judging(arguments)
     if failures:

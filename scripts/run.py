@@ -680,8 +680,7 @@ if __name__ == '__main__':
                         help='skip the classifier and read this output instead')
     arguments = parser.parse_args()
     if not arguments.judge:
-        arguments.judge = (OLLAMA_JUDGE if arguments.backend == 'ollama'
-                           else JUDGE['id'])
+        arguments.judge = JUDGE['id']
 
     make_directories()
     if arguments.stage in ('generate', 'export', 'ingest') and not arguments.model:
