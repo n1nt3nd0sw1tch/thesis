@@ -22,7 +22,7 @@ from settings import (BENCHMARK_PATH, JUDGE, PROMPTS_PATH, RESULTS_DIR, SAFETY,
                       measure_column)
 from utils import read_table, section
 
-ANNOTATION_DIR = RESULTS_DIR / 'annotation'
+ANNOTATION_DIR = RESULTS_DIR / 'annotation manual'
 
 FIELDS = ['answer'] + [measure_column(name) for name in SAFETY]
 
