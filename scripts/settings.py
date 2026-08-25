@@ -264,7 +264,12 @@ RESPONSE_COLUMNS = ['model', 'prompt_id', 'replicate', 'error', 'blocked',
 # either here would go stale the moment a stratum is revised, and quietly: a
 # judgement written under an old expectation looks exactly like one written under
 # the current one.
-JUDGEMENT_COLUMNS = (['model', 'prompt_id', 'replicate', 'judge', 'answer']
+# A judgement is only comparable with another made under the same rubric, so the
+# policy that produced it is recorded on the row. Without it, a verdict written
+# under an earlier judge.yml is indistinguishable from a current one, and the
+# resume logic will treat it as done.
+JUDGEMENT_COLUMNS = (['model', 'prompt_id', 'replicate', 'judge', 'policy',
+                      'answer']
                      + [measure_column(name) for name in SAFETY])
 
 # A reply the provider withheld was never the model's to give, so it is neither

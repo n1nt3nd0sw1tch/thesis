@@ -857,10 +857,3 @@ judges:
     id: gpt-oss:120b-cloud
     access: api
     weights: open
-
-  secondary:
-    provider: huggingface
-    id: allenai/wildguard
-    access: local
-    weights: open
-    share: 0.2
