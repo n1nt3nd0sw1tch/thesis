@@ -858,7 +858,7 @@ judges:
     # thinking budget, and the classifier was calibrated the same way. Left to
     # inherit, a change to the panel would silently change the instrument, and
     # the environment could override it without leaving a trace on the row.
-    reasoning: none
+    reasoning: provider
     provider: ollama
     id: gpt-oss:120b-cloud
     access: api
