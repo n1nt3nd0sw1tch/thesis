@@ -78,6 +78,9 @@ JUDGEMENTS_DIR = RESULTS_DIR / 'judgements'
 # The full pass keeps its own folder, results/judgements/, because it covers
 # every reply rather than the calibration sample and is written by a script
 # rather than a notebook.
+# Where the classifier writes over the whole corpus, one file a model, appended
+# a row at a time so an interrupted run resumes rather than restarts.
+CLASSIFICATION_DIR = RESULTS_DIR / 'classification'
 LABEL_DIR = DATA_DIR / 'label'
 ANNOTATION_DIR = RESULTS_DIR / 'annotation'
 MANUAL_DIR = ANNOTATION_DIR / 'manual'
@@ -89,7 +92,8 @@ DIALOGUES_PATH = PERSISTENCE_DIR / 'dialogues.csv'
 
 DATA_DIRS = [DATA_DIR, PROCESS_DIR, ORIGINAL_DIR, BATCHES_DIR, RESULTS_DIR,
              ADAPTATION_DIR, PERSISTENCE_DIR, JUDGEMENTS_DIR, LANGUAGE_DIR,
-             LABEL_DIR, ANNOTATION_DIR, MANUAL_DIR, JUDGE_DIR]
+             LABEL_DIR, ANNOTATION_DIR, MANUAL_DIR, JUDGE_DIR,
+             CLASSIFICATION_DIR]
 
 # ----------------------------------------------------------------------------
 # Read from config/
