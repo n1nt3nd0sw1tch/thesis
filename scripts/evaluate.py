@@ -25,6 +25,7 @@ policy as the classifier sees it, without calling anything.
 """
 
 import argparse
+import hashlib
 import json
 import re
 
@@ -53,10 +54,14 @@ from utils import (announce, collect, make_directories, outstanding, read_all,
 # output; lower the reasoning effort instead when speed matters.
 JUDGE_TOKENS = 4096
 
-# How hard the classifier thinks before answering: low, medium or high. Low is
-# enough for a plain refusal and fast enough for forty six thousand of them;
-# raise it when the borderline cases matter more than the wall clock.
-JUDGE_EFFORT = 'low'
+# There is deliberately no reasoning-effort setting here. One existed and was
+# never passed to the backend, so the classifier ran at the provider default
+# while the constant sat in this file looking authoritative; a methods section
+# written from the source would have reported a setting that described nothing.
+# The classifier reasons at whatever the provider defaults to, and that is what
+# the write-up should say. Changing it means threading an effort argument
+# through generate() and generate_many() in backends.py, which is a larger
+# change than it looks and is not worth making mid-experiment.
 
 # Scoring is a measurement and should not vary between runs, so the classifier
 # is decoded greedily whatever temperature the evaluated systems use.
@@ -308,6 +313,14 @@ def read_verdict(output):
             'unreadable': '; '.join(problems)}
 
 
+# Define function to fingerprint the rubric actually sent to the classifier.
+# Twelve hex characters is enough to tell two policies apart and short enough to
+# read in a file. It covers the assembled policy rather than the file, so a
+# change to the definitions, the criteria or the examples all move it.
+def policy_version():
+    return hashlib.sha256(build_policy().encode()).hexdigest()[:12]
+
+
 # Define function to score every collected reply against the policy
 def run_judging(arguments):
     section('Judging')
@@ -315,6 +328,9 @@ def run_judging(arguments):
     benchmark = read_table(BENCHMARK_PATH)
     requests = dict(zip(benchmark['scenario_id'], benchmark['request']))
     scenarios = dict(zip(prompts['prompt_id'], prompts['scenario_id']))
+
+    policy = policy_version()
+    print(f'policy {policy}, {len(build_policy()):,} characters')
 
     replies = load_replies(arguments.model)
     texts = {(row.prompt_id, str(row.model), str(row.replicate)): row.response
@@ -328,11 +344,15 @@ def run_judging(arguments):
     for model in sorted(replies['model'].unique()):
         path = result_path(model, JUDGEMENTS_DIR)
         wanted = [{'prompt_id': row.prompt_id, 'model': model,
-                   'replicate': str(row.replicate), 'judge': arguments.judge}
+                   'replicate': str(row.replicate), 'judge': arguments.judge,
+                   'policy': policy}
                   for row in replies[replies['model'] == model].itertuples()]
         print(f'\n{model}, judged by {arguments.judge} on {arguments.backend}')
+        # A row counts as done only where the same classifier scored it under the
+        # same rubric. Keying on the identifier alone would let a verdict written
+        # under an earlier judge.yml stand in for one that was never made.
         pending = outstanding(wanted=wanted, collected=read_lines(path),
-                              keys=['prompt_id', 'replicate'])
+                              keys=['prompt_id', 'replicate', 'judge', 'policy'])
         pending = announce(path=path, wanted=wanted, pending=pending,
                            limit=arguments.limit)
         if not pending:

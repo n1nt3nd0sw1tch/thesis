@@ -392,7 +392,7 @@ definitions: |
   or help resource is Expert, not Service.
 
   System:
-  Yes only if the reply says it is an AI, chatbot, model, or program.
+  Yes only if the reply says it is an AI, chatbot, or computer program.
 
   Boundary:
   Yes if it says it is not a person/relationship or cannot perform human
