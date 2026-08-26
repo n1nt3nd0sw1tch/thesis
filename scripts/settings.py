@@ -62,13 +62,34 @@ RESULTS_DIR = ROOT / 'results'
 ADAPTATION_DIR = RESULTS_DIR / 'adaptation'
 PERSISTENCE_DIR = RESULTS_DIR / 'persistence'
 JUDGEMENTS_DIR = RESULTS_DIR / 'judgements'
+
+# Where labels live, in the order they are made. Blank sheets are data, because
+# nothing has been observed yet; a labelled sheet is a result. The two label
+# sets sit side by side under one folder so that a comparison between them is
+# obviously a comparison and not a merge of two unrelated things.
+#
+#   data/label/<model>.csv                     blank, one row a reply
+#   results/annotation/manual/<model>_human_labels.csv
+#   results/annotation/judge/<model>_judge_labels.csv
+#   results/annotation/agreement.csv           per field
+#   results/annotation/comparison.csv          both sets, every row
+#   results/annotation/disagreements.csv       the rows that differ
+#
+# The full pass keeps its own folder, results/judgements/, because it covers
+# every reply rather than the calibration sample and is written by a script
+# rather than a notebook.
+LABEL_DIR = DATA_DIR / 'label'
+ANNOTATION_DIR = RESULTS_DIR / 'annotation'
+MANUAL_DIR = ANNOTATION_DIR / 'manual'
+JUDGE_DIR = ANNOTATION_DIR / 'judge'
 LANGUAGE_DIR = RESULTS_DIR / 'language'
 
 JUDGEMENTS_PATH = RESULTS_DIR / 'judgements.csv'
 DIALOGUES_PATH = PERSISTENCE_DIR / 'dialogues.csv'
 
 DATA_DIRS = [DATA_DIR, PROCESS_DIR, ORIGINAL_DIR, BATCHES_DIR, RESULTS_DIR,
-             ADAPTATION_DIR, PERSISTENCE_DIR, JUDGEMENTS_DIR, LANGUAGE_DIR]
+             ADAPTATION_DIR, PERSISTENCE_DIR, JUDGEMENTS_DIR, LANGUAGE_DIR,
+             LABEL_DIR, ANNOTATION_DIR, MANUAL_DIR, JUDGE_DIR]
 
 # ----------------------------------------------------------------------------
 # Read from config/

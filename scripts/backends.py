@@ -308,6 +308,15 @@ def build_payload(provider, model_id, messages, max_tokens, temperature):
         if takes_sampling(model_id):
             payload['options']['temperature'] = temperature
             payload['options']['top_p'] = GENERATION['top_p']
+            # A seed as well as a temperature of zero. Greedy decoding alone did
+            # not make the classifier reproducible: the same policy over the same
+            # six hundred replies moved a mean of 0.024 kappa between two runs,
+            # and up to 0.081 on a sparse field. Fixing the seed does not
+            # guarantee determinism on a hosted mixture-of-experts model, where
+            # batching and expert routing vary, but it removes the sampling term
+            # and is free.
+            if temperature == 0:
+                payload['options']['seed'] = GENERATION.get('seed', 7)
         # the panel setting decides, and OLLAMA_THINK overrides it for the
         # classifier, where the machine rather than the design is the constraint
         if OLLAMA_THINK:

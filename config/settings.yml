@@ -857,3 +857,25 @@ judges:
     id: gpt-oss:120b-cloud
     access: api
     weights: open
+
+  alternate:
+    # A second general model reading the same rubric, for judge-against-judge
+    # agreement on the six hundred calibration replies. It is not a safety
+    # classifier and is not meant to be. The point is whether two large
+    # instruction-following models, given identical definitions, describe the
+    # same replies the same way: a field where they diverge is a definition
+    # problem rather than a property of either model.
+    #
+    # This replaced allenai/wildguard, which sat here unused. WildGuard
+    # classifies prompt harmfulness, response refusal and response harmfulness,
+    # so it cannot produce the thirteen fields, and agreement between it and the
+    # primary judge would have measured nothing about this taxonomy.
+    #
+    #   python scripts/evaluate.py --judge qwen3.5:397b-cloud --backend ollama
+    #
+    # Verdicts carry the judge and the policy fingerprint, so a second judge
+    # writes alongside the first rather than over it.
+    provider: ollama
+    id: qwen3.5:397b-cloud
+    access: api
+    weights: open
