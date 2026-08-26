@@ -238,8 +238,25 @@ WORKERS = 12
 def outstanding(wanted, collected, keys):
     if collected.empty:
         return wanted
+    # A row counts as done only where the call succeeded and its output could be
+    # read. A file written before either column was declared has neither, and its
+    # rows are treated as successful rather than failing on a missing key.
+    #
+    # 'unreadable' matters as much as 'error' here. A verdict the parser could
+    # not read is stored with every field blank, and without this it would count
+    # as collected: over tens of thousands of rows that is a silent missing data
+    # mechanism, invisible until the analysis finds empty cells it cannot
+    # explain. Treating it as outstanding means a rerun asks again.
+    def column(name):
+        # A row written before a column existed reads back as NaN, which is not
+        # a failure. Filled here so an absent value is not mistaken for one.
+        return (collected[name].fillna('') if name in collected.columns
+                else pd.Series('', index=collected.index))
+
+    spoiled = ((column('error').astype(str).str.strip() != '')
+               | (column('unreadable').astype(str).str.strip() != ''))
     done = {tuple(str(row[key]) for key in keys)
-            for _, row in collected.iterrows() if not str(row['error']).strip()}
+            for (_, row), bad in zip(collected.iterrows(), spoiled) if not bad}
     return [item for item in wanted
             if tuple(str(item[key]) for key in keys) not in done]
 

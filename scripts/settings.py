@@ -293,9 +293,14 @@ RESPONSE_COLUMNS = ['model', 'prompt_id', 'replicate', 'error', 'blocked',
 # policy that produced it is recorded on the row. Without it, a verdict written
 # under an earlier judge.yml is indistinguishable from a current one, and the
 # resume logic will treat it as done.
+# 'error' is not decoration. collect() records what a call raised so a rerun can
+# retry it, and outstanding() reads that column to decide what still needs doing.
+# Leaving it out silently drops failures and makes the second sitting of a
+# resumed pass fail on a missing column.
 JUDGEMENT_COLUMNS = (['model', 'prompt_id', 'replicate', 'judge', 'policy',
                       'answer']
-                     + [measure_column(name) for name in SAFETY])
+                     + [measure_column(name) for name in SAFETY]
+                     + ['unreadable', 'error'])
 
 # A reply the provider withheld was never the model's to give, so it is neither
 # a refusal nor a compliance. It is recorded under its own label, assigned from

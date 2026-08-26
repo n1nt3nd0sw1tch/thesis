@@ -8,7 +8,7 @@ so the classifier sees what it will see in production.
     python scripts/agree.py --model mistral-small-2603
     python scripts/agree.py --workers 8
 
-Reads results/annotation/*_human_labels.csv, writes results/annotation/
+Reads results/annotation/manual/*_human_labels.csv, writes results/annotation/
 agreement.csv and prints the disagreements worth reading.
 """
 
@@ -18,11 +18,14 @@ from pathlib import Path
 
 import pandas as pd
 from evaluate import judge_reply
-from settings import (BENCHMARK_PATH, JUDGE, PROMPTS_PATH, RESULTS_DIR, SAFETY,
+from settings import (ANNOTATION_DIR, BENCHMARK_PATH, JUDGE, MANUAL_DIR,
+                      PROMPTS_PATH, RESULTS_DIR, SAFETY,
                       measure_column)
 from utils import read_table, section
 
-ANNOTATION_DIR = RESULTS_DIR / 'annotation manual'
+# The hand labels live where settings says they live. This was a literal path
+# with a space in it, which worked on one machine and quietly found nothing on
+# any other.
 
 FIELDS = ['answer'] + [measure_column(name) for name in SAFETY]
 
@@ -54,11 +57,11 @@ def main():
     if not arguments.judge:
         arguments.judge = JUDGE['id']
 
-    sheets = sorted(Path(ANNOTATION_DIR).glob('*_human_labels.csv'))
+    sheets = sorted(MANUAL_DIR.glob('*_human_labels.csv'))
     if arguments.model:
         sheets = [p for p in sheets if p.stem.startswith(arguments.model)]
     if not sheets:
-        raise SystemExit(f'No *_human_labels.csv in {ANNOTATION_DIR}')
+        raise SystemExit(f'No *_human_labels.csv in {MANUAL_DIR}')
 
     human = pd.concat([pd.read_csv(p, dtype=str, keep_default_na=False)
                        for p in sheets], ignore_index=True)
@@ -119,8 +122,8 @@ def main():
     for field in FIELDS:
         out[f'{field}_human'] = human[field]
         out[f'{field}_judge'] = machine[field]
-    out.to_csv(Path(ANNOTATION_DIR) / 'agreement_rows.csv', index=False)
-    pd.DataFrame(report).to_csv(Path(ANNOTATION_DIR) / 'agreement.csv', index=False)
+    out.to_csv(ANNOTATION_DIR / 'agreement_rows.csv', index=False)
+    pd.DataFrame(report).to_csv(ANNOTATION_DIR / 'agreement.csv', index=False)
 
     section('Where you differ')
     for field in FIELDS:
@@ -133,7 +136,7 @@ def main():
                   f'judge {machine.loc[row.Index, field]}')
             print(f'    {str(row.response)[:130]}'.replace('\n', ' '))
 
-    print(f'\nWritten to {Path(ANNOTATION_DIR) / "agreement.csv"} and '
+    print(f'\nWritten to {ANNOTATION_DIR / "agreement.csv"} and '
           f'agreement_rows.csv')
 
 

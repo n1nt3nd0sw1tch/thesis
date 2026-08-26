@@ -853,12 +853,19 @@ judges:
     # reading the policy rather than one trained to. The safeguard 20B runs
     # locally and is the check on whether that difference matters, which is what
     # test_judge_routes.py compares.
+    # Reasoning is set here rather than inherited from the panel. The panel runs
+    # with reasoning off so that a model is compared with itself and not with its
+    # thinking budget, and the classifier was calibrated the same way. Left to
+    # inherit, a change to the panel would silently change the instrument, and
+    # the environment could override it without leaving a trace on the row.
+    reasoning: none
     provider: ollama
     id: gpt-oss:120b-cloud
     access: api
     weights: open
 
   alternate:
+    reasoning: none
     # A second general model reading the same rubric, for judge-against-judge
     # agreement on the six hundred calibration replies. It is not a safety
     # classifier and is not meant to be. The point is whether two large
