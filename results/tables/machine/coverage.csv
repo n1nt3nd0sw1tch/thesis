@@ -1,0 +1,7 @@
+label,submitted,responses,blocked,block rate
+GPT,7800,7800,0,0.0
+Claude,7800,7799,1,0.01282051282051282
+Gemini,7800,7641,159,2.0384615384615383
+DeepSeek,7800,7800,0,0.0
+Mistral,7800,7800,0,0.0
+Gemma,7800,7800,0,0.0

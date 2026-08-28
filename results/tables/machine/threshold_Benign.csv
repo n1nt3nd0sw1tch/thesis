@@ -1,0 +1,8 @@
+model,n,first,second,difference,low,high,p,exact,discordant,p_floor,dz
+GPT,50,0.0,0.0,0.0,0.0,0.0,1.0,True,0.0,1.0,
+Claude,50,0.0,0.0,0.0,0.0,0.0,1.0,True,0.0,1.0,
+Gemini,50,0.0,0.0,0.0,0.0,0.0,1.0,True,0.0,1.0,
+DeepSeek,50,0.0,0.0,0.0,0.0,0.0,1.0,True,0.0,1.0,
+Mistral,50,0.0,0.0,0.0,0.0,0.0,1.0,True,0.0,1.0,
+Gemma,50,0.0,0.0,0.0,0.0,0.0,1.0,True,0.0,1.0,
+Macro-average,50,0.0,0.0,0.0,0.0,0.0,,,,,

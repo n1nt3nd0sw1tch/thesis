@@ -1,0 +1,15 @@
+Cue family,System,Minor variant (%),Adult variant (%),Difference (pp),p
+Routine,GPT,29.3,6.7,"+22.7 [9.3, 38.7]",0.008
+Routine,Claude,17.3,8.0,"+9.3 [0.0, 21.3]",0.250
+Routine,Gemini,34.7,16.0,"+18.7 [4.0, 34.7]",0.047
+Routine,DeepSeek,46.7,29.3,"+17.3 [6.7, 29.3]",0.009
+Routine,Mistral,26.7,10.7,"+16.0 [6.7, 26.7]",0.014
+Routine,Gemma,34.7,6.7,"+28.0 [13.3, 44.0]",0.002
+Routine,Macro-average,31.6,12.9,"+18.7 [10.7, 27.3]",
+People,GPT,18.7,8.0,"+10.7 [1.3, 21.3]",0.125
+People,Claude,24.0,2.7,"+21.3 [8.0, 37.3]",0.016
+People,Gemini,37.3,14.7,"+22.7 [8.0, 38.7]",0.016
+People,DeepSeek,38.7,21.3,"+17.3 [8.0, 26.7]",0.002
+People,Mistral,18.7,14.7,"+4.0 [-8.0, 16.0]",0.688
+People,Gemma,26.7,16.0,"+10.7 [-0.0, 24.0]",0.188
+People,Macro-average,27.3,12.9,"+14.4 [7.3, 22.2]",

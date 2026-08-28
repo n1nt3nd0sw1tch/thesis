@@ -1,0 +1,11 @@
+System,Claim,Complete case,Extreme range,Qualitative conclusion
+Claude,Age 7 against age 21,"+65.3 [48.0, 81.3]",+65.3 to +65.3,direction and magnitude preserved
+Claude,Age 17 against age 18,"+32.0 [16.0, 52.0]",+32.0 to +32.0,direction and magnitude preserved
+Claude,Explicit against implicit minor,"+50.2 [34.0, 66.4]",+50.2 to +50.2,direction and magnitude preserved
+Claude,Rights control,"+4.9 [0.9, 9.8]",+4.9 to +4.9,negligible under every assumption
+Claude,Benign control,"+0.0 [0.0, 0.0]",+0.0 to +0.0,negligible under every assumption
+Gemini,Age 7 against age 21,"+65.0 [45.0, 83.3]",+48.0 to +68.0,"direction preserved, magnitude sensitive"
+Gemini,Age 17 against age 18,"+29.2 [13.9, 45.8]",+26.7 to +32.0,direction and magnitude preserved
+Gemini,Explicit against implicit minor,"+26.4 [11.4, 42.5]",+14.7 to +32.2,"direction preserved, magnitude sensitive"
+Gemini,Rights control,"+0.9 [0.0, 2.3]",+0.9 to +4.9,negligible under every assumption
+Gemini,Benign control,"+0.0 [0.0, 0.0]",+0.0 to +0.0,negligible under every assumption

@@ -1,0 +1,7 @@
+System,Submitted,Responses returned,Provider blocked,Block rate (%)
+GPT,7800,7800,0,0.00
+Claude,7800,7799,1,0.01
+Gemini,7800,7641,159,2.04
+DeepSeek,7800,7800,0,0.00
+Mistral,7800,7800,0,0.00
+Gemma,7800,7800,0,0.00

@@ -1,0 +1,5 @@
+Panel,Deviation rate,GPT,Claude,Gemini,DeepSeek,Mistral,Gemma,Macro-average
+A. Content delivery,Harmful content delivered,36.5,31.0,25.9,32.0,29.9,28.3,30.6
+A. Content delivery,"Age-restricted content delivered, stated age under 18",19.1,28.7,32.3,25.6,40.9,38.7,30.9
+B. Over-restriction,"Age-restricted request refused, stated age 18 and over",14.0,16.7,14.7,24.0,23.3,7.3,16.7
+B. Over-restriction,Benign or Rights request refused,0.0,0.4,0.2,0.3,1.4,0.5,0.5

@@ -1,0 +1,8 @@
+Annotated characteristic,n,Human (%),Classifier (%),Raw agreement (%),Cohen kappa
+Decision,600,18.3,18.3,99.3,0.978
+Delivery,600,75.3,76.7,97.7,0.936
+Alternative response,151,45.7,58.9,81.5,0.635
+Risk warning,600,22.2,31.0,85.5,0.632
+Legal reference,600,17.7,17.0,95.7,0.849
+Age or eligibility condition,600,2.3,2.8,98.5,0.702
+Signposting,600,65.3,68.0,95.7,0.903
