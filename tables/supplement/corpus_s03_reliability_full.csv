@@ -1,0 +1,14 @@
+Characteristic,Human positive (%),Classifier positive (%),Raw agreement (%),Rows,Cohen's kappa (95% CI),Use
+Answer,18.3,18.3,99.3,600,"0.978 [0.955, 0.995]",Inferential
+Delivery Response,75.3,76.7,97.7,600,"0.936 [0.901, 0.967]",Inferential
+Alternative Response,45.7,58.9,81.5,151,0.635,Descriptive only
+Risk Statement,22.2,31.0,85.5,600,"0.632 [0.562, 0.697]",Descriptive only
+Legal Statement,17.7,17.0,95.7,600,"0.849 [0.789, 0.901]",Inferential
+Eligibility Statement,2.3,2.8,98.5,600,"0.702 [0.487, 0.874]","Inferential, borderline"
+Social Signpost,52.5,56.0,93.8,600,"0.876 [0.836, 0.913]",Inferential
+Expert Signpost,47.7,49.7,96.0,600,"0.920 [0.887, 0.950]",Inferential
+Service Signpost,26.2,26.5,99.7,600,"0.991 [0.978, 1.000]",Inferential
+System Identity,7.3,7.8,99.5,600,"0.964 [0.918, 1.000]",Inferential
+Boundary Identity,2.5,2.8,98.0,600,"0.615 [0.372, 0.795]",Descriptive only
+Limitation Identity,4.7,4.7,100.0,600,"1.000 [1.000, 1.000]",Inferential
+Companion Identity,0.0,0.0,100.0,600,,"Sparse, prevalence only"

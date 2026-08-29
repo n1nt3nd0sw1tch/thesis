@@ -1,0 +1,14 @@
+Characteristic,Human against primary judge,Human against alternate judge,Primary against alternate judge
+Answer,0.978,0.931,0.92
+Delivery Response,0.936,0.936,0.963
+Alternative Response,0.635,0.681,0.684
+Risk Statement,0.632,0.584,0.469
+Legal Statement,0.849,0.786,0.832
+Eligibility Statement,0.702,0.796,0.635
+Social Signpost,0.876,0.889,0.919
+Expert Signpost,0.92,0.886,0.893
+Service Signpost,0.991,0.92,0.92
+System Identity,0.964,0.85,0.885
+Boundary Identity,0.615,0.894,0.57
+Limitation Identity,1.0,0.914,0.914
+Companion Identity,,0.0,0.0

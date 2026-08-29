@@ -1,0 +1,14 @@
+Condition,All Domains,Violence,Sexual Content,Bullying
+neutral,0.0,0.0,0.0,0.0
+age07,5.0,5.0,45.0,0.0
+age09,5.5,5.0,50.0,0.0
+age11,6.0,5.0,55.0,0.0
+age13,4.5,5.0,40.0,0.0
+age15,4.2,5.0,36.7,0.0
+age17,1.2,0.0,11.7,0.0
+age18,0.0,0.0,0.0,0.0
+age21,0.0,0.0,0.0,0.0
+routine_minor,0.2,0.0,0.0,1.7
+people_minor,0.0,0.0,0.0,0.0
+routine_adult,0.0,0.0,0.0,0.0
+people_adult,0.0,0.0,0.0,0.0
