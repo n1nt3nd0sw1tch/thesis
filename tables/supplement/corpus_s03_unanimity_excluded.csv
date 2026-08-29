@@ -1,7 +1,0 @@
-Model,Cells with no returned replicate,Cells with some replicates returned,Provider-status unanimity (%),Macro-average without this model (%)
-GPT,0,0,100.0,86.7
-Claude,0,1,99.96,87.2
-Gemini,51,5,99.81,87.0
-DeepSeek,0,0,100.0,87.3
-Mistral,0,0,100.0,93.0
-Gemma,0,0,100.0,86.5

@@ -72,16 +72,42 @@ for _folder in (METHODS, MAIN, SUPPLEMENT, MACHINE, FIGURES):
 # palette is what keeps the two from drifting: an earlier pair had Mistral red
 # in the figures and peach in the text, close enough to Claude that the two were
 # hard to tell apart in the table.
+# The released names are those in Table~ref{tab:models} in the methods chapter,
+# verbatim. A model is named the same way in a figure legend, a table row and a
+# sentence, so the reader never has to work out that GPT and GPT-5.6 Luna are
+# the same thing.
+# Six of Tol's muted qualitative set, chosen by measurement rather than by eye.
+# The minimum pairwise CIEDE2000 distance is 23.2 for normal vision, 18.5 under
+# deuteranopia and 16.1 under protanopia. The set this replaces scored 13.8,
+# 2.8 and 2.2: Claude and Gemma were separated by 2.8 for a red-green colourblind
+# reader, which is no separation at all, and Gemini and DeepSeek by 3.3.
+#
+# The lightness spread is deliberate and load-bearing. A dichromat reads this
+# panel largely by lightness, so flattening it to make the pale colours darker
+# costs more than it gains: pulling sand and cyan toward the middle drops the
+# protanopia minimum from 16.1 to 9.0. The pale lines are handled with weight
+# instead, which is what LINEWIDTH and MARKERSIZE are for.
+#
+# Gemini and Gemma sit 54.0 apart, the widest gap in the set. They are the same
+# provider and the design pairs them to separate deployment filtering from model
+# behaviour, so that is the one comparison a reader must never have to squint at.
 PANEL = {
-    'gpt-5.6-luna':              ('GPT',      '#2F8F64', 'o'),
-    'claude-haiku-4-5-20251001': ('Claude',   '#D9893D', 's'),
-    'gemini-3.5-flash-lite':     ('Gemini',   '#7467B9', '^'),
-    'deepseek-v4-flash':         ('DeepSeek', '#3B82B6', 'D'),
-    'mistral-small-2603':        ('Mistral',  '#C75B59', 'v'),
-    'gemma4:31b-cloud':          ('Gemma',    '#B6912E', 'P'),
+    'gpt-5.6-luna':              ('GPT-5.6 Luna',          '#117733', 'o'),
+    'claude-haiku-4-5-20251001': ('Claude Haiku 4.5',      '#DDCC77', 's'),
+    'gemini-3.5-flash-lite':     ('Gemini 3.5 Flash Lite', '#332288', '^'),
+    'deepseek-v4-flash':         ('DeepSeek-V4 Flash',     '#88CCEE', 'D'),
+    'mistral-small-2603':        ('Mistral Small 4',       '#AA4499', 'v'),
+    'gemma4:31b-cloud':          ('Gemma 4 31B',           '#44AA99', 'P'),
 }
 
-TINT = 0.22
+# Weight rather than darkness, so that sand and cyan read on white without
+# giving up the lightness range the dichromat separation depends on.
+LINEWIDTH, MARKERSIZE = 1.8, 5.0
+
+# A 22 per cent tint left the palest table rows 5.8 apart, which is close to
+# indistinguishable. At 34 per cent they are 7.8 apart for normal vision and 6.7
+# under deuteranopia, and black text is still comfortable on the darkest of them.
+TINT = 0.34
 
 # Greys for reference lines, annotations and anything that is not a model.
 INK, MUTED, PALE = '#3C4650', '#55606B', '#B9C0C7'
@@ -91,6 +117,13 @@ COLOUR = {value[0]: value[1] for value in PANEL.values()}
 MARKER = {value[0]: value[2] for value in PANEL.values()}
 ORDER = [value[0] for value in PANEL.values()]
 MACRO = 'Macro-average'
+
+# The provider word on its own, for the rare place a full name will not fit.
+# Every table and figure uses the full name; this exists so that a caption can
+# say Gemini once the row has already named it in full.
+FAMILY = {'GPT-5.6 Luna': 'GPT', 'Claude Haiku 4.5': 'Claude',
+          'Gemini 3.5 Flash Lite': 'Gemini', 'DeepSeek-V4 Flash': 'DeepSeek',
+          'Mistral Small 4': 'Mistral', 'Gemma 4 31B': 'Gemma'}
 
 
 # Define function to give the pale tint of a model's colour, which is what the
@@ -877,6 +910,41 @@ CAPTIONS = []
 WRITTEN = Counter()
 
 
+# Words that stay lower case inside a heading unless they open or close it.
+MINOR = {'a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'from', 'in', 'into',
+         'nor', 'of', 'on', 'or', 'over', 'per', 'the', 'to', 'with', 'within'}
+
+# Units and symbols that keep their own case wherever they appear, so that a
+# heading ending in (pp) does not come back as (Pp).
+UNITS = {'pp', 'n', 'p', 'q', 'sd', 'ci', 'vs'}
+
+
+# Define function to put one heading into title case.
+#
+# Applied to every column heading and index name at the point a table is
+# written, rather than typed correctly twenty-five times and then typed wrongly
+# on the twenty-sixth. A word already carrying an internal capital is left
+# alone, so a released model name and an abbreviation survive unchanged.
+def titleise(heading):
+    words = str(heading).split()
+    out = []
+    for position, word in enumerate(words):
+        parts = []
+        for piece in word.split('-'):
+            core = piece.strip('()[],.:%$')
+            if not core or not core[0].isalpha() or core.lower() in UNITS:
+                parts.append(piece)
+            elif any(letter.isupper() for letter in core[1:]):
+                parts.append(piece)
+            elif (0 < position < len(words) - 1 and core.lower() in MINOR
+                    and len(word.split('-')) == 1):
+                parts.append(piece.replace(core, core.lower()))
+            else:
+                parts.append(piece.replace(core, core[0].upper() + core[1:]))
+        out.append('-'.join(parts))
+    return ' '.join(out)
+
+
 # Define function to write a table as CSV and record its caption, so that the
 # wording travels with the numbers and the typesetting is done later
 def publish(table, name, caption, label, tier='main', index=True):
@@ -894,6 +962,9 @@ def publish(table, name, caption, label, tier='main', index=True):
             f'{name} writes an index beside multi-level columns, which produces '
             f'a blank header cell. Flatten the columns or reshape the table.')
     folder = {'methods': METHODS, 'main': MAIN, 'supplement': SUPPLEMENT}[tier]
+    table = table.rename(columns=titleise)
+    table.index = table.index.set_names(
+        [None if level is None else titleise(level) for level in table.index.names])
     table.to_csv(folder / f'{name}.csv', index=index)
     CAPTIONS.append({'output': name, 'kind': 'table', 'tier': tier,
                      'label': label, 'caption': caption})

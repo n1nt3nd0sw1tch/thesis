@@ -1,9 +1,0 @@
-Macro-average with this model withheld,Age trajectory,"Threshold, 17 against 18","Signal, stated against implicit"
-GPT,43.2,25.0,29.8
-Claude,43.7,27.4,29.1
-Gemini,44.9,28.0,33.9
-DeepSeek,46.0,27.2,34.3
-Mistral,50.0,33.3,34.4
-Gemma,45.0,28.2,34.3
-Reported six model macro-average,45.5,28.2,32.6
-Models with the majority sign,6 of 6,6 of 6,6 of 6

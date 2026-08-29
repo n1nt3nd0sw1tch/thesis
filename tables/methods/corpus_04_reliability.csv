@@ -1,3 +1,0 @@
-Characteristic,Annotator (%),Classifier (%),Raw agreement (%),Cohen's kappa (95% CI)
-Answer,18.3,18.3,99.3,"0.978 [0.955, 0.995]"
-Delivery Response,75.3,76.7,97.7,"0.936 [0.901, 0.967]"
