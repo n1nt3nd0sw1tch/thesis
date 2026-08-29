@@ -1,0 +1,7 @@
+Model,Age Restricted scenarios paired,"Blocked requests, Age Restricted",Cells with no returned replicate,Cells with some but not all replicates
+GPT,25,0,0,0
+Claude,25,0,0,0
+Gemini,20,79,26,1
+DeepSeek,25,0,0,0
+Mistral,25,0,0,0
+Gemma,25,0,0,0

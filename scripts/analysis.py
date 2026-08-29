@@ -63,22 +63,46 @@ for _folder in (METHODS, MAIN, SUPPLEMENT, MACHINE, FIGURES):
 
 # Identifier, display name, colour, marker. The order is the reporting order and
 # is used everywhere, so a table and a figure never disagree about which column
-# is which model. The colours match the trajectory figures produced by the
-# earlier pass, so old and new figures can sit in the same chapter.
+# is which model.
+#
+# One model, one colour, across the whole thesis. The saturated value is what a
+# figure draws with; style/preamble.tex highlights the same model in prose and
+# in the model selection table with a 22 per cent tint of it, computed by TINT
+# below. Defining the tint as a fraction rather than as a second hand-picked
+# palette is what keeps the two from drifting: an earlier pair had Mistral red
+# in the figures and peach in the text, close enough to Claude that the two were
+# hard to tell apart in the table.
 PANEL = {
-    'gpt-5.6-luna':              ('GPT',      '#55A868', 'o'),
-    'claude-haiku-4-5-20251001': ('Claude',   '#DD8452', 's'),
-    'gemini-3.5-flash-lite':     ('Gemini',   '#8172B3', '^'),
-    'deepseek-v4-flash':         ('DeepSeek', '#4C72B0', 'D'),
-    'mistral-small-2603':        ('Mistral',  '#C44E52', 'v'),
-    'gemma4:31b-cloud':          ('Gemma',    '#CCB974', 'P'),
+    'gpt-5.6-luna':              ('GPT',      '#2F8F64', 'o'),
+    'claude-haiku-4-5-20251001': ('Claude',   '#D9893D', 's'),
+    'gemini-3.5-flash-lite':     ('Gemini',   '#7467B9', '^'),
+    'deepseek-v4-flash':         ('DeepSeek', '#3B82B6', 'D'),
+    'mistral-small-2603':        ('Mistral',  '#C75B59', 'v'),
+    'gemma4:31b-cloud':          ('Gemma',    '#B6912E', 'P'),
 }
+
+TINT = 0.22
+
+# Greys for reference lines, annotations and anything that is not a model.
+INK, MUTED, PALE = '#3C4650', '#55606B', '#B9C0C7'
 
 NAME = {key: value[0] for key, value in PANEL.items()}
 COLOUR = {value[0]: value[1] for value in PANEL.values()}
 MARKER = {value[0]: value[2] for value in PANEL.values()}
 ORDER = [value[0] for value in PANEL.values()]
 MACRO = 'Macro-average'
+
+
+# Define function to give the pale tint of a model's colour, which is what the
+# thesis highlights with. The definitions in style/preamble.tex are this
+# function evaluated at TINT, so a change here is a change there.
+def tint(colour, fraction=TINT):
+    parts = (int(colour.lstrip('#')[index:index + 2], 16) for index in (0, 2, 4))
+    return '#' + ''.join(
+        f'{round(value * fraction + 255 * (1 - fraction)):02X}' for value in parts)
+
+
+PASTEL = {name: tint(colour) for name, colour in COLOUR.items()}
 
 # ----------------------------------------------------------------------------
 # The conditions, grouped the way contrasts use them
@@ -891,16 +915,19 @@ def write_captions():
     return CAPTIONS_PATH
 
 
-# Define function to save a figure in both forms and record its caption.
+# Define function to save a figure and record its caption.
 #
-# The PDF is what the thesis includes, since a raster figure set at column width
-# prints soft; the PNG is for reading in a notebook. The caption is recorded
-# beside the table captions rather than drawn inside the image, so that a figure
-# carries no text the typesetting cannot reflow and a caption cannot drift away
-# from the code that made the figure.
-def save_figure(figure, name, caption='', label='', tier='main', dpi=200):
-    figure.savefig(FIGURES / f'{name}.pdf', bbox_inches='tight')
-    figure.savefig(FIGURES / f'{name}.png', dpi=dpi, bbox_inches='tight')
+# PDF only. The thesis includes vector figures, so a PNG beside each one was a
+# second copy of the same picture that nothing read, and two copies of a figure
+# can disagree once one of them is stale. The cost is that a PDF does not
+# preview inline on GitHub; the notebook shows the figure at the point it is
+# made, which covers the same need.
+#
+# The caption is recorded beside the table captions rather than drawn inside the
+# image, so that a figure carries no text the typesetting cannot reflow and a
+# caption cannot drift away from the code that made the figure.
+def save_figure(figure, name, caption='', label='', tier='main'):
+    figure.savefig(FIGURES / f'{name}.pdf')
     if caption:
         CAPTIONS.append({'output': name, 'kind': 'figure', 'tier': tier,
                          'label': label, 'caption': caption})
@@ -931,7 +958,11 @@ def pvalue(p):
 
 STYLE = {
     'figure.dpi': 110,
-    'savefig.dpi': 200,
+    'savefig.dpi': 300,
+    'savefig.bbox': 'tight',
+    # Type 42 embeds the fonts as TrueType rather than as Type 3 bitmaps, so the
+    # text in a figure stays selectable and searchable in the compiled thesis.
+    'pdf.fonttype': 42,
     'font.family': 'sans-serif',
     'font.size': 9,
     'axes.titlesize': 10,
@@ -941,7 +972,7 @@ STYLE = {
     'axes.grid': True,
     'axes.axisbelow': True,
     'grid.linewidth': 0.5,
-    'grid.alpha': 0.35,
+    'grid.alpha': 0.25,
     'legend.frameon': False,
     'xtick.labelsize': 8,
     'ytick.labelsize': 8,

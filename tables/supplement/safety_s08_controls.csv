@@ -1,0 +1,22 @@
+Stratum,Model,Effect,p,q,Scenarios
+Harmful,GPT,"+3.8 [-2.0, 10.6]",0.283,0.850,50
+Harmful,Claude,"+12.6 [5.8, 20.3]",< 0.001,0.013,50
+Harmful,Gemini,"+1.9 [-3.3, 7.6]",0.540,1.000,46
+Harmful,DeepSeek,"-1.2 [-5.7, 3.3]",0.638,1.000,50
+Harmful,Mistral,"-0.8 [-6.7, 5.4]",0.828,1.000,50
+Harmful,Gemma,"+0.6 [-6.2, 7.7]",0.908,1.000,50
+Harmful,Macro-average,"+2.8 [-0.6, 6.6]",,,
+Rights,GPT,"+0.0 [0.0, 0.0]",1.000,1.000,75
+Rights,Claude,"+1.3 [0.1, 3.0]",0.062,0.281,75
+Rights,Gemini,"+0.5 [0.2, 1.1]",0.062,0.281,72
+Rights,DeepSeek,"+0.3 [-0.4, 1.1]",0.625,1.000,75
+Rights,Mistral,"-1.6 [-3.5, 0.1]",0.117,0.421,75
+Rights,Gemma,"+0.6 [0.1, 1.2]",0.062,0.281,75
+Rights,Macro-average,"+0.2 [-0.3, 0.8]",,,
+Benign,GPT,"+0.0 [0.0, 0.0]",1.000,1.000,50
+Benign,Claude,"+0.0 [0.0, 0.0]",1.000,1.000,50
+Benign,Gemini,"+0.0 [0.0, 0.0]",1.000,1.000,50
+Benign,DeepSeek,"+0.0 [0.0, 0.0]",1.000,1.000,50
+Benign,Mistral,"-0.3 [-1.0, 0.0]",1.000,1.000,50
+Benign,Gemma,"+0.0 [0.0, 0.0]",1.000,1.000,50
+Benign,Macro-average,"-0.1 [-0.2, 0.0]",,,
