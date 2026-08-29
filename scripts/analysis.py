@@ -38,7 +38,7 @@ from itertools import product
 import numpy as np
 import pandas as pd
 
-from settings import (ANNOTATION_DIR, BENCHMARK_PATH, BLOCKED,
+from settings import (read_config, ANNOTATION_DIR, BENCHMARK_PATH, BLOCKED, CONFIG_DIR,
                       CLASSIFICATION_DIR, PERMISSIVENESS, PROMPTS_PATH,
                       RESULTS_DIR, ROOT, SAFETY, measure_column)
 
@@ -109,6 +109,13 @@ LINEWIDTH, MARKERSIZE = 1.8, 5.0
 # under deuteranopia, and black text is still comfortable on the darkest of them.
 TINT = 0.34
 
+# The classifier that applied the rubric is a model too, but not a panel member,
+# so it needs a colour of its own. Tol rose is the seventh of the same family and
+# is the furthest from all six: 19.8 for normal vision, 16.0 under deuteranopia
+# and 15.7 under protanopia, its nearest neighbour being Mistral Small 4.
+JUDGE = 'gpt-oss:120b'
+JUDGE_COLOUR = '#CC6677'
+
 # Greys for reference lines, annotations and anything that is not a model.
 INK, MUTED, PALE = '#3C4650', '#55606B', '#B9C0C7'
 
@@ -136,6 +143,7 @@ def tint(colour, fraction=TINT):
 
 
 PASTEL = {name: tint(colour) for name, colour in COLOUR.items()}
+JUDGE_PASTEL = tint(JUDGE_COLOUR)
 
 # ----------------------------------------------------------------------------
 # The conditions, grouped the way contrasts use them
@@ -154,12 +162,32 @@ STATED = STATED_MINOR + STATED_ADULT
 IMPLICIT_MINOR = ['routine_minor', 'people_minor']
 IMPLICIT_ADULT = ['routine_adult', 'people_adult']
 IMPLICIT = IMPLICIT_MINOR + IMPLICIT_ADULT
-ROUTINE = ['routine_minor', 'routine_adult']
-PEOPLE = ['people_minor', 'people_adult']
 CONDITION_ORDER = [NEUTRAL] + STATED + IMPLICIT
+
+
 STATED_AGE = {'age07': 7, 'age09': 9, 'age11': 11, 'age13': 13,
               'age15': 15, 'age17': 17, 'age18': 18, 'age21': 21}
 THRESHOLD = 17.5
+
+# One name a condition, used in every table, figure and contrast name. The two
+# cue families are reported together: a routine cue and a people cue both signal
+# the same age band, and the channel they signal it through is not compared.
+CONDITION_LABEL = {NEUTRAL: 'Control (No Age)',
+                   **{name: f'Explicit Age ({age})'
+                      for name, age in STATED_AGE.items()},
+                   **{name: 'Implicit Cue (Minor)' for name in IMPLICIT_MINOR},
+                   **{name: 'Implicit Cue (Adult)' for name in IMPLICIT_ADULT}}
+
+# The order those labels appear in, once the two cue families are merged.
+LABEL_ORDER = ([CONDITION_LABEL[NEUTRAL]]
+               + [CONDITION_LABEL[name] for name in STATED]
+               + ['Implicit Cue (Minor)', 'Implicit Cue (Adult)'])
+
+# The contrasts, named in the same vocabulary.
+TRAJECTORY = 'Explicit Age (Minor) vs Explicit Age (Adult)'
+THRESHOLD_CONTRAST = 'Explicit Age (17) vs Explicit Age (18)'
+SIGNAL = 'Explicit Age (Minor) vs Implicit Cue (Minor)'
+CUE_DIRECTION = 'Implicit Cue (Minor) vs Implicit Cue (Adult)'
 
 STRATA = ['Benign', 'Rights', 'Age Restricted', 'Harmful']
 # The stratum in which the design says behaviour ought to move with age, and so
@@ -246,8 +274,7 @@ FAMILIES = {
     'age conditioning':         'primary',
     'benchmark control':        'planned control',
     'age trend':                'secondary',
-    'cue direction':            'secondary',
-    'cue channel':              'planned control',
+    'implicit cue':             'secondary',
     'prompt category':          'secondary',
     'response characteristics': 'secondary',
     # Corpus, provider and platform behaviour
@@ -534,25 +561,55 @@ def contrast(data, measure, first, second, family, name, register,
 # Define function to build the display table for one contrast out of the
 # corrected register, so that a published table carries the adjusted value the
 # claim actually rests on rather than a raw one the reader has to go and adjust
-def present(register, name, columns=('Effect', 'p', 'q', 'Scenarios'),
-            places=1, order=None):
+# Define function to give an estimate and its interval as three numbers rather
+# than one string.
+#
+# A bracketed cell cannot be sorted, cannot be read down a column, and puts three
+# quantities where a reader expects one. The bounds get their own columns, which
+# is how the tables in the literature this thesis compares against report them.
+def bounds(point, low, high, places=1, sign=False):
+    if pd.isna(point):
+        return {'estimate': '', 'low': '', 'high': ''}
+    mark = '+' if sign else ''
+    return {'estimate': f'{point:{mark}.{places}f}',
+            'low': '' if pd.isna(low) else f'{low:.{places}f}',
+            'high': '' if pd.isna(high) else f'{high:.{places}f}'}
+
+
+# Define function to write a value and its interval as one cell, for the rare
+# place a table has no room for three columns
+def interval(point, low, high, places=1, sign=False):
+    if pd.isna(point):
+        return ''
+    head = f'{point:+.{places}f}' if sign else f'{point:.{places}f}'
+    if pd.isna(low) or pd.isna(high):
+        return head
+    return f'{head} [{low:.{places}f}, {high:.{places}f}]'
+
+
+
+def present(register, name, unit='pp', places=1, order=None):
     rows = register[register['contrast'] == name].set_index('model')
     order = list(order or (ORDER + [MACRO]))
+    split = [bounds(rows.at[label, 'effect'], rows.at[label, 'low'],
+                    rows.at[label, 'high'], places=places, sign=True)
+             if label in rows.index else bounds(np.nan, np.nan, np.nan)
+             for label in order]
     table = pd.DataFrame({
         'Model': order,
-        'Effect': [interval(rows.at[label, 'effect'], rows.at[label, 'low'],
-                            rows.at[label, 'high'], places=places, sign=True)
-                   if label in rows.index else '' for label in order],
+        f'Effect ({unit})': [row['estimate'] for row in split],
         'p': [pvalue(rows.at[label, 'p']) if label in rows.index else ''
               for label in order],
         'q': [pvalue(rows.at[label, 'q']) if label in rows.index else ''
               for label in order],
+        '95% CI Lower': [row['low'] for row in split],
+        '95% CI Upper': [row['high'] for row in split],
         'Scenarios': [rows.at[label, 'n'] if label in rows.index else pd.NA
                       for label in order],
     })
     table['Scenarios'] = pd.to_numeric(table['Scenarios'],
                                        errors='coerce').astype('Int64')
-    return table[['Model'] + [column for column in columns]]
+    return table
 
 
 # Define function to give a two sided unpaired permutation p value by shuffling
@@ -906,8 +963,23 @@ def fingerprint_line(frame):
 # Output
 # ----------------------------------------------------------------------------
 
-CAPTIONS = []
+# Every caption lives in config/captions.yml, not in the notebook that draws the
+# table. A publish() call is then one line, a caption can be reworded without
+# touching code, and the whole wording of the results can be read in one file.
+CAPTIONS_CONFIG = read_config(CONFIG_DIR / 'captions.yml')
 WRITTEN = Counter()
+DESCRIBED = []
+
+
+# Define function to look up one entry, refusing a name the file does not
+# describe. An undescribed table would otherwise reach the thesis with a blank
+# caption and nothing would notice.
+def described(name):
+    if name not in CAPTIONS_CONFIG:
+        raise KeyError(
+            f'{name!r} has no entry in config/captions.yml. Add one there '
+            f'rather than passing a caption through the notebook.')
+    return CAPTIONS_CONFIG[name]
 
 
 # Words that stay lower case inside a heading unless they open or close it.
@@ -947,7 +1019,9 @@ def titleise(heading):
 
 # Define function to write a table as CSV and record its caption, so that the
 # wording travels with the numbers and the typesetting is done later
-def publish(table, name, caption, label, tier='main', index=True):
+def publish(table, name):
+    entry = described(name)
+    tier, index = entry['tier'], entry.get('index', True)
     # An index written without a name reads back as 'Unnamed: 0' and typesets as
     # a blank column heading, so a table either names its index or does not
     # write one.
@@ -966,8 +1040,8 @@ def publish(table, name, caption, label, tier='main', index=True):
     table.index = table.index.set_names(
         [None if level is None else titleise(level) for level in table.index.names])
     table.to_csv(folder / f'{name}.csv', index=index)
-    CAPTIONS.append({'output': name, 'kind': 'table', 'tier': tier,
-                     'label': label, 'caption': caption})
+    DESCRIBED.append({'output': name, 'kind': 'table', 'tier': tier,
+                      'label': entry['label'], 'caption': entry['caption']})
     WRITTEN[f'{tier} table'] += 1
     return table
 
@@ -975,7 +1049,7 @@ def publish(table, name, caption, label, tier='main', index=True):
 # Define function to merge this notebook's captions into the shared file rather
 # than overwrite it, since four notebooks write into it and each holds a part
 def write_captions():
-    fresh = pd.DataFrame(CAPTIONS)
+    fresh = pd.DataFrame(DESCRIBED)
     if fresh.empty:
         return CAPTIONS_PATH
     if CAPTIONS_PATH.exists():
@@ -997,23 +1071,13 @@ def write_captions():
 # The caption is recorded beside the table captions rather than drawn inside the
 # image, so that a figure carries no text the typesetting cannot reflow and a
 # caption cannot drift away from the code that made the figure.
-def save_figure(figure, name, caption='', label='', tier='main'):
+def save_figure(figure, name):
+    entry = described(name)
     figure.savefig(FIGURES / f'{name}.pdf')
-    if caption:
-        CAPTIONS.append({'output': name, 'kind': 'figure', 'tier': tier,
-                         'label': label, 'caption': caption})
-    WRITTEN[f'{tier} figure'] += 1
+    DESCRIBED.append({'output': name, 'kind': 'figure', 'tier': entry['tier'],
+                      'label': entry['label'], 'caption': entry['caption']})
+    WRITTEN[f"{entry['tier']} figure"] += 1
     return FIGURES / f'{name}.pdf'
-
-
-# Define function to write a value and its interval as one cell
-def interval(point, low, high, places=1, sign=False):
-    if pd.isna(point):
-        return ''
-    head = f'{point:+.{places}f}' if sign else f'{point:.{places}f}'
-    if pd.isna(low) or pd.isna(high):
-        return head
-    return f'{head} [{low:.{places}f}, {high:.{places}f}]'
 
 
 # Define function to write a p value at the precision it can carry

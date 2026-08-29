@@ -1,0 +1,7 @@
+Model,Cells,Four-Cell Unanimity (%),95% CI Lower,95% CI Upper,Main Response Unanimity (%),Gap (pp)
+GPT-5.6 Luna,2600,94.3,92.3,96.2,96.8,2.5
+Claude Haiku 4.5,2599,91.4,88.9,93.7,95.3,3.9
+Gemini 3.5 Flash Lite,2544,92.8,90.5,95.0,95.3,2.5
+DeepSeek-V4 Flash,2600,91.2,88.7,93.5,92.7,1.5
+Mistral Small 4,2600,62.8,59.1,66.5,85.1,22.3
+Gemma 4 31B,2600,95.0,93.4,96.5,96.7,1.7
