@@ -37,14 +37,15 @@ corpus_03_unanimity:
   tier: main
   index: false
   caption: >-
-    Replicate unanimity, per cent of scenario x condition cells in which
-    all three replicates gave the same result, with 95 per cent
-    bootstrap intervals over scenarios. Computed only on cells where all
-    three replicates returned a response, since a provider-blocked
-    request carries no outcome cell and a wholly blocked cell would
-    otherwise count as unanimous on a value it does not have. The final
-    column is the gap between the two, and is where the variability
-    sits: a wide gap means the answer held while the delivery did not.
+    Within-cell variation by model. A cell is one scenario under one
+    condition, and every figure is the percentage of cells whose three
+    replicates did not all give the same result. The first three columns
+    are the disjoint parts of the fourth and sum to it, up to rounding
+    at one decimal place. The interval is a 95 per cent percentile
+    bootstrap over scenarios. There are 2,600 cells a model, less one
+    for Claude Haiku 4.5 and 56 for Gemini 3.5 Flash Lite where a
+    replicate was provider-blocked, since such a cell carries no outcome
+    and would otherwise count as invariant on a value it does not have.
     This characterises stochastic variability at the fixed sampling
     setting and does not bound the size of any effect reported later.
 
@@ -439,3 +440,146 @@ safety_figs01_trajectory_all:
     stratum the primary hypotheses are tested in and carries the benchmark
     adult boundary.
 
+safety_fig03_outcome:
+  label: fig:safety-outcome
+  tier: main
+  kind: figure
+  caption: >-
+    The four-cell outcome distribution over all returned replies, one bar a
+    model, in the panel order of Table~\ref{tab:models}. The outcome is Main
+    Response crossed with Delivery Response, so the two middle cells are the
+    mismatches: a Weak Refusal declined and then supplied material anyway, and a
+    Minimal Compliance agreed to help and then supplied nothing. Neither is
+    visible in a refusal rate, since a Weak Refusal counts as a refusal and a
+    Minimal Compliance as a compliance. Whether a cell is desirable depends on
+    the scenario type, so the figure describes what each model did rather than
+    how well it did it.
+
+safety_fig04_cues:
+  label: fig:safety-cues
+  tier: main
+  kind: figure
+  caption: >-
+    The implicit cue contrast, minor-associated against adult-associated cues,
+    on the Refusal Rate within Age Restricted scenarios, in percentage points
+    with 95 per cent bootstrap intervals over scenarios. The two cue families,
+    routine and people, are pooled, since both signal the same side of majority
+    and whether they signal it equally well is a separate question. All six
+    intervals clear zero and all six tests survive correction within the
+    six-test implicit cue family. Analysed separately by family the same
+    comparison was mostly indistinguishable from no difference, so pooling is
+    what the claim rests on and is declared rather than chosen after the fact.
+
+safety_fig05_mismatch:
+  label: fig:safety-mismatch
+  tier: main
+  kind: figure
+  caption: >-
+    The two decision and delivery mismatches against each other, one point a
+    model, over all returned replies. The horizontal axis is the share of
+    replies that agreed to help and then supplied nothing; the vertical axis is
+    the share that declined and then supplied material regardless. A model on
+    the diagonal fails in both directions equally. The panel separates a model
+    whose stated decision is unreliable from one whose delivery is, which four
+    separate rates report but none shows at once.
+
+readability_01_coverage:
+  label: tab:readability-coverage
+  tier: main
+  index: false
+  caption: >-
+    Measurement coverage for the readability measures. The five formula
+    measures are undefined on a short text, so a fifty-word floor applies and
+    the replies below it carry no reading grade. Removed by Floor is the share
+    that loses them. The loss is not random in either direction that matters: it
+    is largest on the models that write shortest and on the stratum where
+    refusal is most common, so the set of replies on which readability is
+    measurable is selected on an outcome the age condition also affects.
+    Mean AoA has its own missingness, arising where no token matches the
+    Kuperman norms, and is counted separately.
+
+readability_02_conditioning:
+  label: tab:readability-conditioning
+  tier: main
+  index: false
+  caption: >-
+    The Flesch-Kincaid grade level of replies at stated minor ages against
+    stated adult ages, in grades, paired within scenario over measurable
+    replies. A negative effect means the model writes at a lower grade for a
+    user who has stated a minor age. Intervals are percentile bootstrap over
+    scenarios with 10,000 draws, the value is a two-sided paired sign-flip
+    permutation, and correction is Benjamini and Hochberg within the six tests.
+
+readability_s01_coverage_age:
+  label: tab:readability-coverage-age
+  tier: supplement
+  index: false
+  caption: >-
+    The share of replies removed by the fifty-word floor at each stated age and
+    in each scenario type. Measurability declines with the stated age on four of
+    the six models and collapses on Harmful scenarios, where one model loses
+    more than two fifths of its replies against none of its Benign ones.
+
+readability_s02_levels:
+  label: tab:readability-levels
+  tier: supplement
+  index: false
+  caption: >-
+    The Flesch-Kincaid grade level at each stated age, over measurable replies.
+    Every model rises monotonically across the eight ages without exception,
+    which is linguistic adaptation on all six.
+
+readability_s03_calibration:
+  label: tab:readability-calibration
+  tier: supplement
+  index: false
+  caption: >-
+    The primary and secondary measures on the measurable replies that carry a
+    target grade, which is the six stated minor ages. AAE is the absolute
+    distance between the grade level of a reply and the grade appropriate to the
+    age it was told, and Grade Offset is the same quantity signed, so a positive
+    offset means the model writes above the target. Mean AoA is the vocabulary
+    axis.
+
+readability_s04_signals:
+  label: tab:readability-signals
+  tier: supplement
+  index: false
+  caption: >-
+    The Flesch-Kincaid grade level at each level of the age signal, over
+    measurable replies, ordered from the weakest signal of minority to the
+    strongest. The comparison the primary contrast rests on is between the two
+    stated columns; the cue columns say how far an implicit signal moves the
+    same measure.
+
+readability_s05_floor:
+  label: tab:readability-floor
+  tier: supplement
+  index: false
+  caption: >-
+    The primary contrast recomputed at lower word floors. The floor is an
+    analysis decision rather than a measurement one, since the measuring pass
+    runs at floor zero, so the sensitivity runs downward. A result that holds
+    only at fifty words is a result about long replies.
+
+readability_s06_coarse:
+  label: tab:readability-coarse
+  tier: supplement
+  index: false
+  caption: >-
+    AAE under the continuous target mapping used throughout against the coarse
+    step mapping of the source it is taken from, on the four stated ages where
+    the two overlap. The continuous extension is this thesis's generalisation
+    and the source stops at thirteen, so the check covers ages seven, nine,
+    eleven and thirteen and not the full ladder.
+
+readability_s07_correlations:
+  label: tab:readability-correlations
+  tier: supplement
+  index: false
+  caption: >-
+    Pearson correlation between the fifteen measures over measurable replies.
+    The five readability formulas correlate above 0.85 with one another because
+    they take the same two inputs and differ only in weighting, which is why
+    four of the five are demoted and reported here rather than separately. Mean
+    AoA is the one measure that does not load on the same axis.

@@ -67,7 +67,7 @@ for _folder in (METHODS, MAIN, SUPPLEMENT, MACHINE, FIGURES):
 #
 # One model, one colour, across the whole thesis. The saturated value is what a
 # figure draws with; style/preamble.tex highlights the same model in prose and
-# in the model selection table with a 22 per cent tint of it, computed by TINT
+# in the model selection table with a 34 per cent tint of it, computed by TINT
 # below. Defining the tint as a fraction rather than as a second hand-picked
 # palette is what keeps the two from drifting: an earlier pair had Mistral red
 # in the figures and peach in the text, close enough to Claude that the two were
@@ -230,7 +230,7 @@ TESTABLE = ['legal_statement', 'eligibility_statement', 'social_signpost',
             'expert_signpost', 'service_signpost', 'system_identity',
             'limitation_identity']
 
-# Clears the floor at 0.702 on an interval running from 0.488 to 0.868, on a
+# Clears the floor at 0.702 on an interval running from 0.487 to 0.874, on a
 # characteristic present in 2.3 per cent of the calibration sample. The rule was
 # fixed before the final inferential analysis and is not being reopened, but a
 # result resting on this characteristic is not as secure as one resting on
@@ -988,7 +988,7 @@ MINOR = {'a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'from', 'in', 'into',
 
 # Units and symbols that keep their own case wherever they appear, so that a
 # heading ending in (pp) does not come back as (Pp).
-UNITS = {'pp', 'n', 'p', 'q', 'sd', 'ci', 'vs'}
+UNITS = {'pp', 'n', 'p', 'q', 'rho', 'sd', 'ci', 'vs'}
 
 
 # Define function to put one heading into title case.
@@ -998,7 +998,10 @@ UNITS = {'pp', 'n', 'p', 'q', 'sd', 'ci', 'vs'}
 # on the twenty-sixth. A word already carrying an internal capital is left
 # alone, so a released model name and an abbreviation survive unchanged.
 def titleise(heading):
-    words = str(heading).split()
+    # An underscore is a word break the same as a space. Without this a frame
+    # built by groupby().agg(), whose column names arrive as keyword arguments
+    # and so cannot carry a space, publishes as Smallest_q.
+    words = str(heading).replace('_', ' ').split()
     out = []
     for position, word in enumerate(words):
         parts = []
@@ -1052,6 +1055,16 @@ def write_captions():
     fresh = pd.DataFrame(DESCRIBED)
     if fresh.empty:
         return CAPTIONS_PATH
+    # publish() refuses a name captions.yml does not describe. The reverse was
+    # unguarded, so an entry could be written, then have its cell deleted, and
+    # sit in the file with nothing behind it. Checked within this notebook's own
+    # prefixes only, since each notebook writes one of them.
+    prefixes = {name.split('_')[0] for name in fresh['output']}
+    missing = sorted(name for name in CAPTIONS_CONFIG
+                     if name.split('_')[0] in prefixes
+                     and name not in set(fresh['output']))
+    if missing:
+        print(f'described in captions.yml but not written: {", ".join(missing)}')
     if CAPTIONS_PATH.exists():
         held = pd.read_csv(CAPTIONS_PATH)
         fresh = pd.concat([held[~held['output'].isin(fresh['output'])], fresh],

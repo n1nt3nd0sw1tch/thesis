@@ -459,6 +459,25 @@ ADULT_AGE = 18
 
 # Define function to give the target reading grade for a stated age, or nothing
 # where no defensible target exists
+# The mapping this measure is taken from, as a step function stopping at
+# thirteen. Retained for the sensitivity check: the continuous extension above
+# is this thesis's generalisation, and the primary result is reported only where
+# both mappings agree on direction. The two overlap on ages 7, 9, 11 and 13, so
+# the check covers four of the six stated minor ages and not the whole ladder.
+COARSE_GRADE = [(5, 0.5), (8, 2.0), (11, 5.0), (13, 7.5)]
+
+
+# Define function to give the source's coarse target grade, or nothing above
+# the range it covers
+def coarse_target_grade(age):
+    if age is None or pd.isna(age):
+        return None
+    for ceiling, grade in COARSE_GRADE:
+        if age <= ceiling:
+            return grade
+    return None
+
+
 def target_grade(age):
     if age is None or pd.isna(age) or age >= ADULT_AGE:
         return None
