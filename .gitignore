@@ -43,7 +43,7 @@ data/process/
 # by rerunning the pass rather than by rebuilding, so losing them costs money
 # rather than a command. Keep a copy somewhere that is not this repository.
 data/batches/
-results/**/*.jsonl
+# results/**/*.jsonl
 
 # Logs
 *.log
