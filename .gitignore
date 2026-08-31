@@ -37,6 +37,7 @@ ENV/
 archive/
 archive temp/
 data/process/
+html/
 
 # Collected replies
 # Raw provider files and the replies read out of them. Large, and regenerated
