@@ -1,7 +1,7 @@
 """Builds everything a model is asked, from the downloaded corpora and the design.
 
     python scripts/build.py            the benchmark, and the prompts from it
-    python scripts/build.py turns      the persistence dialogues, once replies exist
+    python scripts/build.py turns      the dialogue extension, once replies exist
 
 The first stage takes the pipeline from the source records to the file a model
 is given, in three steps, each validated before the next reads it.
@@ -37,10 +37,10 @@ from difflib import SequenceMatcher
 import pandas as pd
 from settings import (ADAPTATION_DIR, ANSWERS, BANDS, BENCHMARK_COLUMNS, CATEGORIES,
                       BENCHMARK_PATH, CONDITION_AGES, CONDITION_NAMES,
-                      CONDITIONS, CUES, DIALOGUES_PATH, DIALOGUE_COLUMNS,
+                      CONDITIONS, CUES, PLAN_PATH, DIALOGUE_COLUMNS,
                       DOMAIN_CODES, DOMAIN_NAMES, DRAFTS_COLUMNS, DRAFTS_PATH,
                       DRAFTS_WRITTEN,
-                      METHODS, AUTHORED, MINOR, MINOR_BANDS, ORIGINAL_DIR, PERSISTENCE, PROMPTS_PATH, PROMPT_COLUMNS, SCENARIOS,
+                      METHODS, AUTHORED, MINOR, MINOR_BANDS, ORIGINAL_DIR, DIALOGUE, PROMPTS_PATH, WITHHELD_PATH, PROMPT_COLUMNS, SCENARIOS,
                       SCENARIOS_PATH, SEED, SIGNALS, SOURCES, TOTAL_SCENARIOS,
                       TYPES, TYPE_ANSWERS)
 from utils import (check_benchmark, check_drafts, code_from_scenario,
@@ -548,7 +548,7 @@ def report_prompts(prompts):
 
 
 # ----------------------------------------------------------------------------
-# The persistence dialogues
+# The dialogue extension
 # ----------------------------------------------------------------------------
 
 # Each dialogue opens with a prompt already put to a system and that system's
@@ -573,23 +573,86 @@ def load_responses(directory=ADAPTATION_DIR):
     if missing:
         raise KeyError(f'{directory.name} is missing columns '
                        f'{", ".join(missing)}')
+
     responses = responses[responses['error'].astype(str).str.strip() == '']
+
+    # A provider-blocked request returns no text, so no dialogue can open on
+    # it. These are dropped here rather than carried through to fail validation
+    # later, and reported, because the count belongs beside the single-turn
+    # retention figures: a withheld request is a boundary that held before the
+    # conversation began.
+    #
+    # This runs before the opening_replicate filter in build_dialogues, so a
+    # cell blocked on the replicate being replayed is correctly dropped. Do not
+    # reorder the two: the three replicates were blocked on 40, 40 and 41 cells
+    # and the sets are not identical.
+    empty = responses['response'].astype(str).str.strip() == ''
+    if empty.any():
+        withheld = responses[empty]
+        print(f'{len(withheld)} openings carry no reply and cannot be replayed')
+        for model, count in withheld['model'].value_counts().items():
+            print(f'   {model}: {count}')
+        WITHHELD_PATH.parent.mkdir(parents=True, exist_ok=True)
+        withheld.to_csv(WITHHELD_PATH, index=False)
+        responses = responses[~empty]
+
     return responses.astype({'replicate': str})
 
 
 # Define function to choose the scenarios the extension runs on
-def choose_scenarios(prompts, count, seed):
+def choose_scenarios(prompts, count, seed, strata=None):
+    """Draw the dialogue subset, whole strata first and the remainder
+    stratified across harm domains.
+
+    strata restricts the pool to the scenario types that refuse often enough to
+    leave something to measure. Any stratum small enough to fit inside the count
+    is taken entire rather than sampled, which is what keeps all 25
+    age-restricted scenarios in: they are the only type whose expected answer
+    moves with age, so sampling them would weaken the contrast the extension
+    exists to test. The remainder is drawn from the larger strata under the
+    seed, balanced across domains.
+    """
     scenarios = prompts[['scenario_id']].drop_duplicates()
     scenarios['domain'] = scenarios['scenario_id'].map(code_from_scenario)
     scenarios['scenario_type'] = scenarios['scenario_id'].map(
         lambda name: next(kind for kind, values in TYPES.items()
                           if values['code'] == name.split('-')[1][0]))
-    chosen = (scenarios.groupby(['domain', 'scenario_type'], group_keys=False)
-              .apply(lambda group: group.sample(
-                  n=min(len(group), max(1, round(count / len(scenarios)
-                                                 * len(group)))),
-                  random_state=seed)))
-    return sorted(chosen['scenario_id'])
+
+    if strata:
+        scenarios = scenarios[scenarios['scenario_type'].isin(strata)]
+        if scenarios.empty:
+            raise ValueError(f'No scenarios in strata {", ".join(strata)}')
+
+    # Smallest stratum first, so a stratum that fits entirely is taken entirely
+    # rather than being sampled down by a proportional rule.
+    order = scenarios['scenario_type'].value_counts(ascending=True).index
+    chosen, remaining = [], count
+
+    for index, stratum in enumerate(order):
+        pool = scenarios[scenarios['scenario_type'] == stratum]
+        share = remaining if index == len(order) - 1 else round(
+            remaining / (len(order) - index))
+        take = min(len(pool), share)
+
+        if take >= len(pool):
+            chosen.extend(pool['scenario_id'])
+        else:
+            # Spread the draw across domains rather than letting the seed
+            # concentrate it, so the subset keeps the shape of the benchmark.
+            per_domain = pool.groupby('domain', group_keys=False).apply(
+                lambda group: group.sample(
+                    n=max(1, round(take / len(pool) * len(group))),
+                    random_state=seed))
+            chosen.extend(sorted(per_domain['scenario_id'])[:take])
+
+        remaining -= take
+        if remaining <= 0:
+            break
+
+    if len(chosen) < count:
+        print(f'Only {len(chosen)} scenarios available, {count} requested')
+
+    return sorted(chosen)
 
 
 # Define function to build one dialogue from a prompt, its reply, and a method
@@ -717,9 +780,9 @@ def build_all():
     report_prompts(prompts=prompts)
 
 
-# Define function to build the replayed dialogues of the persistence extension
+# Define function to build the replayed dialogues of the dialogue extension
 def build_turns():
-    section('Persistence extension')
+    section('Dialogue extension')
     prompts = read_table(PROMPTS_PATH)
     responses = load_responses()
     benchmark = read_table(BENCHMARK_PATH)
@@ -728,17 +791,18 @@ def build_turns():
     requests = dict(zip(benchmark['scenario_id'], benchmark['request']))
 
     scenarios = choose_scenarios(prompts=prompts,
-                                 count=PERSISTENCE['scenarios'], seed=SEED)
-    methods = PERSISTENCE['methods']
+                                 count=DIALOGUE['scenarios'], seed=SEED,
+                                 strata=DIALOGUE.get('strata'))
+    methods = DIALOGUE['methods']
     dialogues = build_dialogues(prompts=prompts, responses=responses,
                                 requests=requests, methods=methods,
                                 scenarios=scenarios,
-                                conditions=PERSISTENCE['conditions'],
-                                opening_replicate=PERSISTENCE['opening_replicate'])
-    report('dialogues.csv', check_dialogues(dialogues=dialogues, methods=methods))
+                                conditions=DIALOGUE['conditions'],
+                                opening_replicate=DIALOGUE['opening_replicate'])
+    report('plan.csv', check_dialogues(dialogues=dialogues, methods=methods))
 
-    DIALOGUES_PATH.parent.mkdir(parents=True, exist_ok=True)
-    dialogues.to_csv(DIALOGUES_PATH, index=False)
+    PLAN_PATH.parent.mkdir(parents=True, exist_ok=True)
+    dialogues.to_csv(PLAN_PATH, index=False)
     report_dialogues(dialogues=dialogues, methods=methods, scenarios=scenarios)
 
 

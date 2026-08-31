@@ -60,7 +60,7 @@ BATCHES_DIR = DATA_DIR / 'batches'
 # repeated or discarded without touching the others.
 RESULTS_DIR = ROOT / 'results'
 ADAPTATION_DIR = RESULTS_DIR / 'adaptation'
-PERSISTENCE_DIR = RESULTS_DIR / 'persistence'
+DIALOGUE_DIR = RESULTS_DIR / 'dialogue'
 JUDGEMENTS_DIR = RESULTS_DIR / 'judgements'
 
 # Where labels live, in the order they are made. Blank sheets are data, because
@@ -88,10 +88,14 @@ JUDGE_DIR = ANNOTATION_DIR / 'judge'
 LANGUAGE_DIR = RESULTS_DIR / 'language'
 
 JUDGEMENTS_PATH = RESULTS_DIR / 'judgements.csv'
-DIALOGUES_PATH = PERSISTENCE_DIR / 'dialogues.csv'
+# plan.csv rather than dialogues.csv: dialogue/dialogues.csv reads badly and
+# DIALOGUE_DIR beside DIALOGUES_PATH is a pair that gets confused.
+PLAN_PATH = DIALOGUE_DIR / 'plan.csv'
+TURNS_PATH = DIALOGUE_DIR / 'turns.csv'
+WITHHELD_PATH = DIALOGUE_DIR / 'withheld.csv'
 
 DATA_DIRS = [DATA_DIR, PROCESS_DIR, ORIGINAL_DIR, BATCHES_DIR, RESULTS_DIR,
-             ADAPTATION_DIR, PERSISTENCE_DIR, JUDGEMENTS_DIR, LANGUAGE_DIR,
+             ADAPTATION_DIR, DIALOGUE_DIR, JUDGEMENTS_DIR, LANGUAGE_DIR,
              LABEL_DIR, ANNOTATION_DIR, MANUAL_DIR, JUDGE_DIR,
              CLASSIFICATION_DIR]
 
@@ -152,7 +156,7 @@ EXPLICIT_OPENER = SETTINGS['explicit_opener']
 SAFETY = SETTINGS['safety']
 LANGUAGE = SETTINGS['language']
 METHODS = SETTINGS['methods']
-PERSISTENCE = SETTINGS['persistence']
+DIALOGUE = SETTINGS['dialogue']
 
 DATASETS = SETTINGS['datasets']
 SOURCES = SETTINGS['sources']
@@ -373,6 +377,6 @@ assert all({'provider', 'id', 'access', 'weights'} <= set(spec)
 assert all(spec['access'] in ('api', 'local') for spec in MODELS.values())
 assert all(spec['provider'] in PROVIDER_KEYS for spec in MODELS.values()
            if spec['access'] == 'api')
-assert all(method in METHODS for method in PERSISTENCE['methods'])
+assert all(method in METHODS for method in DIALOGUE['methods'])
 assert all(len(values) >= 2 for values in SAFETY.values())
 assert len({len(spec['turns']) for spec in METHODS.values()}) == 1

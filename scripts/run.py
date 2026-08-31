@@ -41,7 +41,8 @@ from evaluate import (JUDGE_TEMPERATURE, JUDGE_TOKENS, OLLAMA_JUDGE, build_item,
                       build_policy, compare, describe, read)
 from flags import flags_of
 from settings import (ADAPTATION_DIR, RESPONSE_COLUMNS, BENCHMARK_PATH, GENERATION, JUDGE,
-                      BATCHES_DIR, MODELS, PROMPTS_PATH, PROVIDER_KEYS)
+                      BATCHES_DIR, DIALOGUE_DIR, MODELS, PLAN_PATH, PROMPTS_PATH,
+                      PROVIDER_KEYS, TURNS_PATH)
 from utils import (WORKERS, announce, api_key, append_line, collect,
                    make_directories, model_slug, outstanding, read_all,
                    read_lines, read_table, result_path, section, shape_of)
@@ -646,10 +647,163 @@ def run_check(arguments):
 # Run
 # ----------------------------------------------------------------------------
 
+# ----------------------------------------------------------------------------
+# Dialogue extension
+# ----------------------------------------------------------------------------
+
+# The single-turn pass sends one user message per call and resumes on prompt_id
+# and replicate. A dialogue needs the conversation sent in order and resumption
+# on dialogue_id and turn, since one prompt opens three dialogues and each
+# generates two replies, so this is a second entry point rather than a flag on
+# the first. Everything else is shared: generate() already takes a message list,
+# and outstanding(), collect() and append_line() give the same resumption,
+# logging and cost meter as the adaptation pass.
+
+# Define function to name the file one model's collected turns are written to
+def dialogue_path(model):
+    return DIALOGUE_DIR / f'{model_slug(model)}.jsonl'
+
+
+# Define function to list the turns of one dialogue as a message list, up to
+# but not including the turn being asked for
+#
+# Every call carries the whole conversation, not the previous reply alone. The
+# age is stated only at turn one, so a truncated history would remove the very
+# thing the extension measures, and any movement would then be a general
+# capitulation rather than the loss of a disclosed age.
+def history_before(turns, turn):
+    return [{'role': row['role'], 'content': row['text']}
+            for _, row in turns.iterrows()
+            if int(row['turn']) < int(turn)]
+
+
+# Define function to list what a dialogue pass still needs
+def dialogue_items(model):
+    plan = read_table(PLAN_PATH)
+    plan = plan[plan['model'] == model]
+    wanted = [{'dialogue_id': row['dialogue_id'], 'turn': str(row['turn']),
+               'model': model}
+              for _, row in plan.iterrows()
+              if row['role'] == 'assistant' and int(row['turn']) > 2]
+    return outstanding(wanted=wanted, keys=['dialogue_id', 'turn'],
+                       collected=read_lines(dialogue_path(model)))
+
+
+# Define function to collect one model's dialogues
+#
+# Turns within a dialogue are sequential, because turn 5 cannot be sent until
+# turn 4 has come back: the model must be answering its own reply rather than a
+# placeholder. Workers are therefore fixed at one.
+#
+# Ordering is by opening cell rather than by dialogue_id. The three methods on
+# one cell share turns one and two, so asking for them together keeps a
+# provider's prefix cache warm and the shared opening is billed once rather than
+# three times. It costs nothing but the sort.
+def collect_dialogues(model, backend='api', max_tokens=None, temperature=None):
+    pending = dialogue_items(model)
+    path = dialogue_path(model)
+    if not pending:
+        return path, 0, 0
+
+    plan = read_table(PLAN_PATH)
+    plan = plan[plan['model'] == model]
+    plan = plan.assign(turn=plan['turn'].astype(int)).sort_values('turn')
+    grouped = {name: rows for name, rows in plan.groupby('dialogue_id')}
+
+    order = {name: (rows.iloc[0]['prompt_id'], name)
+             for name, rows in grouped.items()}
+    pending.sort(key=lambda item: (order[item['dialogue_id']],
+                                   int(item['turn'])))
+
+    def produce(item):
+        turns = grouped[item['dialogue_id']]
+        # rows already collected in an earlier run, so a resumed dialogue is
+        # rebuilt from what is on disk rather than generated a second time
+        done = {str(record['turn']): record['text']
+                for record in read_lines(path)
+                if record.get('dialogue_id') == item['dialogue_id']}
+        filled = turns.assign(text=[done.get(str(row['turn']), row['text'])
+                                    for _, row in turns.iterrows()])
+
+        text = generate(backend, model, history_before(filled, item['turn']),
+                        max_tokens, temperature)
+        append_line(path, {'dialogue_id': item['dialogue_id'],
+                           'turn': item['turn'], 'model': model, 'text': text})
+        return {}
+
+    log = path.with_suffix('.log.jsonl')
+    failures = collect(pending=pending, produce=produce, path=log,
+                       label=f'{model} dialogues',
+                       meter=lambda: (spent(model),
+                                      USAGE['input'] + USAGE['output']),
+                       workers=1)
+    if failures:
+        print(f'  {failures} failed, reasons in {log.name}. They stay '
+              f'outstanding, so running again retries them.')
+        for reason, count in reasons_in(log).most_common(3):
+            print(f'    {count} x {reason[:110]}')
+    else:
+        log.unlink(missing_ok=True)
+    return path, len(pending), failures
+
+
+# Define function to run one model's dialogue pass
+def run_dialogue(arguments):
+    if not PLAN_PATH.exists():
+        raise SystemExit('No plan.csv, run: python scripts/build.py turns')
+
+    model = arguments.model
+    section(f'Dialogues, {model}')
+    backend = arguments.backend if provider_of(model) == 'ollama' else 'api'
+    path, asked, failures = collect_dialogues(
+        model=model, backend=backend,
+        max_tokens=arguments.max_tokens, temperature=arguments.temperature)
+    print(f'{asked:,} turns asked for, {failures:,} failed, '
+          f'written to {path.name}')
+    return failures
+
+
+# Define function to fill the plan from the collected turns
+#
+# Kept apart from collection so that it can be rerun, and so that an incomplete
+# dialogue fails loudly here rather than passing quietly into the analysis as a
+# short conversation. A dialogue missing either generated turn cannot give a
+# trajectory, so it is dropped whole and counted, which is the rule the paired
+# contrasts already use: missing either side, drop the item.
+def merge_turns():
+    plan = read_table(PLAN_PATH)
+    collected = {}
+    for model in plan['model'].unique():
+        for record in read_lines(dialogue_path(model)):
+            collected[(record['dialogue_id'], str(record['turn']))] = record['text']
+
+    plan['text'] = [collected.get((row['dialogue_id'], str(row['turn'])),
+                                  row['text'])
+                    for _, row in plan.iterrows()]
+
+    generated = plan[(plan['role'] == 'assistant')
+                     & (plan['turn'].astype(int) > 2)]
+    empty = generated[generated['text'].astype(str).str.strip() == '']
+    incomplete = set(empty['dialogue_id'])
+    if incomplete:
+        print(f'{len(incomplete):,} dialogues are missing a generated turn '
+              f'and are dropped')
+        for model, count in (empty.drop_duplicates('dialogue_id')['model']
+                             .value_counts().items()):
+            print(f'   {model}: {count}')
+        plan = plan[~plan['dialogue_id'].isin(incomplete)]
+
+    TURNS_PATH.parent.mkdir(parents=True, exist_ok=True)
+    plan.to_csv(TURNS_PATH, index=False)
+    print(f'{plan["dialogue_id"].nunique():,} complete dialogues, '
+          f'{len(plan):,} turns, written to {TURNS_PATH.name}')
+    return plan
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('stage',
-                        choices=['check', 'generate', 'export', 'ingest'])
+                        choices=['check', 'generate', 'dialogue', 'export', 'ingest'])
     parser.add_argument('--model', default='')
     parser.add_argument('--backend', default='ollama', choices=list(BACKENDS))
     parser.add_argument('--judge', default='')
@@ -683,10 +837,13 @@ if __name__ == '__main__':
         arguments.judge = JUDGE['id']
 
     make_directories()
-    if arguments.stage in ('generate', 'export', 'ingest') and not arguments.model:
+    if arguments.stage in ('generate', 'dialogue', 'export', 'ingest') \
+            and not arguments.model:
         raise SystemExit(f'--model is needed to {arguments.stage}')
     if arguments.stage == 'generate':
         failures = run_generation(arguments)
+    elif arguments.stage == 'dialogue':
+        failures = run_dialogue(arguments)
     elif arguments.stage == 'export':
         failures = run_export(arguments)
     elif arguments.stage == 'ingest':
