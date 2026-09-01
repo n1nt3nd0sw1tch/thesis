@@ -639,11 +639,29 @@ def choose_scenarios(prompts, count, seed, strata=None):
         else:
             # Spread the draw across domains rather than letting the seed
             # concentrate it, so the subset keeps the shape of the benchmark.
-            per_domain = pool.groupby('domain', group_keys=False).apply(
-                lambda group: group.sample(
-                    n=max(1, round(take / len(pool) * len(group))),
-                    random_state=seed))
-            chosen.extend(sorted(per_domain['scenario_id'])[:take])
+            #
+            # Shares are allocated by largest remainder rather than by rounding
+            # each one, because rounding does not sum. Drawing 25 from ten
+            # domains of five gives an exact share of 2.5 apiece, and Python
+            # rounds a half to even, so a naive round() returns 2 per domain
+            # and 20 scenarios rather than 25.
+            sizes = pool.groupby('domain').size()
+            exact = sizes * take / len(pool)
+            quota = exact.astype(int)
+            short = take - int(quota.sum())
+            if short > 0:
+                # ties broken by domain name, so the allocation is reproducible
+                order_by_remainder = sorted(
+                    sizes.index,
+                    key=lambda name: (-(exact[name] - quota[name]), name))
+                for name in order_by_remainder[:short]:
+                    quota[name] += 1
+            quota = quota.clip(upper=sizes)
+
+            drawn = [group.sample(n=int(quota[name]), random_state=seed)
+                     for name, group in pool.groupby('domain')
+                     if quota[name] > 0]
+            chosen.extend(sorted(pd.concat(drawn)['scenario_id'])[:take])
 
         remaining -= take
         if remaining <= 0:
@@ -684,13 +702,38 @@ def build_dialogues(prompts, responses, requests, methods, scenarios,
                     conditions, opening_replicate):
     wanted = prompts[prompts['scenario_id'].isin(scenarios)
                      & prompts['condition'].isin(conditions)]
-    opening = (responses if str(opening_replicate).lower() == 'all'
-               else responses[responses['replicate'] == str(opening_replicate)])
+    # 'all' carries every replicate forward, 'first' the opening draw only, and
+    # a number the replicate with that name. 'first' is a word rather than a
+    # replicate id, so it is resolved here: matching it against the replicate
+    # column directly returns nothing and yields an empty plan.
+    #
+    # It resolves to replicate 1 rather than to the earliest replicate that
+    # happens to carry a reply. A cell whose first draw was withheld does not
+    # open on its second: the extension meets the opening that came first, and
+    # a withheld one is a boundary that held before the conversation began.
+    setting = str(opening_replicate).lower()
+    if setting == 'all':
+        opening = responses
+    elif setting == 'first':
+        opening = responses[responses['replicate'] == '1']
+    else:
+        opening = responses[responses['replicate'] == str(opening_replicate)]
+
+    if opening.empty:
+        raise ValueError(
+            f'opening_replicate {opening_replicate!r} matched no replies. '
+            f'The replicate column holds '
+            f'{", ".join(sorted(responses["replicate"].unique()))}.')
     merged = wanted.merge(opening, on='prompt_id', how='inner')
     rows = [row for _, pair in merged.iterrows() for method in methods
             for row in build_dialogue(prompt=pair, reply=pair, method=method,
                                       turns=METHODS[method]['turns'],
                                       request=requests[pair['scenario_id']])]
+    if not rows:
+        raise ValueError(
+            f'No dialogues to build. {len(wanted)} prompts match the chosen '
+            f'scenarios and conditions and {len(opening)} openings match the '
+            f'replicate, but nothing joins on prompt_id.')
     return pd.DataFrame(rows)[DIALOGUE_COLUMNS]
 
 

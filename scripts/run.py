@@ -677,29 +677,46 @@ def history_before(turns, turn):
             if int(row['turn']) < int(turn)]
 
 
-# Define function to list what a dialogue pass still needs
+# Define function to list the dialogues a pass still needs
+#
+# The unit of work is the dialogue, not the turn. Turn 5 cannot be sent until
+# turn 4 has come back, so the two turns of one dialogue are always sequential;
+# it is the dialogues that are independent of each other and can run at once.
+# Keying the work on the turn instead would let collect() put both turns of one
+# dialogue into the same parallel group and send the second before the first
+# had been answered.
+#
+# The cost of the coarser key is that a dialogue whose second turn failed is
+# retried whole, so its first turn is generated again. That is a few calls on a
+# rerun, and it is the right trade: a dialogue holding only its first generated
+# turn cannot give a trajectory and would be dropped at the merge anyway.
 def dialogue_items(model):
     plan = read_table(PLAN_PATH)
     plan = plan[plan['model'] == model]
-    wanted = [{'dialogue_id': row['dialogue_id'], 'turn': str(row['turn']),
-               'model': model}
-              for _, row in plan.iterrows()
-              if row['role'] == 'assistant' and int(row['turn']) > 2]
-    return outstanding(wanted=wanted, keys=['dialogue_id', 'turn'],
-                       collected=read_lines(dialogue_path(model)))
+    wanted = [{'dialogue_id': name, 'model': model}
+              for name in plan['dialogue_id'].unique()]
+
+    # a dialogue counts as collected once every generated turn is on disk
+    have = read_lines(dialogue_path(model))
+    if have.empty:
+        return wanted
+    per_dialogue = have.groupby('dialogue_id').size()
+    needed = (plan[(plan['role'] == 'assistant')
+                   & (plan['turn'].astype(int) > 2)]
+              .groupby('dialogue_id').size())
+    done = {name for name, count in per_dialogue.items()
+            if count >= needed.get(name, 0)}
+    return [item for item in wanted if item['dialogue_id'] not in done]
 
 
 # Define function to collect one model's dialogues
-#
-# Turns within a dialogue are sequential, because turn 5 cannot be sent until
-# turn 4 has come back: the model must be answering its own reply rather than a
-# placeholder. Workers are therefore fixed at one.
 #
 # Ordering is by opening cell rather than by dialogue_id. The three methods on
 # one cell share turns one and two, so asking for them together keeps a
 # provider's prefix cache warm and the shared opening is billed once rather than
 # three times. It costs nothing but the sort.
-def collect_dialogues(model, backend='api', max_tokens=None, temperature=None):
+def collect_dialogues(model, backend='api', max_tokens=None, temperature=None,
+                      workers=1):
     pending = dialogue_items(model)
     path = dialogue_path(model)
     if not pending:
@@ -712,23 +729,45 @@ def collect_dialogues(model, backend='api', max_tokens=None, temperature=None):
 
     order = {name: (rows.iloc[0]['prompt_id'], name)
              for name, rows in grouped.items()}
-    pending.sort(key=lambda item: (order[item['dialogue_id']],
-                                   int(item['turn'])))
+    pending.sort(key=lambda item: order[item['dialogue_id']])
+
+    # Turns already on disk, read once and never written to, so a rerun that
+    # picks up a part-finished dialogue does not generate its earlier turns
+    # again. read_lines returns a frame, and iterating a frame walks its column
+    # names rather than its rows, which is the bug this replaced.
+    have = read_lines(path)
+    existing = ({} if have.empty else
+                {(row['dialogue_id'], str(row['turn'])): row['text']
+                 for _, row in have.iterrows()})
 
     def produce(item):
-        turns = grouped[item['dialogue_id']]
-        # rows already collected in an earlier run, so a resumed dialogue is
-        # rebuilt from what is on disk rather than generated a second time
-        done = {str(record['turn']): record['text']
-                for record in read_lines(path)
-                if record.get('dialogue_id') == item['dialogue_id']}
-        filled = turns.assign(text=[done.get(str(row['turn']), row['text'])
-                                    for _, row in turns.iterrows()])
+        # The conversation is built forward. Every call carries the whole
+        # history, not the previous reply alone: the age is stated only at turn
+        # one, so a truncated history would remove the very thing the extension
+        # measures and any movement would be a general capitulation rather than
+        # the loss of a disclosed age.
+        messages = []
+        for _, row in grouped[item['dialogue_id']].iterrows():
+            if row['role'] == 'user':
+                messages.append({'role': 'user', 'content': row['text']})
+                continue
 
-        text = generate(backend, model, history_before(filled, item['turn']),
-                        max_tokens, temperature)
-        append_line(path, {'dialogue_id': item['dialogue_id'],
-                           'turn': item['turn'], 'model': model, 'text': text})
+            # read_table keeps an empty cell as '' rather than NaN, but a plan
+            # loaded any other way would give NaN here and str(NaN) is 'nan',
+            # which is not empty. That would skip generation and write the
+            # string nan into the conversation, silently.
+            text = '' if pd.isna(row['text']) else str(row['text']).strip()
+            if not text:
+                key = (item['dialogue_id'], str(row['turn']))
+                if key in existing:
+                    text = existing[key]
+                else:
+                    text = generate(backend, model, messages,
+                                    max_tokens, temperature)
+                    append_line(path, {'dialogue_id': item['dialogue_id'],
+                                       'turn': row['turn'], 'model': model,
+                                       'text': text})
+            messages.append({'role': 'assistant', 'content': text})
         return {}
 
     log = path.with_suffix('.log.jsonl')
@@ -736,7 +775,7 @@ def collect_dialogues(model, backend='api', max_tokens=None, temperature=None):
                        label=f'{model} dialogues',
                        meter=lambda: (spent(model),
                                       USAGE['input'] + USAGE['output']),
-                       workers=1)
+                       workers=workers)
     if failures:
         print(f'  {failures} failed, reasons in {log.name}. They stay '
               f'outstanding, so running again retries them.')
@@ -757,8 +796,9 @@ def run_dialogue(arguments):
     backend = arguments.backend if provider_of(model) == 'ollama' else 'api'
     path, asked, failures = collect_dialogues(
         model=model, backend=backend,
-        max_tokens=arguments.max_tokens, temperature=arguments.temperature)
-    print(f'{asked:,} turns asked for, {failures:,} failed, '
+        max_tokens=arguments.max_tokens, temperature=arguments.temperature,
+        workers=arguments.workers)
+    print(f'{asked:,} dialogues asked for, {failures:,} failed, '
           f'written to {path.name}')
     return failures
 
@@ -774,8 +814,13 @@ def merge_turns():
     plan = read_table(PLAN_PATH)
     collected = {}
     for model in plan['model'].unique():
-        for record in read_lines(dialogue_path(model)):
-            collected[(record['dialogue_id'], str(record['turn']))] = record['text']
+        # read_lines returns a frame, and iterating a frame walks its column
+        # names rather than its rows
+        frame = read_lines(dialogue_path(model))
+        if frame.empty:
+            continue
+        collected.update({(row['dialogue_id'], str(row['turn'])): row['text']
+                          for _, row in frame.iterrows()})
 
     plan['text'] = [collected.get((row['dialogue_id'], str(row['turn'])),
                                   row['text'])
@@ -800,7 +845,12 @@ def merge_turns():
     return plan
 
 
-if __name__ == '__main__':
+# Define function to build the argument parser
+#
+# Extracted from __main__ so that a notebook can build the same arguments
+# the command line does, with the same defaults, rather than assembling a
+# namespace by hand and drifting from it.
+def parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('stage',
                         choices=['check', 'generate', 'dialogue', 'export', 'ingest'])
@@ -832,7 +882,11 @@ if __name__ == '__main__':
                         help='skip generation and score this text instead')
     parser.add_argument('--verdict', default='',
                         help='skip the classifier and read this output instead')
-    arguments = parser.parse_args()
+    return parser
+
+
+if __name__ == '__main__':
+    arguments = parser().parse_args()
     if not arguments.judge:
         arguments.judge = JUDGE['id']
 
