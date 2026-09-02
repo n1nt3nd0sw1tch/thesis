@@ -40,7 +40,7 @@ from evaluate import (JUDGE_TEMPERATURE, JUDGE_TOKENS, OLLAMA_JUDGE,
                       blocked_verdict, build_policy, policy_version,
                       read_verdict)
 from settings import (BENCHMARK_PATH, DIALOGUE_DIR, JUDGE, JUDGEMENT_COLUMNS,
-                      TURNS_PATH)
+                      RESULTS_DIR, TURNS_PATH)
 from utils import (WORKERS, announce, collect, make_directories, outstanding,
                    read_lines, read_table, section)
 
@@ -49,7 +49,18 @@ from utils import (WORKERS, announce, collect, make_directories, outstanding,
 # established for each; this pass carries thirteen of which two carry a claim,
 # and appending would give one file whose usable field set depends on which rows
 # are being read.
-JUDGEMENTS_PATH = DIALOGUE_DIR / 'classification_dialogue.jsonl'
+# results/dialogue/ holds a corpus and results/ holds the verdicts on one, so
+# these sit beside classification.csv rather than inside the corpus folder.
+# The jsonl is the working file, appended a line at a time so an interrupted
+# pass loses one verdict rather than all of them; the csv is written once the
+# pass is complete, which is the same split the single-turn pass uses.
+JUDGEMENTS_PATH = RESULTS_DIR / 'classification_dialogue.jsonl'
+JOINED_PATH = RESULTS_DIR / 'classification_dialogue.csv'
+
+# The single-turn verdicts, joined by notebooks/13_classification.ipynb. It is
+# not a constant in settings.py, so the path is named here rather than
+# reimplementing the join.
+CLASSIFICATION_PATH = RESULTS_DIR / 'classification.csv'
 
 # The columns written for each verdict.
 #
@@ -242,6 +253,116 @@ def run_judging(arguments):
         print(f'\n{failures} failed this pass, run again to retry them')
     return failures
 
+
+# ----------------------------------------------------------------------------
+# Joining
+# ----------------------------------------------------------------------------
+
+# Define function to write the analysis file for the dialogue extension
+#
+# One row per scored turn, for turns 2, 4 and 6 of every complete dialogue.
+# Turn 2 is the replayed opening and its verdict is read from
+# classification.csv rather than rescored: the text is the one the Adaptation
+# pass collected and classified, so rescoring it would put a second verdict on
+# one reply and make the subtraction in Delta_t a difference between two
+# measurements rather than two turns.
+#
+# Carrying turn 2 into this file is what makes the extension analysable on its
+# own. Delta_4 and Delta_6 are both differences from turn 2, so A_1 has to sit
+# beside A_4 and A_6 in one frame or every analysis begins by joining two files
+# on a key neither of them shares.
+def merge_judgements():
+    turns = read_table(TURNS_PATH)
+    turns = turns.assign(turn=turns['turn'].astype(int))
+    context = (turns[turns['turn'] == 2]
+               [['dialogue_id', 'prompt_id', 'scenario_id', 'condition',
+                 'band', 'model', 'opening_replicate', 'method',
+                 'expected_answer']])
+
+    fields = [name for name in DIALOGUE_JUDGEMENT_COLUMNS
+              if name not in ('model', 'dialogue_id', 'turn')]
+
+    policy = policy_version()
+
+    # Two filters, applied to both sides, mirroring what
+    # notebooks/13_classification.ipynb applies before it writes
+    # classification.csv.
+    #
+    # A verdict written under an earlier rubric is not a verdict on this one, so
+    # the file must hold a single fingerprint or the fields do not mean the same
+    # thing down a column. And a verdict that came back unreadable or errored is
+    # a failed classification, not a missing value: carried into the analysis it
+    # would read as a blank answer, where the honest treatment is to drop it and
+    # let the pass ask again.
+    def usable(frame, where):
+        if frame.empty:
+            return frame
+        wrong = int((frame['policy'] != policy).sum())
+        if wrong:
+            print(f'{wrong:,} verdicts in {where} were written under another '
+                  f'rubric and are excluded')
+            frame = frame[frame['policy'] == policy]
+        spoiled = ((frame.get('unreadable', '').astype(str).str.strip() != '')
+                   | (frame.get('error', '').astype(str).str.strip() != ''))
+        if int(spoiled.sum()):
+            print(f'{int(spoiled.sum()):,} verdicts in {where} are unreadable '
+                  f'or errored and are excluded, so the pass asks again')
+            frame = frame[~spoiled]
+        return frame
+
+    # turn 2, from the single-turn pass. The replicate the dialogue replayed is
+    # recorded on the row, so the verdict pulled here is the one on the exact
+    # text that opened this conversation and not another draw of it.
+    opening = usable(read_table(CLASSIFICATION_PATH), CLASSIFICATION_PATH.name)
+    opening = opening.rename(columns={'replicate': 'opening_replicate'})
+    first = (context.merge(opening,
+                           on=['prompt_id', 'model', 'opening_replicate'],
+                           how='left')
+             .assign(turn=2))
+
+    missing = int(first['answer'].isna().sum())
+    if missing:
+        print(f'{missing} openings have no verdict in '
+              f'{CLASSIFICATION_PATH.name}. A dialogue cannot give a movement '
+              f'without one, so those are dropped.')
+        first = first[first['answer'].notna()]
+
+    # turns 4 and 6, from this pass
+    later = read_lines(JUDGEMENTS_PATH)
+    if later.empty:
+        raise FileNotFoundError(f'Nothing in {JUDGEMENTS_PATH.name}, run the '
+                                f'judging pass first')
+    later = usable(later, JUDGEMENTS_PATH.name)
+    later = later.assign(turn=later['turn'].astype(int))
+    later = context.merge(later, on=['dialogue_id', 'model'], how='inner')
+
+    joined = pd.concat([first, later], ignore_index=True)
+    joined = joined[['dialogue_id', 'prompt_id', 'scenario_id', 'condition',
+                     'band', 'model', 'opening_replicate', 'method', 'turn']
+                    + fields]
+    joined = joined.sort_values(['dialogue_id', 'turn'])
+
+    # A dialogue is only analysable with all three turns present, since both
+    # movements are measured from the same opening. One missing turn is dropped
+    # whole and counted, which is the rule the paired contrasts use.
+    counts = joined.groupby('dialogue_id')['turn'].nunique()
+    short = set(counts[counts < 3].index)
+    if short:
+        print(f'{len(short):,} dialogues do not carry all three turns and are '
+              f'dropped')
+        joined = joined[~joined['dialogue_id'].isin(short)]
+
+    joined.to_csv(JOINED_PATH, index=False)
+    print(f'{joined["dialogue_id"].nunique():,} dialogues, {len(joined):,} '
+          f'scored turns, written to {JOINED_PATH.name}')
+
+    # The answer by turn, which is the trajectory in its coarsest form: turn 2
+    # is what the model said before it was pressed and turns 4 and 6 what it
+    # said after each pressure turn. Printed here so that a shift is visible the
+    # moment the join finishes rather than only once the analysis runs.
+    print()
+    print(pd.crosstab(joined['turn'], joined['answer']).to_string())
+    return joined
 
 # Define function to build the argument parser
 #
