@@ -2,7 +2,7 @@
 
     python scripts/language.py
     python scripts/language.py --model claude-haiku-4-5-20251001
-    python scripts/language.py --floor 50 --difficult 10
+    python scripts/language.py --floor 0 --difficult 10
 
 Reads results/adaptation/ and writes results/language/, one file per model.
 
@@ -45,7 +45,11 @@ instead of syllables, and SMOG counts only polysyllables, so a reply that is
 simple by one and hard by another is telling you which property of the text is
 doing the work. Reporting one of each family is the reason for the set.
 
-A floor applies to the readability group. Readability formulas are unstable on
+A floor applies to the readability group, and it is an analysis decision rather
+than a measurement one. Every measure here is computed without a length
+restriction, and the notebook then treats the formula measures as missing below
+fifty words, so the threshold can be varied without measuring again. Readability
+formulas are unstable on
 short texts and meaningless on very short ones: 'I cannot help with that' has a
 grade level below zero, which is arithmetic rather than a finding. Replies under
 the floor carry the structure and vocabulary measures, which are defined at any
@@ -532,7 +536,16 @@ def bootstrap_paired(frame, column, cluster='scenario_id', draws=1000, seed=7):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--model', default='', help='one model, or all of them')
-    parser.add_argument('--floor', type=int, default=FLOOR,
+    # Zero, not FLOOR. The frozen pass was run without a length restriction and
+    # notebooks/16_readability.ipynb applies the fifty-word floor itself, which
+    # is what lets the threshold be varied in the sensitivity analysis without
+    # measuring the corpus again. A default of fifty would let a bare
+    # `python scripts/language.py` regenerate a different intermediate dataset
+    # from the one the thesis describes, and the notebook's assertion that every
+    # FKGL is present would then fail on a corpus that had been silently
+    # re-measured. FLOOR is left defined because measure() still takes it and a
+    # caller may want it.
+    parser.add_argument('--floor', type=int, default=0,
                         help='words below which readability is left blank')
     parser.add_argument('--difficult', type=float, default=DIFFICULT_ABOVE,
                         help='age after which a word counts as difficult')
@@ -552,6 +565,28 @@ if __name__ == '__main__':
         replies = read_lines(path)
         if replies.empty:
             continue
+
+        # Returned replies only. A reply the provider withheld is an empty
+        # string: it scores zero words, falls below any floor, and is written
+        # out with the five formulas blank, so it counts in every denominator
+        # and reports a provider intervention as a model writing nothing. The
+        # corpus is 46,800 requests and 46,640 replies, and Section 3.4.2
+        # excludes a withheld reply from every rate because a provider-level
+        # block is a property of the service rather than of the model.
+        #
+        # Filtered here rather than in the notebook, so the measured files hold
+        # only replies and nothing downstream has to remember. The measurable
+        # total at fifty words does not move, since an empty reply was already
+        # below the floor; the coverage denominators and the floor sensitivity
+        # do.
+        returned = replies['response'].astype(str).str.strip() != ''
+        if 'error' in replies.columns:
+            returned &= replies['error'].astype(str).str.strip() == ''
+        withheld = int((~returned).sum())
+        replies = replies[returned]
+        if replies.empty:
+            continue
+
         rows = []
         for reply in replies.itertuples():
             rows.append({'prompt_id': reply.prompt_id, 'model': reply.model,
@@ -568,9 +603,10 @@ if __name__ == '__main__':
 
         measured = sum(1 for row in rows if row[measure_column('FKGL')] != '')
         lengths = sorted(row[measure_column('Response Length')] for row in rows)
-        print(f'  {model:<28} {len(rows):>6,} replies, {measured:>6,} long '
-              f'enough for the formulas ({measured / len(rows):>4.0%}), median '
-              f'{lengths[len(lengths) // 2]:,} words')
+        note = f', {withheld} withheld' if withheld else ''
+        print(f'  {model:<28} {len(rows):>6,} replies{note}, {measured:>6,} '
+              f'long enough for the formulas ({measured / len(rows):>4.0%}), '
+              f'median {lengths[len(lengths) // 2]:,} words')
 
     print(f'\nWritten to {LANGUAGE_DIR}')
     print(f'Replies under {arguments.floor} words carry vocabulary and structure '
