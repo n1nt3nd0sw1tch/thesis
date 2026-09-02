@@ -1,4 +1,4 @@
-Model,Effect (Grades),p,q,95% CI Lower,95% CI Upper,Scenarios
+Model,Effect (Grades),p,q,95% CI Lower,95% CI Upper,Complete Scenarios
 GPT-5.6 Luna,-1.87,< 0.001,< 0.001,-2.05,-1.7,193
 Claude Haiku 4.5,-2.23,< 0.001,< 0.001,-2.39,-2.09,170
 Gemini 3.5 Flash Lite,-1.55,< 0.001,< 0.001,-1.74,-1.33,158

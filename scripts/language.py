@@ -11,7 +11,7 @@ rather than in the judgement. A classification costs a call to a classifier and
 cannot be revised without another one; readability costs arithmetic, so a change
 of mind about how it is measured is a second rather than an afternoon.
 
-Twelve measures in three groups.
+Fifteen measures in three groups.
 
     Readability, how hard the reply is to read
       FKGL              Flesch Kincaid grade level, US school year
@@ -21,15 +21,18 @@ Twelve measures in three groups.
       SMOG              grade implied by polysyllable density
 
     Vocabulary, how early the words are learned
-      Mean AoA          mean age of acquisition over words in the norms
-      Max AoA           the latest-acquired word in the reply
-      Difficult Share   share of words acquired after the threshold age
+      Mean AoA          mean age of acquisition over tokens in the norms
+      P90 AoA           the ninetieth percentile of the same distribution
+      Max AoA           the latest-acquired token in the reply
+      Difficult Share   share of rated tokens acquired after the threshold age
       AoA Coverage      share of words the norms carry at all
 
     Structure, what the reply is made of
-      Response Length   words
+      Response Length   whitespace-separated words
       Sentence Length   words per sentence
-      Lexical Variety   distinct words over total words
+      Word Length       characters per word
+      TTR               distinct words over total words
+      MTLD              measure of textual lexical diversity
 
 Two corpus-level comparisons live here too, since they are arithmetic over the
 same text and belong beside the per-reply measures rather than in a notebook.
@@ -47,9 +50,16 @@ doing the work. Reporting one of each family is the reason for the set.
 
 A floor applies to the readability group, and it is an analysis decision rather
 than a measurement one. Every measure here is computed without a length
-restriction, and the notebook then treats the formula measures as missing below
-fifty words, so the threshold can be varied without measuring again. Readability
-formulas are unstable on
+restriction, and the analysis then treats the five formula measures as missing
+below fifty words, so the threshold can be varied without measuring again.
+
+That floor applies to those five and to nothing else. The vocabulary measures
+and most of the structural ones are defined at any length and are written
+whatever a reply's length. MTLD is the one exception, and its limit is its own
+rather than the analysis floor: it needs fifty tokens to run at all and returns
+nothing below that.
+
+Readability formulas are unstable on
 short texts and meaningless on very short ones: 'I cannot help with that' has a
 grade level below zero, which is arithmetic rather than a finding. Replies under
 the floor carry the structure and vocabulary measures, which are defined at any
@@ -201,7 +211,7 @@ def measure_text(text, norms, difficult=DIFFICULT_ABOVE):
 
 # Define function to blank the length-dependent measures on a reply too short
 # for them to mean anything, keeping the rest
-def measure(text, norms, floor=FLOOR, difficult=DIFFICULT_ABOVE):
+def measure(text, norms, floor=0, difficult=DIFFICULT_ABOVE):
     scored = measure_text(text, norms, difficult)
     if scored[measure_column('Response Length')] >= floor:
         return scored
@@ -260,7 +270,7 @@ def load_texts(model=''):
         raise SystemExit(f'Nothing collected in {ADAPTATION_DIR}')
     if model:
         replies = replies[replies['model'] == model]
-    replies = replies[replies['response'].astype(str).str.strip() != ''].copy()
+    replies = returned_only(replies)
     # The replicate arrives as a string from some collectors and an integer from
     # others, and the pairing below indexes on it, so it is coerced once here
     # rather than compared across types further down.
@@ -350,13 +360,29 @@ def replicate_similarity(replies, condition):
 
 
 # Define function to score which words distinguish one set of replies from
-# another, by the log odds ratio with an informative Dirichlet prior.
 #
 # A plain frequency count answers with 'you', 'the' and 'help' whatever the
 # split, and a raw log ratio answers with whatever appeared twice in one set and
 # never in the other. The prior is the pooled corpus, so a word is distinctive
 # only if it is commoner here than the corpus as a whole would predict, and the
 # denominator penalises rare words rather than rewarding them.
+# Define function to rank the words that separate two sets of replies
+#
+# Returns a weighted log-odds z-score, not a ratio. The log odds of a word in
+# one set against the other are taken with an informative Dirichlet prior drawn
+# from the pooled corpus, and the result is then divided by its estimated
+# standard error, which is the last step and the one the name has to record.
+#
+# Each part does its own work. A plain frequency count answers with 'you', 'the'
+# and 'help' whatever the split. A raw log ratio answers with whatever appeared
+# twice in one set and never in the other. The prior is what makes a word large
+# only where it is commoner than the pooled corpus predicts, and the division by
+# the standard error is what stops a word seen a handful of times from
+# outranking one seen a thousand.
+#
+# Say weighted log-odds z-score wherever the measure is named. Calling it a
+# ratio describes the numerator and omits the standardisation, which is the part
+# that makes the ranking usable.
 def distinctive_words(left, right, prior_weight=1000, minimum=15):
     from collections import Counter
     import numpy as np
@@ -387,6 +413,25 @@ def distinctive_words(left, right, prior_weight=1000, minimum=15):
 
 
 
+
+# Define function to keep the replies a provider actually returned
+#
+# One definition, used by the measuring pass and by load_texts, because two
+# copies of it drift and the drift is silent: a corpus measured under one rule
+# and read under another gives a denominator that matches nothing.
+#
+# fillna is load-bearing. A withheld reply can arrive as an empty string or as a
+# null, depending on how the provider reported it, and str(NaN) is the three
+# characters 'nan', so a filter written as .astype(str).str.strip() != '' keeps
+# every null it was written to remove. That failure is silent twice over: the
+# rows measure as zero-length replies and land in every denominator, and a check
+# that compares the measured count against load_texts passes because both sides
+# made the same mistake.
+def returned_only(replies):
+    kept = replies['response'].fillna('').astype(str).str.strip().ne('')
+    if 'error' in replies.columns:
+        kept &= replies['error'].fillna('').astype(str).str.strip().eq('')
+    return replies[kept].copy()
 
 # Define function to read what was written, as numbers and with the experimental
 # metadata attached. Blanked cells are written as empty strings, which makes
@@ -536,15 +581,14 @@ def bootstrap_paired(frame, column, cluster='scenario_id', draws=1000, seed=7):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--model', default='', help='one model, or all of them')
-    # Zero, not FLOOR. The frozen pass was run without a length restriction and
-    # notebooks/16_readability.ipynb applies the fifty-word floor itself, which
-    # is what lets the threshold be varied in the sensitivity analysis without
-    # measuring the corpus again. A default of fifty would let a bare
-    # `python scripts/language.py` regenerate a different intermediate dataset
-    # from the one the thesis describes, and the notebook's assertion that every
-    # FKGL is present would then fail on a corpus that had been silently
-    # re-measured. FLOOR is left defined because measure() still takes it and a
-    # caller may want it.
+    # Zero, not FLOOR. The frozen pass was measured without a length
+    # restriction and notebooks/16_readability.ipynb applies the fifty-word
+    # floor itself, which is what lets the threshold be varied in the
+    # sensitivity analysis without measuring the corpus again. A default of
+    # fifty would let a bare `python scripts/language.py` write files that fail
+    # the notebook's assertion that every FKGL is present, on a corpus that had
+    # been silently re-measured. FLOOR stays defined because measure() takes it
+    # and the notebook imports it as the analysis floor.
     parser.add_argument('--floor', type=int, default=0,
                         help='words below which readability is left blank')
     parser.add_argument('--difficult', type=float, default=DIFFICULT_ABOVE,
@@ -566,24 +610,22 @@ if __name__ == '__main__':
         if replies.empty:
             continue
 
-        # Returned replies only. A reply the provider withheld is an empty
-        # string: it scores zero words, falls below any floor, and is written
-        # out with the five formulas blank, so it counts in every denominator
-        # and reports a provider intervention as a model writing nothing. The
-        # corpus is 46,800 requests and 46,640 replies, and Section 3.4.2
+        # RETURNED REPLIES ONLY. DO NOT REMOVE THIS.
+        #
+        # A reply the provider withheld is an empty string or a null. Measured,
+        # it scores zero words, falls below any floor, and is written out with
+        # the five formulas blank, so it lands in every denominator and reports
+        # an intervention outside the model as a model writing nothing. It also
+        # matches no token in the norms, so it arrives in the AoA missingness
+        # count as well: on this corpus that is 160 rows, which turns 6 genuine
+        # unmatched replies into 166.
+        #
+        # The corpus is 46,800 requests and 46,640 replies, and Section 3.4.2
         # excludes a withheld reply from every rate because a provider-level
         # block is a property of the service rather than of the model.
-        #
-        # Filtered here rather than in the notebook, so the measured files hold
-        # only replies and nothing downstream has to remember. The measurable
-        # total at fifty words does not move, since an empty reply was already
-        # below the floor; the coverage denominators and the floor sensitivity
-        # do.
-        returned = replies['response'].astype(str).str.strip() != ''
-        if 'error' in replies.columns:
-            returned &= replies['error'].astype(str).str.strip() == ''
-        withheld = int((~returned).sum())
-        replies = replies[returned]
+        before = len(replies)
+        replies = returned_only(replies)
+        withheld = before - len(replies)
         if replies.empty:
             continue
 

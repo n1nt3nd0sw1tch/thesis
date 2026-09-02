@@ -17,9 +17,18 @@ Why these four
 Each is a claim in Chapter 4 that a table states and cannot demonstrate.
 
 The lexical figure carries the mechanism. Section 4.3.3 concludes that models
-simplify syntactic form more than lexical choice, and its evidence is a pair of
-correlations: sentence length moves with grade level at .60 and vocabulary
-difficulty at .02. A correlation states that; a trajectory shows it. All three
+adapt sentence- and word-level readability more than lexical acquisition
+difficulty. A readability formula is a function of two things, sentence length
+and word length, and vocabulary difficulty is related to only one of them: mean
+age of acquisition correlates .86 with word length and .02 with sentence length.
+So the two are not independent measures of one thing, and the question a
+correlation cannot answer is which of the formula's two components a model
+actually moved across the age ladder. That is what the trajectory shows, and the
+correlation is not offered as evidence that vocabulary and grade level are
+unrelated: they correlate at .72.
+
+The claim is deliberately about surface complexity rather than syntax, since
+sentence length is a proxy for syntactic structure and not a measure of it. All three
 are drawn as movement away from age seven in units of their own spread, because
 they are in three different units and any other scaling either flattens one or
 inflates another.
@@ -106,6 +115,20 @@ SIGNALS = [('neutral', 'Control'), ('adult_cue', 'Adult Cue'),
            ('minor_age', 'Minor Age')]
 
 
+# Define function to reduce to scenario level before averaging
+#
+# The canonical reduction the analysis uses everywhere: replicates within a
+# scenario and condition first, then each scenario weighted equally. Averaging
+# raw rows instead lets a scenario whose three replicates all cleared the floor
+# count three times against one whose single surviving replicate counts once,
+# and the floor removes replicates unevenly across models, so the two averages
+# differ by up to 0.16 grades on this corpus.
+def by_scenario(part, measure, keys):
+    cell = part.groupby(keys + ['scenario_id', 'condition'],
+                        observed=True)[measure].mean()
+    scenario = cell.groupby(keys + ['scenario_id'], observed=True).mean()
+    return scenario.groupby(keys, observed=True).mean()
+
 # Define function to set the type and the sizes for one figure
 #
 # Returns the label size in points. Everything else is set on rcParams, which is
@@ -162,8 +185,10 @@ def save(figure, name):
 # relative to how far it varies in the corpus at all. A line that ends near zero
 # has not moved.
 #
-# What Section 4.3.3 claims is that the adaptation is structural rather than
-# lexical, and the evidence for it in Table G.7 is that sentence length
+# What Section 4.3.3 claims is that the adaptation is in surface complexity
+# rather than in lexical difficulty. Table G.7 does not establish that on its
+# own: mean age of acquisition correlates .72 with grade level, so the two are
+# not separate measurements. What it does establish is that sentence length
 # correlates .60 with grade level and mean age of acquisition .02. This figure
 # is that correlation as a trajectory: if the claim holds, sentence length
 # tracks grade level up the ladder and vocabulary difficulty lags behind both.
@@ -182,7 +207,7 @@ def draw_lexical(frame, display):
              colormaps['viridis'](0.68)]
 
     for (measure, label, style, mark), tone in zip(tracks, tones):
-        levels = frame.groupby('age')[measure].mean().reindex(LADDER)
+        levels = by_scenario(frame, measure, ['age']).reindex(LADDER)
         spread = frame[measure].std()
         moved = (levels - levels.iloc[0]) / spread
         axis.plot(LADDER, moved.values, style, marker=mark, markersize=3.4,
@@ -206,7 +231,7 @@ def draw_lexical(frame, display):
     # should not be used to support it.
     print('  movement from age 7 to age 21, in standard deviations:')
     for measure, label, _, _ in tracks:
-        levels = frame.groupby('age')[measure].mean().reindex(LADDER)
+        levels = by_scenario(frame, measure, ['age']).reindex(LADDER)
         moved = (levels.iloc[-1] - levels.iloc[0]) / frame[measure].std()
         print(f'    {label:<24}{moved:+.2f}')
     return save(figure, 'readability_lexical.pdf')
@@ -337,13 +362,18 @@ def draw_signals(frame, display):
     figure, axis = plt.subplots(figsize=(6.5, 2.8))
     keys = [key for key, _ in SIGNALS]
 
+    drawn = []
     for name in ORDER:
         part = frame[frame['label'] == name]
-        levels = part.groupby('level')['fkgl'].mean().reindex(keys)
+        levels = by_scenario(part, 'fkgl', ['level']).reindex(keys)
+        drawn.append(levels)
         axis.plot(range(len(keys)), levels.values, marker='o', markersize=4.5,
                   linewidth=1.0, alpha=0.85, color=COLOUR[name], label=name)
 
-    macro = frame.groupby('level')['fkgl'].mean().reindex(keys)
+    # The mean of the six model estimates, not a pooled recomputation over their
+    # replies. A panel figure in this thesis weights the six models equally, and
+    # pooling would weight them by how much each wrote.
+    macro = pd.concat(drawn, axis=1).mean(axis=1).reindex(keys)
     axis.plot(range(len(keys)), macro.values, marker='D', markersize=5.5,
               linewidth=2.0, color='black', zorder=5,
               label='Panel Mean')

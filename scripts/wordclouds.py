@@ -32,10 +32,13 @@ differ by a factor of three.
 Nine panels, and why the control is one of them
 ----------------------------------------------------------------------------
 
-Three by three: the control condition, then the eight stated ages in order. The
-control earns its panel because it is the baseline every age contrast in
-Chapter 4 is read against, and a reader who cannot see what a model says when it
-is told nothing has no reference for what it says when it is told an age.
+Three by three: the eight stated ages in order, then the control. The control
+earns its panel because it is the baseline every age contrast in Chapter 4 is
+read against, and a reader who cannot see what a model says when it is told
+nothing has no reference for what it says when it is told an age. It sits last
+rather than first because the grid is a progression and the control is not a
+point on it: at the head it reads as an age below seven, and at the foot as the
+reference the eight are measured against.
 
 ----------------------------------------------------------------------------
 Each word is drawn once, at the condition where it scores highest
@@ -56,9 +59,13 @@ subject is the progression across the panels.
 What these show, and what they must not be read as
 ----------------------------------------------------------------------------
 
-Size is the weighted log-odds ratio from language.distinctive_words(), with the
-pooled cut as an informative prior, so a word is large only where it is commoner
-in that condition than the cut as a whole predicts. It is not a frequency.
+Size is the weighted log-odds z-score from language.distinctive_words(): the log
+odds of a word under one condition against the rest, with an informative
+Dirichlet prior taken from the pooled cut, divided by its estimated standard
+error. Dividing by the standard error is what makes it a z-score rather than a
+ratio, and it is what stops a word seen a handful of times from outranking a
+word seen a thousand. A word is large only where it is commoner in that
+condition than the cut as a whole predicts, and it is not a frequency.
 Position and orientation carry nothing, and each panel is scaled to its own
 strongest word, so sizes rank within a panel and are not compared across them.
 
@@ -70,7 +77,7 @@ cannot by size.
 Read as subject matter, never as vocabulary difficulty. Section 4.3.3 reports
 mean AoA flat at 4.97 to 5.22 while grade level moves two to three grades, and
 the two are consistent: a few dozen distinctive words out of a vocabulary of
-thousands do not move a mean over every content word.
+thousands do not move a mean over matched tokens.
 
 No floor is applied, unlike every other readability figure, since a word is a
 word at any length and the fifty-word cut would remove the short refusals that
