@@ -14,6 +14,7 @@ corpus_01_flow:
   label: tab:corpus-flow
   tier: methods
   index: false
+  kind: table
   caption: >-
     Requests submitted and requests the provider blocked, by model. A
     blocked request returned no text and carries no rubric verdict. The
@@ -25,6 +26,7 @@ corpus_02_blocking:
   label: tab:corpus-blocking
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Provider block rate for Gemini 3.5 Flash Lite, per cent of requests
     submitted. Only domains with at least one block are shown; the other
@@ -36,6 +38,7 @@ corpus_03_unanimity:
   label: tab:corpus-unanimity
   tier: main
   index: false
+  kind: table
   caption: >-
     Within-cell variation by model. A cell is one scenario under one
     condition, and every figure is the percentage of cells whose three
@@ -53,6 +56,7 @@ corpus_s01_denominators:
   label: tab:corpus-denominators
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The denominator of every safety rate in the thesis. Eligible counts
     the requests the design allocates to that subset, analysed counts
@@ -62,6 +66,7 @@ corpus_s02_blocking_tests:
   label: tab:corpus-blocking-tests
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Provider blocking contrasts, paired within scenario, percentage
     points with 95 per cent bootstrap intervals over scenarios and
@@ -76,6 +81,7 @@ corpus_s03_unanimity_excluded:
   label: tab:corpus-unanimity-excluded
   tier: supplement
   index: true
+  kind: table
   caption: >-
     Cells excluded from the unanimity table, and whether the blocking
     that excluded them was itself consistent. Provider-status unanimity
@@ -90,6 +96,7 @@ safety_01_primary:
   label: tab:safety-primary
   tier: main
   index: false
+  kind: table
   caption: >-
     The three primary contrasts, on Refusal Rate within Age Restricted
     scenarios. Effects are percentage points with 95 per cent bootstrap
@@ -108,6 +115,7 @@ safety_02_alignment:
   label: tab:safety-alignment
   tier: main
   index: false
+  kind: table
   caption: >-
     Benchmark Action Alignment, per cent of returned responses whose
     action matched what the design expects for that scenario at that
@@ -155,6 +163,7 @@ safety_s01_outcome:
   label: tab:safety-outcome
   tier: supplement
   index: true
+  kind: table
   caption: >-
     The primary outcome across all returned responses, per cent. The
     four cells sum to one hundred. Refusal Rate is Strong plus Weak
@@ -169,6 +178,7 @@ safety_s02_outcome_by_stratum:
   label: tab:safety-outcome-stratum
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The outcome within each scenario type, per cent of returned
     responses. A refusal is the expected answer on Harmful scenarios and
@@ -180,6 +190,7 @@ safety_s03_alignment_components:
   label: tab:safety-alignment-components
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Decision Alignment against Benchmark Action Alignment, per cent of
     returned responses. Decision Alignment asks only whether the stated
@@ -194,6 +205,7 @@ safety_s04_directional:
   label: tab:safety-deviation
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The two directional safety diagnostics on the primary denominator,
     per cent of returned responses in the stated subset. Panel A,
@@ -209,6 +221,7 @@ safety_s05_directional_end_to_end:
   label: tab:safety-deviation-endtoend
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The same two directional rates on the end-to-end denominator, per cent of
     submitted requests, with a provider-blocked request counted as
@@ -224,6 +237,7 @@ safety_s06_signal_levels:
   label: tab:safety-signal-levels
   tier: supplement
   index: true
+  kind: table
   caption: >-
     Refusal Rate on Age Restricted scenarios by condition group, per
     cent of returned responses. The levels behind the signal contrast,
@@ -235,6 +249,7 @@ safety_s07_retention:
   label: tab:safety-retention
   tier: supplement
   index: true
+  kind: table
   caption: >-
     Scenarios entering the trajectory contrast, against what blocking
     did to the scenario x condition cells behind it. A paired contrast
@@ -253,6 +268,7 @@ safety_s08_controls:
   label: tab:safety-controls
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Planned controls. The trajectory contrast on Refusal Rate run in the
     three strata whose expected answer does not change with age,
@@ -267,6 +283,7 @@ safety_s09_cues:
   label: tab:safety-cues
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The implicit cue contrast on Refusal Rate within Age Restricted
     scenarios, percentage points with 95 per cent bootstrap intervals,
@@ -279,6 +296,7 @@ safety_s10_category:
   label: tab:safety-category
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Refusal Rate by prompt category on Harmful scenarios. The effect is
     the mean across the ten harm domains of the within-domain
@@ -294,6 +312,7 @@ safety_s11_domains:
   label: tab:safety-domains
   tier: supplement
   index: true
+  kind: table
   caption: >-
     Refusal Rate on Harmful scenarios by harm domain, per cent of
     returned responses, ordered by the macro-average. Descriptive only.
@@ -305,6 +324,7 @@ safety_s12_characteristics:
   label: tab:safety-characteristics
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Every annotated characteristic beyond the outcome, tested one at a
     time. Prevalence is the share of returned responses on which the
@@ -329,6 +349,7 @@ safety_s13_register:
   label: tab:safety-register
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The safety test register after Benjamini and Hochberg correction
     within each declared family. Tests counts every registered row and
@@ -343,6 +364,7 @@ safety_s14_trend:
   label: tab:safety-trend
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Whether Refusal Rate moves monotonically with the stated age. The
     statistic is the mean over scenarios of the Spearman rank
@@ -364,6 +386,7 @@ safety_s15_sensitivity:
   label: tab:safety-sensitivity
   tier: supplement
   index: true
+  kind: table
   caption: >-
     Leave-one-model-out sensitivity on the three primary contrasts,
     percentage points. Each of the first six rows gives the macro-
@@ -377,6 +400,7 @@ safety_s16_borderline:
   label: tab:safety-borderline
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Sensitivity on the borderline characteristic. Eligibility Statement
     clears the calibration agreement floor at Cohen kappa 0.702, but on
@@ -447,6 +471,7 @@ readability_01_coverage:
   label: tab:readability-coverage
   tier: main
   index: false
+  kind: table
   caption: >-
     Measurement coverage for the readability measures. The five formula measures are unreliable on a short text, so they are
     computed without a length restriction and treated as missing below a
@@ -465,6 +490,7 @@ readability_02_conditioning:
   label: tab:readability-conditioning
   tier: main
   index: false
+  kind: table
   caption: >-
     The Flesch-Kincaid grade level of replies at stated minor ages against
     stated adult ages, in grades, paired within scenario. A scenario entered only where the grade level was
@@ -478,6 +504,7 @@ readability_s01_coverage_age:
   label: tab:readability-coverage-age
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The share of replies removed by the fifty-word floor at each stated age and in each scenario type. Age trends in measurability differ by model, so the selection does not bias every effect in one direction. Across scenario types it is greatest on Harmful for all six, reaching 40.9 per cent on Gemini 3.5 Flash Lite and 43.8 on Gemma 4 31B, and Benign loss is zero on four models. Measurability declines with the stated age on four of
     the six models and collapses on Harmful scenarios, where one model loses
@@ -487,6 +514,7 @@ readability_s02_levels:
   label: tab:readability-levels
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The Flesch-Kincaid grade level at each stated age, over measurable replies and weighted by scenario. The model-level means rise monotonically across all eight stated ages on all six models. That is a statement about the aggregate trajectories and not about every scenario within them.
 
@@ -494,6 +522,7 @@ readability_s03_calibration:
   label: tab:readability-calibration
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The primary and secondary measures on the measurable replies that carry a
     target grade, which is the six stated minor ages. AAE is the absolute
@@ -504,6 +533,7 @@ readability_s04_signals:
   label: tab:readability-signals
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The Flesch-Kincaid grade level at each level of the age signal, over measurable replies, ordered from no age information through the adult-associated signals to the minor-associated ones. The comparison the primary contrast rests on is between the two
     stated columns; the cue columns say how far an implicit signal moves the
@@ -513,6 +543,7 @@ readability_s05_floor:
   label: tab:readability-floor
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The primary contrast recomputed at lower word floors. The floor is an
     analysis decision rather than a measurement one, since the measuring pass
@@ -523,6 +554,7 @@ readability_s06_coarse:
   label: tab:readability-coarse
   tier: supplement
   index: false
+  kind: table
   caption: >-
     AAE under the continuous target mapping used throughout against the coarse
     step mapping of the source it is taken from, on the four stated ages where
@@ -534,6 +566,7 @@ readability_s07_correlations:
   label: tab:readability-correlations
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Pearson correlation between the fifteen measures over measurable replies.
     The five formula-based measures correlate above 0.85 with one another because they draw on closely related properties of sentence length and word complexity, not because they share an identical definition: FKGL and FRE weigh syllables a word, Gunning Fog counts complex words, ARI counts characters and SMOG counts polysyllables. They are near substitutes in practice rather than by construction, which is why four of the five are demoted and reported here rather than separately. Mean AoA is not independent of them, at .72 against FKGL, but it is related to them through only one of their two inputs: it correlates .86 with word length and .02 with sentence length, so it shares the word-length component of a readability formula and not the sentence-length component. That is what makes it a separate axis to report rather than a sixth formula.
@@ -542,6 +575,7 @@ readability_s08_outcome:
   label: tab:readability-outcome
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Two sensitivity analyses asking whether the primary contrast is attributable to differences in response-outcome composition, in school grades. The two hold different things fixed: the benign restriction fixes the expected action and the Total Compliance restriction fixes the observed outcome. The word floor removes replies selected on the outcome and
     the outcome moves with the stated age, so the primary contrast could in
@@ -556,6 +590,7 @@ readability_s09_boundary:
   label: tab:readability-boundary
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Reading grade level at a stated age of seventeen against a stated age of eighteen, in school grades, paired within scenario. The effect is seventeen minus eighteen, so a negative value means the reply is at a lower grade for the seventeen-year-old. The primary contrast
     compares six minor ages against two adult ones and cannot tell a gradual
@@ -570,6 +605,7 @@ readability_s10_lexical_tail:
   label: tab:readability-lexical-tail
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Vocabulary measures over all returned replies made at a stated minor age. No fifty-word floor is applied, because these measures do not depend on the formula-based readability threshold and are defined at any length; MTLD is not among them and carries its own minimum.
     Mean AoA is dominated by the common early-acquired words that make up most
@@ -586,6 +622,7 @@ safety_s17_stability:
   label: tab:safety-stability
   tier: supplement
   index: false
+  kind: table
   caption: >-
     Replicate stability of the thirteen rubric fields. A cell is a model
     crossed with a prompt, three replicates of identical text, and only
@@ -607,6 +644,7 @@ safety_s18_delivery:
   label: tab:safety-delivery
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The three primary contrasts recomputed on Content Delivery Rate beside
     the Refusal Rate effects they mirror, percentage points on Age
@@ -622,6 +660,7 @@ safety_s19_legal_strata:
   label: tab:safety-legal-strata
   tier: supplement
   index: true
+  kind: table
   caption: >-
     Legal Statement separated by scenario type, prevalence in the first
     five columns and the stated minor against stated adult difference in
@@ -634,6 +673,7 @@ safety_s20_conditioned:
   label: tab:safety-conditioned
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The stated minor against stated adult contrast recomputed inside a
     single outcome cell, for the seven characteristics that clear the
@@ -647,6 +687,7 @@ safety_s21_alternative:
   label: tab:safety-alternative
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The two quantities behind the Alternative Response rate. A reply is
     eligible where its answer is a refusal or its delivery is no, and the
@@ -659,6 +700,7 @@ safety_s22_trend_minors:
   label: tab:safety-trend-minors
   tier: supplement
   index: false
+  kind: table
   caption: >-
     The declared rank trend statistic recomputed over the six stated
     minor ages alone, with the full-ladder value beside it. The declared
