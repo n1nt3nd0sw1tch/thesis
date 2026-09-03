@@ -241,22 +241,27 @@ safety_s03_alignment_components:
     delivery mismatch counted against the benchmark. The chapter reports
     Action Alignment; this table shows what that choice costs and where.
 
-safety_s04_deviation:
+safety_s04_directional:
   label: tab:safety-deviation
   tier: supplement
   index: false
   caption: >-
-    Deviation rates on the primary denominator, per cent of returned
-    responses in the stated subset. Panel A counts content that reached
-    the user where the design expects a refusal. Panel B counts refusals
-    where the design expects the request to be answered.
+    The two directional safety diagnostics on the primary denominator,
+    per cent of returned responses in the stated subset. Panel A,
+    Content Leakage, counts content that reached the user where the
+    design expects a refusal, and is read from Delivery Response. Panel
+    B, Over-Restriction, counts refusals where the design expects the
+    request to be answered, and is read from Main Response. The two
+    panels are different failures rather than two signs of one quantity,
+    and neither is the Decision Deviation of equation 3.1, which is
+    defined on Main Response alone.
 
-safety_s05_deviation_end_to_end:
-  label: tab:safety-deviation-e2e
+safety_s05_directional_end_to_end:
+  label: tab:safety-deviation-endtoend
   tier: supplement
   index: false
   caption: >-
-    The same deviation rates on the end-to-end denominator, per cent of
+    The same two directional rates on the end-to-end denominator, per cent of
     submitted requests, with a provider-blocked request counted as
     content that did not reach the user and as a request the user could
     not have answered. A block therefore lowers a delivery rate and
@@ -363,6 +368,10 @@ safety_s12_characteristics:
     of forty-two tests. The group column orders the rows and is not a
     composite. A characteristic below the calibration agreement floor of
     Cohen kappa 0.70 is shown with its prevalence and carries no test.
+    Alternative Response is the one conditionally applicable field: the
+    rubric defines it only where the answer is a Refusal or the delivery
+    is No, so its prevalence is the share of eligible replies and its
+    denominator is not the denominator of the other twelve.
     Part of any movement follows the shift in the outcome mix rather
     than a change in how a given outcome is written, which Chapter 5.4
     separates.
@@ -621,3 +630,24 @@ readability_s10_lexical_tail:
     Kuperman norms, and is reported alongside the rest so that a low mean is not
     mistaken for a simple vocabulary where it is a thin match against the norms.
     All are descriptive and none carries a test.
+
+safety_s17_stability:
+  label: tab:safety-stability
+  tier: supplement
+  index: false
+  caption: >-
+    Replicate stability of the thirteen rubric fields. A cell is a model
+    crossed with a prompt, three replicates of identical text, and only
+    cells with all three returned are counted. Unanimous is the share of
+    cells whose three replicates carry the same value. Active Cells
+    counts the cells on which the field was recorded at least once, and
+    the last column is unanimity among those, which is the figure that
+    describes the measurement: a field present on one reply in fifty is
+    unanimous on almost every cell for the trivial reason that it is
+    absent from all three. Main Response is included so the eleven
+    characteristics can be read against the decision they describe.
+    Alternative Response counts only the cells whose three replicates
+    were all eligible, which is why its denominator is smaller. This is
+    descriptive and carries no test; what it establishes is an upper
+    bound on how finely a single prevalence in
+    Table~\ref{tab:safety-characteristics} can be read.

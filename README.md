@@ -1,15 +1,18 @@
 # Does Age Matter?
 
 Code and data for a benchmark that asks whether a chatbot changes what it will
-answer when it is told how old the user is. Every request is byte-identical
-across the age conditions, so the age signal is the only thing that varies.
+answer when it is told how old the user is. The canonical request is
+byte-identical across the disclosure conditions and only the age material around
+it varies, so the age signal is the only thing that differs between two prompts
+for the same scenario. 200 scenarios, 13 disclosure conditions, 3 replicates,
+6 models, 46,800 requests.
 
 ## Layout
 
 ```
 config/
   settings.yml     the design, the corpora, and the model panel
-  scenarios.yml    the 120 scenarios, the one part written by hand
+  scenarios.yml    the 200 scenarios, the one part written by hand
 
 scripts/
   settings.py      what the design states, and where everything lives
@@ -18,7 +21,8 @@ scripts/
   download.py      1  the corpora        -> data/process/corpora/
   build.py         2  the benchmark      -> data/
   run.py           3  the replies        -> results/adaptation/
-  evaluate.py      4  the judgements     -> results/judgements.csv
+  judge.py         4  the classifications -> results/classification/
+  analysis.py         the corpus, the statistics and the shared paths
 
 data/              the corpora downloaded, and the benchmark built from them
 notebooks/         what the pipeline produced, read back
@@ -45,12 +49,12 @@ or `results/`, and reports what it did.
 | 1. Corpora | `python scripts/download.py` | `data/process/corpora/` |
 | 2. Benchmark | `python scripts/build.py` | `drafts.csv`, `benchmark.csv`, `prompts.csv`, `scores.csv` |
 | 3. Replies | `python scripts/run.py generate --model <id> --backend <runtime>` | `results/adaptation/<model>.jsonl` |
-| 4. Judgements | `python scripts/evaluate.py --backend <runtime>` | `results/judgements.csv` |
+| 4. Classification | `python scripts/judge.py --backend <runtime>` | `results/classification/<model>.jsonl` |
 
 Stage 2 is the whole build: it reads the corpora and `config/scenarios.yml`,
-opens a draft per usable source record, fills the 120 scenario slots from the
-drafts marked to keep, expands each across the eleven age conditions, and scores
-every request variant for readability. `drafts.csv` is the only file edited by
+opens a draft per usable source record, fills the 200 scenario slots from the
+drafts marked to keep, expands each across the thirteen disclosure conditions,
+and scores every request variant for readability. `drafts.csv` is the only file edited by
 hand, and work already in it is preserved on every run, so the stage can be
 rerun after any revision to the design.
 
@@ -62,7 +66,7 @@ night to it.
 The persistence extension is built once replies exist:
 
 ```
-python scripts/build.py turns       # results/persistence/dialogues.csv
+python scripts/build.py turns       # results/dialogue/plan.csv and turns.csv
 ```
 
 ## Before a run
