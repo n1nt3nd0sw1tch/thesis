@@ -89,7 +89,7 @@ from settings import ROOT
 
 FIGURES = ROOT / 'figures'
 TEXT_WIDTH_CM = 16.0
-LABEL_POINTS = 10.5
+LABEL_POINTS = 11
 
 LADDER = [7, 9, 11, 13, 15, 17, 18, 21]
 MINOR = [7, 9, 11, 13, 15, 17]
