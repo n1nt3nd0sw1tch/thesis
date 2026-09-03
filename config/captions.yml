@@ -651,3 +651,55 @@ safety_s17_stability:
     descriptive and carries no test; what it establishes is an upper
     bound on how finely a single prevalence in
     Table~\ref{tab:safety-characteristics} can be read.
+
+safety_s18_delivery:
+  label: tab:safety-delivery
+  tier: supplement
+  index: false
+  caption: >-
+    The three primary contrasts recomputed on Content Delivery Rate beside
+    the Refusal Rate effects they mirror, percentage points on Age
+    Restricted scenarios, paired within scenario. A negative delivery
+    effect means less of the requested material reached the user at the
+    younger or more explicit condition, so the two columns should carry
+    opposite signs if the age signal changes what arrives rather than
+    only how a reply is worded. Descriptive: the confirmatory question
+    was fixed on Refusal Rate before the results were seen, so no family
+    is declared and no adjusted value is reported.
+
+safety_s19_legal_strata:
+  label: tab:safety-legal-strata
+  tier: supplement
+  index: true
+  caption: >-
+    Legal Statement separated by scenario type, prevalence in the first
+    five columns and the stated minor against stated adult difference in
+    the last four. The field records an age-related rule in either
+    direction, restricting or granting, so the pooled effect has no
+    globally desirable sign and is interpretable only by stratum.
+    Descriptive and untested.
+
+safety_s20_conditioned:
+  label: tab:safety-conditioned
+  tier: supplement
+  index: false
+  caption: >-
+    The stated minor against stated adult contrast recomputed inside a
+    single outcome cell, for the seven characteristics that clear the
+    agreement floor. The outcome mix moves with age, so a marginal
+    effect mixes a change in which cells replies fall into with a change
+    in how a cell is written; restricting to one cell separates the two.
+    It costs scenarios, which is why the Scenarios column is reported
+    and no test is attached.
+
+safety_s21_alternative:
+  label: tab:safety-alternative
+  tier: supplement
+  index: false
+  caption: >-
+    The two quantities behind the Alternative Response rate. A reply is
+    eligible where its answer is a refusal or its delivery is no, and the
+    conditional rate is the quantity the rubric defines. Both are given
+    because a conditional rate alone can be read backwards: a model can
+    appear generous with substitutes because it rarely produces a reply
+    on which one is possible.

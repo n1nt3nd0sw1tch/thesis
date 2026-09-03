@@ -262,11 +262,15 @@ BORDERLINE = ['eligibility_statement']
 # a maximum is dominated by whichever member is commonest. Nothing here is
 # combined, and every test in the response characteristics family is a test of
 # one annotated characteristic.
+# The names are the four blocks of Table 3.10 and not a second vocabulary.
+# An earlier version called them Redirection, Justification, Signposting and
+# Identity, which named the same partition twice and left a reader matching
+# Justification to Statement by hand.
 GROUPS = {
-    'Redirection': ['Alternative Response'],
-    'Justification': ['Risk Statement', 'Legal Statement',
-                      'Eligibility Statement'],
-    'Signposting': ['Social Signpost', 'Expert Signpost', 'Service Signpost'],
+    'Response': ['Alternative Response'],
+    'Statement': ['Risk Statement', 'Legal Statement',
+                  'Eligibility Statement'],
+    'Signpost': ['Social Signpost', 'Expert Signpost', 'Service Signpost'],
     'Identity': ['System Identity', 'Boundary Identity', 'Limitation Identity',
                  'Companion Identity'],
 }
