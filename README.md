@@ -23,6 +23,9 @@ scripts/
   run.py           3  the replies        -> results/adaptation/
   judge.py         4  the classifications -> results/classification/
   analysis.py         the corpus, the statistics and the shared paths
+  language.py         the fifteen language measures, computed from reply text
+  figures.py       5  the readability figures -> figures/
+  safety_figures.py 5 the safety figures      -> figures/
 
 data/              the corpora downloaded, and the benchmark built from them
 notebooks/         what the pipeline produced, read back
@@ -50,6 +53,17 @@ or `results/`, and reports what it did.
 | 2. Benchmark | `python scripts/build.py` | `drafts.csv`, `benchmark.csv`, `prompts.csv`, `scores.csv` |
 | 3. Replies | `python scripts/run.py generate --model <id> --backend <runtime>` | `results/adaptation/<model>.jsonl` |
 | 4. Classification | `python scripts/judge.py --backend <runtime>` | `results/classification/<model>.jsonl` |
+| 5. Figures | `python scripts/figures.py` and `python scripts/safety_figures.py` | `figures/*.pdf` |
+
+Stage 5 runs after the notebooks, not before them. `figures.py` recomputes its
+own reductions from the language table, but `safety_figures.py` reads the
+intervals out of `tables/machine/register_safety.csv` rather than recomputing
+them, so that a figure and the table beside it in the thesis come from one
+result. It refuses to run if that file is absent and says why.
+
+Both write straight into `figures/` and neither touches `tables/`. That split is
+the point: a figure can be redrawn without regenerating twenty-two CSVs, which
+is what rerunning a notebook to change one line of drawing code used to do.
 
 Stage 2 is the whole build: it reads the corpora and `config/scenarios.yml`,
 opens a draft per usable source record, fills the 200 scenario slots from the

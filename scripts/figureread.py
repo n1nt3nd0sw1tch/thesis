@@ -18,6 +18,7 @@ from matplotlib import colormaps
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 from matplotlib.ticker import MultipleLocator
+import matplotlib.patheffects as pe
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -31,7 +32,7 @@ from settings import ROOT
 # Configuration
 # ---------------------------------------------------------------------
 
-FIGURES = ROOT / "figures"
+FIGURES = ROOT / "figures/readability"
 TEXT_WIDTH_CM = 16.0
 LABEL_POINTS = 11
 GRID_SIZE = (13.5, 7.8)
@@ -179,14 +180,21 @@ def save(fig, name):
     return path
 
 
-def annotate_contrast(ax, point, low, high):
+def annotate_contrast(ax, point, low, high, location="right"):
+    """Draw a compact effect badge in unused panel space."""
     if not np.isfinite(point):
         return
-    text = rf"$\Delta = {point:+.2f}$" + "\n" + rf"$[{low:+.2f}, {high:+.2f}]$"
+
+    text = f"Δ {point:+.2f}\n[{low:+.2f}, {high:+.2f}]"
+    x, ha = (0.035, "left") if location == "left" else (0.965, "right")
     ax.text(
-        0.97, 0.95, text, transform=ax.transAxes, ha="right", va="top",
-        fontsize=plt.rcParams["font.size"] * 0.90, linespacing=1.25,
-        bbox=dict(facecolor="white", alpha=0.78, edgecolor="none", pad=2)
+        x, 0.955, text, transform=ax.transAxes, ha=ha, va="top",
+        fontsize=plt.rcParams["font.size"] * 0.84,
+        fontweight="semibold", linespacing=1.18, color=INK, zorder=7,
+        bbox=dict(
+            boxstyle="round,pad=0.24", facecolor="white", alpha=0.92,
+            edgecolor="#D0D0D0", linewidth=0.55
+        )
     )
 
 
@@ -198,6 +206,35 @@ def age_bands(ax):
 def readable_on(rgba):
     r, g, b = rgba[:3]
     return "white" if 0.2126*r + 0.7152*g + 0.0722*b < 0.42 else "black"
+
+
+def spread_labels(values, minimum_gap, lower, upper):
+    """Return non-overlapping y positions while preserving value order."""
+    values = np.asarray(values, dtype=float)
+    positions = values.copy()
+    valid = np.flatnonzero(np.isfinite(values))
+    if len(valid) < 2:
+        return positions
+
+    order = valid[np.argsort(values[valid])]
+    placed = values[order].copy()
+
+    # Forward pass: enforce the minimum vertical separation.
+    for i in range(1, len(placed)):
+        placed[i] = max(placed[i], placed[i - 1] + minimum_gap)
+
+    # Shift the group back inside the plotting range if needed.
+    if placed[-1] > upper:
+        placed -= placed[-1] - upper
+    if placed[0] < lower:
+        placed += lower - placed[0]
+
+    # A second backward pass keeps separation if clamping moved the group.
+    for i in range(len(placed) - 2, -1, -1):
+        placed[i] = min(placed[i], placed[i + 1] - minimum_gap)
+
+    positions[order] = placed
+    return positions
 
 
 # ---------------------------------------------------------------------
@@ -218,15 +255,39 @@ def ladder_panel(ax, df, model, points, title=None, small=False):
         linewidth=1.5 if small else 1.9, color=COLOUR[model], zorder=3
     )
 
-    # Representative ages: child, adolescent, pre-threshold, adult threshold.
-    for age, offset in {7: (0, 7), 13: (0, 7), 17: (-7, 7), 18: (7, 7)}.items():
+    # Representative ages: child, adolescent, pre-threshold and adult threshold.
+    # Labels are staggered, and high points are moved below the line so they do
+    # not collide with panel titles or the top edge.
+    base_specs = {
+        7:  ((0, 11), "bottom"),
+        13: ((0, 11), "bottom"),
+        17: ((-12, 12), "bottom"),
+        18: ((12, -14), "top"),
+    }
+    ymax = ax.get_ylim()[1]
+    for age, (offset, va) in base_specs.items():
         value = values.loc[age]
-        if np.isfinite(value):
-            ax.annotate(
-                f"{value:.1f}", (age, value), xytext=offset,
-                textcoords="offset points", ha="center", va="bottom",
-                fontsize=points * 0.72, color=COLOUR[model], zorder=4
-            )
+        if not np.isfinite(value):
+            continue
+
+        dx, dy = offset
+        if value > ymax - 0.65:
+            dy, va = -14, "top"
+            if age == 17:
+                dx = -12
+            elif age == 18:
+                dx = 12
+
+        note = ax.annotate(
+            f"{value:.1f}", (age, value), xytext=(dx, dy),
+            textcoords="offset points", ha="center", va=va,
+            fontsize=points * 0.84, fontweight="bold",
+            color=COLOUR[model], zorder=6
+        )
+        note.set_path_effects([
+            pe.withStroke(linewidth=2.2, foreground="white"),
+            pe.Normal(),
+        ])
 
     panel(ax, title, points)
     ax.set_xticks(LADDER)
@@ -242,7 +303,7 @@ def draw_ladder(frame, display, kind=None):
     for ax, model in zip(axes.flat, ORDER):
         part = frame[frame["label"] == model]
         ladder_panel(ax, part, model, points, model)
-        annotate_contrast(ax, *contrast(part)[:3])
+        annotate_contrast(ax, *contrast(part)[:3], location="left")
 
     outer_labels(fig, axes, "Age", "Flesch-Kincaid Grade Level", points)
     legend(
@@ -284,7 +345,7 @@ def draw_distribution(frame, display, kind=None):
         ax.hist(adult, bins=edges, density=True, histtype="step",
                 linestyle="--", linewidth=2.0, color=COLOUR[model])
         panel(ax, model, points)
-        annotate_contrast(ax, *contrast(part)[:3])
+        annotate_contrast(ax, *contrast(part)[:3], location="right")
         print(f"    {model:<24}{overlap(minor, adult, edges):.0%}")
 
     outer_labels(fig, axes, "Flesch-Kincaid Grade Level", "Density", points)
@@ -327,9 +388,11 @@ def draw_signals(frame, display, kind=None):
         part = frame[frame["label"] == model]
         ax.axhline(0, color=INK, linewidth=1.0, alpha=0.75, zorder=2)
 
-        for track, (measure, name, style, marker, weight) in enumerate(SIGNAL_TRACKS):
+        moved_tracks = []
+        for measure, name, style, marker, weight in SIGNAL_TRACKS:
             levels = by_scenario(part, measure, ["level"]).reindex(keys)
             moved = (levels - levels.loc["neutral"]) / part[measure].std()
+            moved_tracks.append(moved)
 
             ax.plot(
                 range(len(keys)), moved.values, style, marker=marker,
@@ -340,22 +403,55 @@ def draw_signals(frame, display, kind=None):
                 label=name if index == 0 else None
             )
 
-            # Exact values for the two minor-associated conditions.
-            for x, xoff in ((3, -4), (4, 4)):
-                value = moved.iloc[x]
-                if np.isfinite(value):
-                    ax.annotate(
-                        f"{value:+.2f}", (x, value),
-                        xytext=(xoff, (9, -12, 7)[track]),
-                        textcoords="offset points", ha="center", va="center",
-                        fontsize=points * 0.68, color=COLOUR[model], zorder=5
-                    )
-
         panel(ax, model, points)
         ax.set_xticks(range(len(keys)), labels)
-        ax.set_xlim(-0.5, 4.5)
-        ax.margins(y=0.18)
+        ax.set_xlim(-0.5, 4.72)
+        ax.margins(y=0.26)
         ax.yaxis.set_major_locator(MultipleLocator(0.25))
+
+        # Show exact values for Minor Cue and Minor Age in dedicated label
+        # columns rather than directly on top of the trajectories.
+        ymin, ymax = ax.get_ylim()
+        pad = 0.07 * (ymax - ymin)
+
+        for x, text_x in ((3, 3.18), (4, 4.18)):
+            raw = np.array([series.iloc[x] for series in moved_tracks], dtype=float)
+
+            label_y = spread_labels(
+                raw,
+                minimum_gap=0.17,
+                lower=ymin + pad,
+                upper=ymax - pad,
+            )
+
+            for value, y_text in zip(raw, label_y):
+                if not np.isfinite(value):
+                    continue
+
+                note = ax.annotate(
+                    f"{value:+.2f}",
+                    xy=(x, value),
+                    xytext=(text_x, y_text),
+                    textcoords="data",
+                    ha="left",
+                    va="center",
+                    fontsize=points * 0.82,
+                    fontweight="bold",
+                    color=COLOUR[model],
+                    zorder=6,
+                    arrowprops=dict(
+                        arrowstyle="-",
+                        color=COLOUR[model],
+                        linewidth=0.50,
+                        alpha=0.45,
+                        shrinkA=2,
+                        shrinkB=3,
+                    ),
+                )
+                note.set_path_effects([
+                    pe.withStroke(linewidth=2.0, foreground="white"),
+                    pe.Normal(),
+                ])
 
     outer_labels(fig, axes, "", "Change From Neutral (SD)", points)
     handles, names = axes.flat[0].get_legend_handles_labels()
@@ -373,20 +469,95 @@ def draw_coverage(frame, floor, display):
     blues = colormaps["Blues"]
     fig, axes = grid(sharex=True, sharey=True, constrained_layout=True)
 
+    # Enough labels to make the plot quantitative without turning every line
+    # segment into text. These capture the youngest point, mid-adolescence,
+    # the minor/adult boundary, and the oldest point.
+    label_ages = [7, 13, 17, 18, 21]
+
     for index, (ax, model) in enumerate(zip(axes.flat, ORDER)):
         part = frame[frame["label"] == model]
+        series = {}
+
         for kind in TYPES:
             style, marker, depth = TYPE_STYLE[kind]
-            loss = (part[part["scenario_type"] == kind]
-                    .groupby("age")["short"].mean().reindex(LADDER) * 100)
+            loss = (
+                part[part["scenario_type"] == kind]
+                .groupby("age")["short"].mean().reindex(LADDER) * 100
+            )
+            series[kind] = loss
+
             ax.plot(
                 LADDER, loss.values, style, marker=marker,
                 markersize=4.0, linewidth=1.6, color=blues(depth),
                 label=kind if index == 0 else None
             )
+
         panel(ax, model, points)
         ax.set_xticks(LADDER)
         ax.set_xlim(6.4, 21.6)
+        ax.margins(y=0.12)
+
+        ymin, ymax = ax.get_ylim()
+        yrange = ymax - ymin
+
+        for age in label_ages:
+            values, colours = [], []
+
+            for kind in TYPES:
+                value = series[kind].get(age, np.nan)
+
+                # Suppress tiny values: visually they are already zero and
+                # printing them adds clutter without information.
+                if np.isfinite(value) and value >= 1.5:
+                    _, _, depth = TYPE_STYLE[kind]
+                    values.append(float(value))
+                    colours.append(blues(depth))
+
+            if not values:
+                continue
+
+            label_y = spread_labels(
+                values,
+                minimum_gap=max(2.2, 0.045 * yrange),
+                lower=ymin + 0.04 * yrange,
+                upper=ymax - 0.04 * yrange,
+            )
+
+            # Alternate left/right around the crowded 17/18 boundary.
+            if age == 17:
+                text_x, ha = age - 0.25, "right"
+            elif age == 18:
+                text_x, ha = age + 0.25, "left"
+            elif age == 21:
+                text_x, ha = age - 0.28, "right"
+            else:
+                text_x, ha = age + 0.22, "left"
+
+            for value, y_text, colour in zip(values, label_y, colours):
+                note = ax.annotate(
+                    f"{value:.0f}",
+                    xy=(age, value),
+                    xytext=(text_x, y_text),
+                    textcoords="data",
+                    ha=ha,
+                    va="center",
+                    fontsize=points * 0.76,
+                    fontweight="bold",
+                    color=colour,
+                    zorder=6,
+                    arrowprops=dict(
+                        arrowstyle="-",
+                        color=colour,
+                        linewidth=0.45,
+                        alpha=0.40,
+                        shrinkA=2,
+                        shrinkB=3,
+                    ),
+                )
+                note.set_path_effects([
+                    pe.withStroke(linewidth=1.8, foreground="white"),
+                    pe.Normal(),
+                ])
 
     outer_labels(fig, axes, "Age", f"Below the {floor} Word Floor (\\%)", points)
     handles, names = axes.flat[0].get_legend_handles_labels()

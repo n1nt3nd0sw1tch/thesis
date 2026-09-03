@@ -1108,18 +1108,31 @@ def publish(table, name):
 
 # Define function to merge this notebook's captions into the shared file rather
 # than overwrite it, since four notebooks write into it and each holds a part
-def write_captions():
+def write_captions(kind=None):
     fresh = pd.DataFrame(DESCRIBED)
     if fresh.empty:
         return CAPTIONS_PATH
     # publish() refuses a name captions.yml does not describe. The reverse was
     # unguarded, so an entry could be written, then have its cell deleted, and
-    # sit in the file with nothing behind it. Checked within this notebook's own
-    # prefixes only, since each notebook writes one of them.
+    # sit in the file with nothing behind it. Checked within this run's own
+    # prefixes only, since each producer writes one of them.
+    #
+    # The check is also scoped by kind, because one prefix is now written by two
+    # programs: 15_safety.ipynb produces the safety tables and
+    # scripts/safety_figures.py the safety figures. A name of the other kind,
+    # already recorded in captions.csv by the other program, is accounted for
+    # and is not reported here. A name of this run's own kind is still reported
+    # if it goes missing, which is the case the guard exists for.
     prefixes = {name.split('_')[0] for name in fresh['output']}
+    kinds = {kind} if kind else set(fresh['kind'])
+    elsewhere = set()
+    if CAPTIONS_PATH.exists():
+        prior = pd.read_csv(CAPTIONS_PATH)
+        elsewhere = set(prior.loc[~prior['kind'].isin(kinds), 'output'])
     missing = sorted(name for name in CAPTIONS_CONFIG
                      if name.split('_')[0] in prefixes
-                     and name not in set(fresh['output']))
+                     and name not in set(fresh['output'])
+                     and name not in elsewhere)
     if missing:
         print(f'described in captions.yml but not written: {", ".join(missing)}')
     if CAPTIONS_PATH.exists():
