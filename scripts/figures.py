@@ -89,7 +89,7 @@ from settings import ROOT
 
 FIGURES = ROOT / 'figures'
 TEXT_WIDTH_CM = 16.0
-LABEL_POINTS = 9.0
+LABEL_POINTS = 10.5
 
 LADDER = [7, 9, 11, 13, 15, 17, 18, 21]
 MINOR = [7, 9, 11, 13, 15, 17]
@@ -179,13 +179,15 @@ def contrast(part, column='fkgl', interval=True):
 # Style
 # ----------------------------------------------------------------------------
 
-def styled(display, width_inches=7.4):
+def styled(display, width_inches=7.4, label_points=None):
     scale = display * TEXT_WIDTH_CM / (width_inches * 2.54)
-    points = LABEL_POINTS / scale
+    if label_points is None:
+        label_points = LABEL_POINTS
+    points = label_points / scale
     plt.rcParams.update({
         'font.size': points, 'axes.labelsize': points,
-        'axes.titlesize': points * 1.02, 'xtick.labelsize': points * 0.88,
-        'ytick.labelsize': points * 0.88, 'legend.fontsize': points * 0.9,
+        'axes.titlesize': points * 1.05, 'xtick.labelsize': points * 0.95,
+        'ytick.labelsize': points * 0.95, 'legend.fontsize': points * 0.95,
         'axes.edgecolor': MUTED, 'axes.labelcolor': 'black',
         'text.color': 'black', 'xtick.color': MUTED, 'ytick.color': MUTED,
         'xtick.labelcolor': 'black', 'ytick.labelcolor': 'black',
@@ -229,7 +231,7 @@ def annotate(axis, point, low, high):
     # scenario count belongs in the caption and the primary table, where a
     # reader can compare it across models, not inside every panel.
     axis.text(0.97, 0.95, text, transform=axis.transAxes, ha='right', va='top',
-              color='black', fontsize=plt.rcParams['font.size'] * 0.8,
+              color='black', fontsize=plt.rcParams['font.size'] * 0.90,
               linespacing=1.25,
               bbox=dict(facecolor='white', alpha=0.78, edgecolor='none',
                         pad=2.0))
@@ -311,7 +313,7 @@ def draw_ladder(frame, display, kind=None):
                Line2D([0], [0], color=MUTED, linestyle=':', linewidth=1.5)]
     figure.legend(handles, ['Minor', 'Adult', 'Target'],
                   loc='lower center', ncol=3, frameon=False,
-                  bbox_to_anchor=(0.5, -0.04), fontsize=points * 0.9)
+                  bbox_to_anchor=(0.5, -0.075), fontsize=points * 0.9)
     name = ('readability_ladder.pdf' if kind is None
             else f'readability_ladder_{SLUG[kind]}.pdf')
     return save(figure, name)
@@ -362,7 +364,7 @@ def draw_distribution(frame, display, kind=None):
     handles = [Patch(facecolor=PALE, alpha=0.5, edgecolor=MUTED, linewidth=1.1),
                Line2D([0], [0], color=MUTED, linewidth=2.0, linestyle='--')]
     figure.legend(handles, ['Minor', 'Adult'], loc='lower center', ncol=2,
-                  frameon=False, bbox_to_anchor=(0.5, -0.03),
+                  frameon=False, bbox_to_anchor=(0.5, -0.075),
                   fontsize=points * 0.95)
     name = ('readability_distribution.pdf' if kind is None
             else f'readability_distribution_{SLUG[kind]}.pdf')
@@ -432,7 +434,7 @@ def draw_signals(frame, display, kind=None):
     outer_labels(figure, axes, '', 'Movement From Control (SD)', points)
     handles, labels = axes[0][0].get_legend_handles_labels()
     figure.legend(handles, labels, loc='lower center', ncol=3, frameon=False,
-                  bbox_to_anchor=(0.5, -0.03), fontsize=points * 0.9)
+                  bbox_to_anchor=(0.5, -0.075), fontsize=points * 0.9)
     name = ('readability_signals.pdf' if kind is None
             else f'readability_signals_{SLUG[kind]}.pdf')
     return save(figure, name)
@@ -470,12 +472,12 @@ def draw_coverage(frame, floor, display):
                  f'Below the {floor} Word Floor (\\%)', points)
     handles, names = axes[0][0].get_legend_handles_labels()
     figure.legend(handles, names, loc='lower center', ncol=4, frameon=False,
-                  bbox_to_anchor=(0.5, -0.03), fontsize=points * 0.9)
+                  bbox_to_anchor=(0.5, -0.075), fontsize=points * 0.9)
     return save(figure, 'readability_coverage.pdf')
 
 
 def draw_coverage_grid(frame, floor, display):
-    points = styled(display, 9.6)
+    points = styled(display, 9.6, label_points=9.0)
     frame = frame.assign(short=frame['response_length'] < floor)
     ceiling = float(frame.groupby(['label', 'scenario_type', 'age'])['short']
                     .mean().max() * 100)
@@ -513,7 +515,7 @@ def draw_coverage_grid(frame, floor, display):
                               else 'black')
 
     figure.supxlabel('Age', color='black', fontsize=points, y=0.04)
-    figure.supylabel('Scenario Type', color='black', fontsize=points)
+    # figure.supylabel('Scenario', color='black', fontsize=points)
     # The colourbar carries its scale in the ticks and its meaning in the
     # caption. A label written down its side competes with the shared axis
     # titles for the same edge of the figure.
@@ -544,7 +546,7 @@ def draw_coverage_grid(frame, floor, display):
 # Lower triangle, since the matrix is symmetric and the exact figures are in
 # Table G.7. The figure's job is the block structure, not every cell.
 def draw_correlations(frame, display):
-    points = styled(display, 10.5)
+    points = styled(display, 10.5, label_points=9.0)
     columns = [key for key, _ in MEASURES if key in frame.columns]
     labels = [name for key, name in MEASURES if key in frame.columns]
     matrix = frame[columns].corr()
