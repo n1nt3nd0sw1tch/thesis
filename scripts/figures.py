@@ -105,7 +105,7 @@ TARGET = {age: min(age - 5, 12) for age in MINOR}
 # The kind of signal in brackets under the block it belongs to, so the pairing
 # is read from the layout: Adult and Minor name the block and Cue and Age name
 # how it was given.
-SIGNALS = [('neutral', 'Control', ''), ('adult_cue', 'Adult', '(Cue)'),
+SIGNALS = [('neutral', 'Neutral', ''), ('adult_cue', 'Adult', '(Cue)'),
            ('adult_age', 'Adult', '(Age)'), ('minor_cue', 'Minor', '(Cue)'),
            ('minor_age', 'Minor', '(Age)')]
 
