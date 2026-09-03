@@ -49,26 +49,6 @@ corpus_03_unanimity:
     This characterises stochastic variability at the fixed sampling
     setting and does not bound the size of any effect reported later.
 
-corpus_04_reliability:
-  label: tab:corpus-reliability
-  tier: methods
-  index: false
-  caption: >-
-    Agreement between the human annotator and the classifier on the two
-    characteristics that constitute the primary outcome, on a
-    calibration sample of six hundred responses drawn one hundred a
-    model. The prevalence columns give the share each annotator marked
-    positive, where positive is Refusal for Answer and Yes for Delivery
-    Response. The classifier was run again on those six hundred replies
-    under the same policy rather than scored on the labels it produced
-    in the main pass, so the coefficient carries the classifier own run-
-    to-run variation as well as its disagreement with the annotator, and
-    is the more conservative of the two comparisons available. Intervals
-    are percentile intervals from four thousand resamples of the
-    annotated rows. Because the sample was also used to refine the
-    rubric, these are calibration figures and not an independent
-    validation.
-
 corpus_s01_denominators:
   label: tab:corpus-denominators
   tier: supplement
@@ -105,40 +85,6 @@ corpus_s03_unanimity_excluded:
     out sensitivity on the macro-average four-cell unanimity: it is a
     check on whether that panel figure rests on one member and never
     replaces it.
-
-corpus_s04_reliability_full:
-  label: tab:corpus-reliability-full
-  tier: supplement
-  index: false
-  caption: >-
-    Classifier calibration on every annotated characteristic. Rows is
-    the number of pairs the coefficient rests on, which is the full
-    sample except where the judge returned no value. The Use column
-    applies the agreement floor of Cohen kappa 0.70: three
-    characteristics fall below it and are descriptive only, one has no
-    coefficient at all rather than a low one because no positive case
-    appeared in the sample, and one clears the floor at 0.702 on a wide
-    interval and is marked borderline, with a sensitivity withholding it
-    reported in Chapter 5.2. Alternative Response is reported without an
-    interval: the judge returned no value for it on most of the sample
-    in the calibration run, and the saved row-level pairs record those
-    as absent rather than as missing, so the rows behind its coefficient
-    cannot be identified.
-
-corpus_s05_repeatability:
-  label: tab:corpus-repeatability
-  tier: supplement
-  index: false
-  caption: >-
-    Calibration against repeatability. The first two columns are
-    agreement between the human annotator and each of two independent
-    classifier runs, and are calibration. The third is agreement between
-    those two runs, and is repeatability of the judging procedure itself
-    with the human annotation held out of it. The third column is why
-    verdicts in the full corpus pass are not identical to the
-    calibration run on the same replies. That divergence is
-    stochasticity in the procedure and is not a reason to recompute the
-    calibration against a later run of the procedure being calibrated.
 
 safety_01_primary:
   label: tab:safety-primary
@@ -703,3 +649,19 @@ safety_s21_alternative:
     because a conditional rate alone can be read backwards: a model can
     appear generous with substitutes because it rarely produces a reply
     on which one is possible.
+
+safety_s22_trend_minors:
+  label: tab:safety-trend-minors
+  tier: supplement
+  index: false
+  caption: >-
+    The declared rank trend statistic recomputed over the six stated
+    minor ages alone, with the full-ladder value beside it. The declared
+    test runs over all eight stated ages and so measures association
+    across the whole range, taking in the fall at the statutory boundary
+    and the fall from eighteen to twenty-one; this is the narrower
+    quantity a developmental reading of the ladder needs. Flat counts
+    scenarios whose Refusal Rate does not vary across the ages in
+    question, and it rises sharply once the adult ages are removed.
+    Descriptive: no family is declared, no permutation value is computed
+    and nothing here is corrected.

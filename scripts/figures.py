@@ -196,15 +196,43 @@ def styled(display, width_inches=7.4, label_points=None):
     return points
 
 
+# def panel(axis, title=None, points=9.0):
+#     axis.set_facecolor(PANEL_FILL)
+#     axis.grid(
+#     axis='y',
+#     linestyle='-',
+#     linewidth=0.85,
+#     alpha=0.33,
+#     color=MUTED)
+#     # axis.grid(axis='y', linestyle='--', linewidth=0.7, alpha=0.55,
+#     #           color='white')
+#     axis.set_axisbelow(True)
+#     for side in ('top', 'right'):
+#         axis.spines[side].set_visible(False)
+#     if title:
+#         axis.set_title(title, pad=points * 0.5, color='black')
+
 def panel(axis, title=None, points=9.0):
     axis.set_facecolor(PANEL_FILL)
-    axis.grid(axis='y', linestyle='--', linewidth=0.7, alpha=0.55,
-              color='white')
+
+    axis.grid(
+        axis='y',
+        linestyle='-',
+        linewidth=0.6,
+        alpha=0.25,
+        color=MUTED
+    )
     axis.set_axisbelow(True)
+
     for side in ('top', 'right'):
         axis.spines[side].set_visible(False)
+
     if title:
-        axis.set_title(title, pad=points * 0.5, color='black')
+        axis.set_title(
+            title,
+            pad=points * 0.5,
+            color='black'
+        )
 
 
 def save(figure, name):
@@ -266,14 +294,31 @@ def readable_on(rgba):
 # six copies of the same axis name. Without it the left column sets its y label
 # twice and the two collide, which is what the earlier versions of these figures
 # did.
+# def outer_labels(figure, axes, xlabel, ylabel, points):
+#     for axis in axes.flat:
+#         axis.label_outer()
+#     if xlabel:
+#         figure.supxlabel(xlabel, color='black', fontsize=points)
+#     if ylabel:
+#         figure.supylabel(ylabel, color='black', fontsize=points)
+
 def outer_labels(figure, axes, xlabel, ylabel, points):
     for axis in axes.flat:
         axis.label_outer()
-    if xlabel:
-        figure.supxlabel(xlabel, color='black', fontsize=points)
-    if ylabel:
-        figure.supylabel(ylabel, color='black', fontsize=points)
 
+    if xlabel:
+        figure.supxlabel(
+            xlabel,
+            color='black',
+            fontsize=points * 1.08
+        )
+
+    if ylabel:
+        figure.supylabel(
+            ylabel,
+            color='black',
+            fontsize=points * 1.15
+        )
 
 # ----------------------------------------------------------------------------
 # Grade level across age
@@ -293,7 +338,6 @@ def ladder_panel(axis, part, name, points, title=None, small=False):
               markeredgecolor=COLOUR[name], markeredgewidth=1.0,
               linewidth=1.4 if small else 1.7, color=COLOUR[name], zorder=3)
     panel(axis, title, points)
-    axis.set_facecolor('none')
     axis.set_xticks(LADDER)
     axis.set_xlim(6.4, 21.6)
 
@@ -313,7 +357,10 @@ def draw_ladder(frame, display, kind=None):
                Line2D([0], [0], color=MUTED, linestyle=':', linewidth=1.5)]
     figure.legend(handles, ['Minor', 'Adult', 'Target'],
                   loc='lower center', ncol=3, frameon=False,
-                  bbox_to_anchor=(0.5, -0.075), fontsize=points * 0.9)
+                  bbox_to_anchor=(0.5, -0.075), fontsize=points * 1.05, 
+                  handlelength=2.2,
+                  handletextpad=0.7,
+                  columnspacing=1.5)
     name = ('readability_ladder.pdf' if kind is None
             else f'readability_ladder_{SLUG[kind]}.pdf')
     return save(figure, name)
@@ -326,8 +373,8 @@ def draw_ladder(frame, display, kind=None):
 def distribution_panel(axis, part, name, edges, points, title=None,
                        label=False):
     minor, adult, _ = blocks(part)
-    axis.hist(minor, bins=edges, density=True, alpha=0.28,
-              facecolor=COLOUR[name], edgecolor=COLOUR[name], linewidth=1.1,
+    axis.hist(minor, bins=edges, density=True, alpha=0.4,
+              facecolor=COLOUR[name], edgecolor=COLOUR[name], linewidth=1.2,
               label='Minor' if label else None)
     axis.hist(adult, bins=edges, density=True, histtype='step',
               linestyle='--', linewidth=2.0, color=COLOUR[name],
@@ -365,7 +412,10 @@ def draw_distribution(frame, display, kind=None):
                Line2D([0], [0], color=MUTED, linewidth=2.0, linestyle='--')]
     figure.legend(handles, ['Minor', 'Adult'], loc='lower center', ncol=2,
                   frameon=False, bbox_to_anchor=(0.5, -0.075),
-                  fontsize=points * 0.95)
+                  fontsize=points * 1.05, 
+                  handlelength=2.2,
+                  handletextpad=0.7,
+                  columnspacing=1.5)
     name = ('readability_distribution.pdf' if kind is None
             else f'readability_distribution_{SLUG[kind]}.pdf')
     return save(figure, name)
@@ -409,8 +459,9 @@ def draw_signals(frame, display, kind=None):
                                 sharey=True, constrained_layout=True)
     for index, name in enumerate(ORDER):
         axis = axes[index // 3][index % 3]
-        axis.axvspan(0.5, 2.5, color=ADULT_BAND, zorder=0)
-        axis.axvspan(2.5, 4.5, color=MINOR_BAND, zorder=0)
+        # Keep one continuous panel background across Neutral, Adult and Minor
+        # signal levels. Grouping is carried by the x-axis labels rather than
+        # by separate background bands.
         axis.axhline(0, color=MUTED, linewidth=0.8, zorder=1)
         part = frame[frame['label'] == name]
 
@@ -426,7 +477,6 @@ def draw_signals(frame, display, kind=None):
                       label=label if index == 0 else None)
 
         panel(axis, name, points)
-        axis.set_facecolor('none')
         axis.set_xticks(range(len(keys)), names)
         axis.set_xlim(-0.5, 4.5)
         axis.margins(y=0.16)
@@ -434,7 +484,10 @@ def draw_signals(frame, display, kind=None):
     outer_labels(figure, axes, '', 'Movement From Control (SD)', points)
     handles, labels = axes[0][0].get_legend_handles_labels()
     figure.legend(handles, labels, loc='lower center', ncol=3, frameon=False,
-                  bbox_to_anchor=(0.5, -0.075), fontsize=points * 0.9)
+                  bbox_to_anchor=(0.5, -0.075), fontsize=points * 1.05, 
+                  handlelength=2.2,
+                  handletextpad=0.7,
+                  columnspacing=1.5)
     name = ('readability_signals.pdf' if kind is None
             else f'readability_signals_{SLUG[kind]}.pdf')
     return save(figure, name)
@@ -472,7 +525,10 @@ def draw_coverage(frame, floor, display):
                  f'Below the {floor} Word Floor (\\%)', points)
     handles, names = axes[0][0].get_legend_handles_labels()
     figure.legend(handles, names, loc='lower center', ncol=4, frameon=False,
-                  bbox_to_anchor=(0.5, -0.075), fontsize=points * 0.9)
+                  bbox_to_anchor=(0.5, -0.075), fontsize=points * 1.05, 
+                  handlelength=2.2,
+                  handletextpad=0.7,
+                  columnspacing=1.5)
     return save(figure, 'readability_coverage.pdf')
 
 
