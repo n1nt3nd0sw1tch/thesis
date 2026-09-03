@@ -89,7 +89,7 @@ import sys
 from pathlib import Path
 
 import matplotlib.pyplot as plt
-from matplotlib import colormaps, colors, font_manager
+from matplotlib import colormaps, colors
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
@@ -151,10 +151,10 @@ TEXT_WIDTH_CM = 16.0
 # and is the largest that leaves the grid its room.
 LABEL_POINTS = 7.0
 
-# The document is set in Latin Modern, so the figures are set in a serif face
-# too. Resolved through matplotlib rather than named, because a missing font is
-# silently substituted and the figure then ships in whatever was to hand.
-SERIF = font_manager.findfont(font_manager.FontProperties(family='serif'))
+# The clouds and their labels take matplotlib's default face. A serif was tried
+# to match the document and reverted: a word cloud sets a word at whatever size
+# its score earns, and at the small end a serif loses more legibility than the
+# match is worth.
 
 SIGNPOST = {'parent', 'parents', 'guardian', 'guardians', 'teacher', 'teachers',
             'counselor', 'counsellor', 'adult', 'adults', 'trusted',
@@ -216,7 +216,7 @@ def draw(words, axis, top):
                 COLOURMAP(TONE_DARK + position * (TONE_PALE - TONE_DARK)))
 
         cloud = WordCloud(width=680, height=500, background_color='white',
-                          font_path=SERIF, prefer_horizontal=0.88,
+                          prefer_horizontal=0.88,
                           relative_scaling=0.55, min_font_size=6,
                           max_words=top, color_func=tone,
                           random_state=7).generate_from_frequencies(words)
@@ -244,8 +244,8 @@ def draw_grid(assigned, top, filename, display):
     for index, (key, label) in enumerate(CONDITIONS):
         axis = axes[index // 3][index % 3]
         draw(assigned[key], axis, top)
-        axis.set_title(label, fontsize=points, color=INK, pad=points * 0.22,
-                       fontfamily='serif')
+        axis.set_title(label, fontsize=points, color=INK,
+                       pad=points * 0.22)
 
     # tight_layout measures its padding in multiples of the default font size,
     # which is ten points and has nothing to do with the label size computed

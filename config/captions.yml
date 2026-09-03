@@ -519,8 +519,7 @@ readability_s01_coverage_age:
   tier: supplement
   index: false
   caption: >-
-    The share of replies removed by the fifty-word floor at each stated age and
-    in each scenario type. Measurability declines with the stated age on four of
+    The share of replies removed by the fifty-word floor at each stated age and in each scenario type. Age trends in measurability differ by model, so the selection does not bias every effect in one direction. Across scenario types it is greatest on Harmful for all six, reaching 40.9 per cent on Gemini 3.5 Flash Lite and 43.8 on Gemma 4 31B, and Benign loss is zero on four models. Measurability declines with the stated age on four of
     the six models and collapses on Harmful scenarios, where one model loses
     more than two fifths of its replies against none of its Benign ones.
 
@@ -529,8 +528,7 @@ readability_s02_levels:
   tier: supplement
   index: false
   caption: >-
-    The Flesch-Kincaid grade level at each stated age, over measurable replies.
-    Grade level rises across the ladder on all six models and without exception across the six minor ages. Across all eight it rises throughout on five; DeepSeek-V4 Flash reaches 7.85 at eighteen and 7.84 at twenty-one, which is flat rather than reversed.
+    The Flesch-Kincaid grade level at each stated age, over measurable replies and weighted by scenario. The model-level means rise monotonically across all eight stated ages on all six models. That is a statement about the aggregate trajectories and not about every scenario within them.
 
 readability_s03_calibration:
   label: tab:readability-calibration
@@ -539,8 +537,7 @@ readability_s03_calibration:
   caption: >-
     The primary and secondary measures on the measurable replies that carry a
     target grade, which is the six stated minor ages. AAE is the absolute
-    distance between the grade level of a reply and the operational target grade assigned to the age it was told, and Grade Offset is the same quantity signed, so a positive
-    offset means the model writes above the target. Mean AoA is the vocabulary
+    distance between the grade level of a reply and the target grade assigned to the age it was told, and Grade Offset is the same quantity signed, so a positive offset means the model writes above the target: four of the six do and two write below it. Mean AoA is the vocabulary
     axis.
 
 readability_s04_signals:
@@ -548,9 +545,7 @@ readability_s04_signals:
   tier: supplement
   index: false
   caption: >-
-    The Flesch-Kincaid grade level at each level of the age signal, over
-    measurable replies, ordered from the weakest signal of minority to the
-    strongest. The comparison the primary contrast rests on is between the two
+    The Flesch-Kincaid grade level at each level of the age signal, over measurable replies, ordered from no age information through the adult-associated signals to the minor-associated ones. The comparison the primary contrast rests on is between the two
     stated columns; the cue columns say how far an implicit signal moves the
     same measure.
 
@@ -602,8 +597,7 @@ readability_s09_boundary:
   tier: supplement
   index: false
   caption: >-
-    Reading grade level at a stated age of seventeen against a stated age of
-    eighteen, in school grades, paired within scenario. The primary contrast
+    Reading grade level at a stated age of seventeen against a stated age of eighteen, in school grades, paired within scenario. The effect is seventeen minus eighteen, so a negative value means the reply is at a lower grade for the seventeen-year-old. The primary contrast
     compares six minor ages against two adult ones and cannot tell a gradual
     climb from a step at the statutory boundary. These two ages are one year
     apart, so an effect here of the same order as the whole ladder would mean
