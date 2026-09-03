@@ -121,7 +121,7 @@ safety_02_alignment:
     expected answer on Age Restricted scenarios and is excluded from
     those two rows.
 
-safety_fig01_trajectory:
+safety_trajectory:
   label: fig:safety-trajectory
   tier: main
   kind: figure
@@ -135,15 +135,18 @@ safety_fig01_trajectory:
     three control strata, where the expected answer does not change with
     age, is in the supplement.
 
-safety_fig02_primary:
+safety_primary:
   label: fig:safety-primary
   tier: main
   kind: figure
   caption: >-
     The three primary contrasts on Refusal Rate within Age Restricted
     scenarios, percentage points with 95 per cent bootstrap intervals
-    over scenarios, paired within scenario. A positive effect means more
-    refusal at the younger or the more explicit condition. The three
+    over scenarios, paired within scenario. Panel (a) is the six stated
+    minor ages against the two stated adult ages, panel (b) is seventeen
+    against eighteen, and panel (c) is the stated minor ages against the
+    minor cues. A positive effect means more refusal at the younger or
+    the more explicit condition. The three
     panels share a horizontal scale, so a wider interval cannot read as
     a larger effect. The macro-average weights the six models equally,
     is descriptive of this panel, and carries no test.
@@ -384,18 +387,18 @@ safety_s16_borderline:
     characteristics whose significance changes as a result, which is the
     only way the borderline characteristic could affect a conclusion
     that does not rest on it directly.
-safety_figs01_trajectory_all:
+safety_trajectory_all:
   label: fig:safety-trajectory-all
   tier: supplement
   kind: figure
   caption: >-
     Refusal Rate against the stated age in all four scenario types, per cent
     of returned replies. Panels (a), (b) and (d) are the planned controls,
-    where the expected answer is the same at every age. Panel (c) is the
-    stratum the primary hypotheses are tested in and carries the benchmark
-    adult boundary.
+    where the expected answer is the same at every age, and they share the
+    upper scale in their row. Panel (c) is the stratum the primary hypotheses
+    are tested in and carries the benchmark adult boundary.
 
-safety_fig03_outcome:
+safety_outcome:
   label: fig:safety-outcome
   tier: main
   kind: figure
@@ -406,11 +409,13 @@ safety_fig03_outcome:
     mismatches: a Weak Refusal declined and then supplied material anyway, and a
     Minimal Compliance agreed to help and then supplied nothing. Neither is
     visible in a refusal rate, since a Weak Refusal counts as a refusal and a
-    Minimal Compliance as a compliance. Whether a cell is desirable depends on
-    the scenario type, so the figure describes what each model did rather than
-    how well it did it.
+    Minimal Compliance as a compliance. A segment narrower than five points
+    carries no printed value, since the label would not fit inside it, and
+    those cells are read from Table~\ref{tab:safety-outcome} instead. Whether
+    a cell is desirable depends on the scenario type, so the figure describes
+    what each model did rather than how well it did it.
 
-safety_fig04_cues:
+safety_cues:
   label: fig:safety-cues
   tier: main
   kind: figure
@@ -425,7 +430,7 @@ safety_fig04_cues:
     comparison was mostly indistinguishable from no difference, so pooling is
     what the claim rests on and is declared rather than chosen after the fact.
 
-safety_fig05_mismatch:
+safety_mismatch:
   label: fig:safety-mismatch
   tier: main
   kind: figure
