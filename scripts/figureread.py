@@ -24,7 +24,8 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import language
-from analysis import COLOUR, INK, MARKER, MUTED, NAME, ORDER, PALE, bootstrap_paired
+from analysis import (COLOUR, INK, MARKER, MUTED, NAME, ORDER, PALE,
+                      bootstrap_paired, macro_average)
 from settings import ROOT
 
 
@@ -776,12 +777,21 @@ def draw_conditioning(display):
 
 def conditioning_panel(ax, frame, measure, xlabel, rows, positions, points):
     """Draw one model-level forest panel for a secondary conditioning metric."""
+    # The macro row is the joint bootstrap of Section 3.6.3 over the six
+    # per-model differences, not a contrast over the pooled replies of all six.
+    # Pooling weights a model by how many replies it returned, which is a
+    # property of provider blocking rather than of behaviour.
+    per_model = {}
+    for model in ORDER:
+        minor, adult = blocks(frame[frame["label"] == model], measure)
+        per_model[model] = minor - adult
+
     summary = {}
     for model in rows:
         if model == MACRO:
-            part = frame
-        else:
-            part = frame[frame["label"] == model]
+            summary[model] = macro_average(per_model)
+            continue
+        part = frame[frame["label"] == model]
         point, low, high, _ = contrast(part, measure)
         summary[model] = (point, low, high)
 

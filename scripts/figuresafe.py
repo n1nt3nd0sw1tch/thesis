@@ -309,7 +309,7 @@ def forest(axes, part, rows, positions):
     axes.set_yticks(positions)
     axes.set_yticklabels([display_label(row) for row in rows])
     axes.set_ylim(-0.7, len(rows) - 0.3)
-    axes.set_xlabel("Difference in refusal rate (pp)")
+    axes.set_xlabel("Difference in Refusal Rate (pp)")
     axes.grid(axis="y", visible=False)
     panel(axes, grid_axis="x")
 
@@ -336,8 +336,8 @@ def draw_trajectory(focus, display):
     axes.set_ylim(-6, 106)
     axes.set_yticks(range(0, 101, 20))
     axes.set_xlabel("Age")
-    axes.set_ylabel("Refusal rate (%)")
-    axes.set_title("Age Restricted scenarios", loc="left")
+    axes.set_ylabel("Refusal Rate (%)")
+    axes.set_title("Age Restricted Scenarios", loc="left")
     panel(axes, grid_axis="y")
     figure.legend(ncol=3, fontsize=points * 0.95,
                   **LEGEND_BELOW)
@@ -376,7 +376,7 @@ def draw_trajectory_all(returned, display):
     # grids. The axis text is identical in all four, so four copies of it spend
     # a quarter of the figure saying the same thing.
     figure.supxlabel("Age", fontsize=points * 1.08)
-    figure.supylabel("Refusal rate (%)", fontsize=points * 1.15)
+    figure.supylabel("Refusal Rate (%)", fontsize=points * 1.15)
 
     # Below body size, and the one place in this file that is. Six released
     # names on three columns is 795 points at 0.95 against a 756 point canvas,
@@ -406,9 +406,9 @@ def draw_primary(register, display):
         axes.set_title(PANEL[name], loc="left")
         axes.set_xlabel("")
 
-    figure.supxlabel("Difference in refusal rate (pp)", fontsize=points * 1.08)
+    figure.supxlabel("Difference in Refusal Rate (pp)", fontsize=points * 1.08)
     figure.suptitle(
-        "Age Restricted scenarios",
+        "Age Restricted Scenarios",
         x=0.015, ha="left", fontsize=points * SUPTITLE)
     return save(figure, "safety_primary", points)
 
@@ -447,8 +447,8 @@ def draw_outcome(returned, display):
     axes.set_xlim(0, 104)
     axes.set_xticks(range(0, 101, 20))
     axes.set_ylim(len(ORDER) - 0.4, -0.6)
-    axes.set_xlabel("Share of returned replies (%)")
-    axes.set_title("Outcome distribution", loc="left")
+    axes.set_xlabel("Share of Returned Replies (%)")
+    axes.set_title("Outcome Distribution", loc="left")
     axes.grid(axis="y", visible=False)
     panel(axes, grid_axis="x")
     figure.legend(ncol=2, fontsize=points * 0.95,
@@ -503,7 +503,7 @@ def draw_mismatch(returned, display):
     axes.set_ylim(-0.06, float(mismatch["weak"].max()) * 1.35)
     axes.set_xlabel("Minimal Compliance: agreed, supplied nothing (%)")
     axes.set_ylabel("Weak Refusal: declined, supplied anyway (%)")
-    axes.set_title("Decision and delivery mismatches", loc="left")
+    axes.set_title("Decision and Delivery Mismatches", loc="left")
     panel(axes, grid_axis="both")
     return save(figure, "safety_mismatch", points)
 
