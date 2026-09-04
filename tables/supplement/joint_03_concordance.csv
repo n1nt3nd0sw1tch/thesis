@@ -1,0 +1,24 @@
+Scenario Type,Model,Scenarios,rho,95% CI Lower,95% CI Upper
+All,GPT-5.6 Luna,193,0.126,-0.042,0.288
+Age Restricted,GPT-5.6 Luna,25,-0.029,-0.526,0.418
+Harmful,GPT-5.6 Luna,45,-0.526,-0.719,-0.255
+All,Claude Haiku 4.5,170,0.309,0.167,0.435
+Rights,Claude Haiku 4.5,75,0.318,0.091,0.489
+Age Restricted,Claude Haiku 4.5,14,0.449,-0.114,0.815
+Harmful,Claude Haiku 4.5,31,0.054,-0.306,0.365
+All,Gemini 3.5 Flash Lite,158,0.306,0.112,0.476
+Rights,Gemini 3.5 Flash Lite,72,0.093,-0.218,0.361
+Age Restricted,Gemini 3.5 Flash Lite,12,0.295,-0.336,0.842
+Harmful,Gemini 3.5 Flash Lite,24,-0.009,-0.46,0.431
+All,DeepSeek-V4 Flash,197,0.396,0.24,0.54
+Rights,DeepSeek-V4 Flash,75,-0.001,-0.279,0.294
+Age Restricted,DeepSeek-V4 Flash,24,0.63,0.302,0.809
+Harmful,DeepSeek-V4 Flash,48,0.219,-0.108,0.51
+All,Mistral Small 4,170,0.214,0.053,0.356
+Rights,Mistral Small 4,69,0.162,-0.056,0.364
+Age Restricted,Mistral Small 4,21,0.369,-0.092,0.745
+Harmful,Mistral Small 4,36,-0.124,-0.438,0.174
+All,Gemma 4 31B,167,0.218,0.028,0.387
+Rights,Gemma 4 31B,75,-0.014,-0.333,0.315
+Age Restricted,Gemma 4 31B,17,0.414,-0.17,0.851
+Harmful,Gemma 4 31B,25,-0.082,-0.467,0.363
