@@ -29,61 +29,38 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
 
 # ---------------------------------------------------------------------
-# Optional project imports; fall back to local constants if unavailable.
+# Project imports
 # ---------------------------------------------------------------------
 
-try:
-    sys.path.insert(0, str(Path(__file__).resolve().parent))
-    import analysis  # type: ignore
-    from settings import ROOT  # type: ignore
+# Use the exact same project configuration as figureread.py / figuresafe.py.
+# Do not define a second model palette here: model identity must have one
+# colour everywhere in the thesis.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-    COLOUR = analysis.COLOUR
-    INK = analysis.INK
-    MUTED = analysis.MUTED
-    MACRO = getattr(analysis, "MACRO", "Macro-average")
-    SCENARIO_ORDER = list(getattr(analysis, "SCENARIO_ORDER", [
-        "Benign", "Rights", "Age Restricted", "Harmful"
-    ]))
-    PROJECT_ROOT = ROOT
-except Exception:
-    analysis = None
-    PROJECT_ROOT = Path(__file__).resolve().parent
-    COLOUR = {
-        "GPT-5.6 Luna": "#0B7A3B",
-        "Claude Haiku 4.5": "#C58F16",
-        "Gemini 3.5 Flash Lite": "#352A8F",
-        "DeepSeek-V4 Flash": "#73BFE2",
-        "Mistral Small 4": "#B13A9B",
-        "Gemma 4 31B": "#A33D2D",
-    }
-    INK = "#1F1F1F"
-    MUTED = "#6F6F6F"
-    MACRO = "Macro-average"
-    SCENARIO_ORDER = ["Benign", "Rights", "Age Restricted", "Harmful"]
+import analysis
+from settings import ROOT
+
+COLOUR = analysis.COLOUR
+INK = analysis.INK
+MUTED = analysis.MUTED
+MODEL_ORDER = list(analysis.ORDER)
+MACRO = "Macro-average"  # machine/data key; display as Macro-Average
 
 # ---------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------
 
-FIGURES = PROJECT_ROOT / "figures" / "joint"
+FIGURES = ROOT / "figures" / "joint"
 TEXT_WIDTH_CM = 16.0
-LABEL_POINTS = 9.8
+LABEL_POINTS = 10.2
 GRID_SIZE = (13.5, 7.8)
-WIDE_SIZE = (13.5, 5.0)
+WIDE_SIZE = (13.5, 6.2)
 FOREST_SIZE = (13.5, 7.0)
 
 PANEL_FILL = "#F5F5F5"
 MINOR_BAND = "#E8EDF2"
 ADULT_BAND = "#F2EDE8"
 
-MODEL_ORDER = [
-    "GPT-5.6 Luna",
-    "Claude Haiku 4.5",
-    "Gemini 3.5 Flash Lite",
-    "DeepSeek-V4 Flash",
-    "Mistral Small 4",
-    "Gemma 4 31B",
-]
 MODEL_AXIS = {
     "GPT-5.6 Luna": "GPT-5.6\nLuna",
     "Claude Haiku 4.5": "Claude\nHaiku 4.5",
@@ -185,40 +162,31 @@ def save(fig, name):
 # Data loading
 # ---------------------------------------------------------------------
 
-def locate(filename: str) -> Path:
-    here = Path(__file__).resolve().parent
-    candidates = [
-        here / filename,
-        Path.cwd() / filename,
-        PROJECT_ROOT / filename,
-        PROJECT_ROOT / "tables" / "main" / filename,
-        Path("/mnt/data") / filename,
-    ]
-    for path in candidates:
-        if path.exists():
-            return path
-    raise FileNotFoundError(filename)
+LADDERS_PATH = ROOT / "tables" / "main" / "joint_01_ladders.csv"
+SHAPE_PATH = ROOT / "tables" / "main" / "joint_02_shape.csv"
+CONCORDANCE_PATH = ROOT / "tables" / "supplement" / "joint_03_concordance.csv"
 
 
-def load_ladders(path=None):
-    path = locate("joint_01_ladders(2).csv") if path is None else Path(path)
+def read_table(path: Path) -> pd.DataFrame:
+    """Read one frozen Notebook 17 table and fail with a useful path."""
     if not path.exists():
-        path = locate("joint_01_ladders.csv")
+        raise FileNotFoundError(
+            f"Required frozen table not found: {path}\n"
+            "Run notebooks/17_joint.ipynb first so the published CSV exists."
+        )
     return pd.read_csv(path)
 
 
-def load_shape(path=None):
-    path = locate("joint_02_shape(2).csv") if path is None else Path(path)
-    if not path.exists():
-        path = locate("joint_02_shape.csv")
-    return pd.read_csv(path)
+def load_ladders():
+    return read_table(LADDERS_PATH)
 
 
-def load_concordance(path=None):
-    path = locate("joint_03_concordance(2).csv") if path is None else Path(path)
-    if not path.exists():
-        path = locate("joint_03_concordance.csv")
-    return pd.read_csv(path)
+def load_shape():
+    return read_table(SHAPE_PATH)
+
+
+def load_concordance():
+    return read_table(CONCORDANCE_PATH)
 
 
 # ---------------------------------------------------------------------
