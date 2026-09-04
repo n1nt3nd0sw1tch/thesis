@@ -1,4 +1,4 @@
-Scenario Type,Model,Scenarios,rho,95% CI Lower,95% CI Upper,Reason
+Scenario Type,Model,n,rho,95% CI Lower,95% CI Upper,Reason
 Pooled,GPT-5.6 Luna,193,-0.126,-0.289,0.049,estimated
 Benign,GPT-5.6 Luna,49,,,,safety shift constant
 Rights,GPT-5.6 Luna,74,,,,safety shift constant
