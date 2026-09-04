@@ -52,6 +52,7 @@ GRID_SIZE = (13.5, 7.8)
 WIDE_SIZE = (13.5, 6.2)
 
 PANEL_FILL = "#F5F5F5"
+MUTED = analysis.MUTED
 MINOR_BAND = "#E8EDF2"
 ADULT_BAND = "#F2EDE8"
 
@@ -267,7 +268,7 @@ def grid(figsize=GRID_SIZE, **kwargs):
 
 def panel(ax, title=None, points=9):
     ax.set_facecolor(PANEL_FILL)
-    ax.grid(axis="y", linestyle="-", linewidth=0.6, alpha=0.25, color=analysis.MUTED)
+    ax.grid(axis="y", linestyle="-", linewidth=0.6, alpha=0.25, color=MUTED)
     ax.set_axisbelow(True)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
@@ -276,6 +277,10 @@ def panel(ax, title=None, points=9):
 
 
 def map_panel(ax, title=None, points=9):
+    """Heatmap/map axes: no grey panel fill and no plot grid."""
+    ax.set_facecolor("white")
+    ax.grid(False)
+    ax.set_axisbelow(False)
     if title:
         ax.set_title(title, pad=points * 0.5, color="black")
 
@@ -463,6 +468,7 @@ def groups_for(kind, frame):
 # ---------------------------------------------------------------------
 
 def draw_heatmap(ax, table, points, vmax, annotate=True):
+    map_panel(ax, None, points)
     blues = colormaps["Blues"]
     values = table.to_numpy(dtype=float)
     image = ax.imshow(values, cmap="Blues", vmin=0, vmax=vmax, aspect="auto")
@@ -564,11 +570,7 @@ def draw_rates(returned, display):
             range(len(table.index)),
             table.index if index % 3 == 0 else [],
         )
-        ax.set_title(
-            model,
-            pad=points * 0.60,
-            color="black",
-        )
+        map_panel(ax, model, points)
         ax.tick_params(length=0)
         ax.tick_params(axis="x", labelsize=points * 0.80)
         ax.tick_params(axis="y", labelsize=points * 0.80)
@@ -604,34 +606,47 @@ def draw_rates(returned, display):
 
 def draw_outcome_pair(returned, display, cells, filename):
     """Draw one wide 1x2 outcome figure for a pair of outcome cells."""
-    points = styled(display, width_inches=10.6, label_points=9.4)
-    blues = colormaps["Blues"]
+    points = styled(display, width_inches=11.0, label_points=9.6)
+
+    # Publication style: light fills with crisp coloured outlines.
+    colour = {
+        "Benign": "#F2A65A",
+        "Rights": "#8E7CC3",
+        "Age Restricted": "#72B7B2",
+        "Harmful": "#4C78A8",
+    }
 
     fig, axes = plt.subplots(
         1,
         2,
-        figsize=(14.1, 5.9),
+        figsize=(15.3, 8.9),
         sharey=True,
         constrained_layout=False,
     )
     fig.subplots_adjust(
-        left=0.17,
-        right=0.99,
+        left=0.18,
+        right=0.985,
         top=0.86,
-        bottom=0.22,
-        wspace=0.035,
+        bottom=0.225,
+        wspace=0.12,
     )
 
-    y = np.arange(len(analysis.ORDER))[::-1]
-    height = 0.17
-    offsets = np.linspace(-1.5 * height, 1.5 * height, len(SCENARIOS))
+    # More vertical breathing room between model groups.
+    group_gap = 2.02
+    y = np.arange(len(analysis.ORDER))[::-1] * group_gap
+
+    # Four clearly separated bars per model.
+    height = 0.14
+    offsets = np.array([0.45, 0.15, -0.15, -0.45])
+
+    # Small-value panels benefit from a light minimum text offset.
+    tiny_columns = [0.20, 0.42, 0.64, 0.86]
 
     for index, (ax, cell) in enumerate(zip(axes, cells)):
         panel(ax, cell, points)
         all_values = []
 
         for s_idx, (offset, scenario) in enumerate(zip(offsets, SCENARIOS)):
-            _, _, depth = TYPE_STYLE[scenario]
             part = returned[returned["scenario_type"].eq(scenario)]
             values = rate_by_model(
                 part,
@@ -642,25 +657,37 @@ def draw_outcome_pair(returned, display, cells, filename):
             bars = ax.barh(
                 y + offset,
                 values,
-                height=height * 0.90,
-                facecolor=blues(depth),
-                edgecolor=blues(depth),
-                linewidth=0.55,
+                height=height,
+                facecolor=mpl.colors.to_rgba(colour[scenario], 0.28),
+                edgecolor=colour[scenario],
+                linewidth=1.10,
                 label=scenario if index == 0 else None,
                 zorder=3,
             )
 
             maximum = max(values) if len(values) else 1.0
+
             for bar, value in zip(bars, values):
-                if not np.isfinite(value) or value <= 0:
+                if not np.isfinite(value) or value <= 0.05:
                     continue
 
-                x_text = value + max(0.05, maximum * 0.013)
                 y_text = bar.get_y() + bar.get_height() / 2
 
-                if cell == "Weak Refusal" or maximum < 5 or value < 1.5:
-                    x_text = value + 0.24 + 0.30 * s_idx
-                    y_text = y_text + (s_idx - 1.5) * 0.070
+                if cell == "Weak Refusal":
+                    # Place numbers close to each bar end rather than in distant columns.
+                    x_text = value + 0.07
+                    if value < 0.12:
+                        x_text = max(x_text, 0.12)
+                elif cell == "Total Compliance" and value >= 95:
+                    # Keep near-100 labels inside the panel and separated from the border.
+                    x_text = min(value + 0.45, 101.0)
+                elif value < 1.5:
+                    # Tiny values in the left panel still need a little room from the axis.
+                    x_text = max(value + 0.08, tiny_columns[s_idx])
+                else:
+                    x_text = value + max(0.10, maximum * 0.016)
+
+                label_size = points * (0.62 if cell == "Weak Refusal" else 0.68)
 
                 note = ax.text(
                     x_text,
@@ -668,53 +695,78 @@ def draw_outcome_pair(returned, display, cells, filename):
                     f"{value:.1f}",
                     ha="left",
                     va="center",
-                    fontsize=points * 0.60,
+                    fontsize=label_size,
                     color="black",
                     zorder=5,
+                    clip_on=False,
                 )
                 note.set_path_effects([
-                    pe.withStroke(linewidth=2.0, foreground="white"),
+                    pe.withStroke(linewidth=1.4, foreground="white"),
                     pe.Normal(),
                 ])
 
-        ax.grid(axis="x", linewidth=0.6, alpha=0.25, color=analysis.MUTED)
-        ax.grid(axis="y", visible=False)
         ax.set_yticks(y, [MODEL_AXIS[m] for m in analysis.ORDER])
-        ax.tick_params(axis="x", labelsize=points * 0.88)
-        ax.tick_params(axis="y", labelsize=points * 0.88)
+        ax.tick_params(axis="x", labelsize=points * 0.90)
+        ax.tick_params(axis="y", labelsize=points * 0.90)
         ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
 
         maximum = max(all_values) if all_values else 1.0
-        minimum = min(all_values) if all_values else 0.0
-
         if cell == "Weak Refusal":
-            ax.set_xlim(0, max(2.6, maximum * 1.95))
+            ax.set_xlim(0, max(4.4, nice_ceiling(maximum * 1.55)))
+            ax.set_xticks([0, 1, 2, 3, 4])
         elif cell == "Minimal Compliance":
-            ax.set_xlim(0, max(9.0, maximum * 1.30))
+            ax.set_xlim(0, nice_ceiling(maximum * 1.45))
         elif cell == "Strong Refusal":
-            ax.set_xlim(0, min(100, maximum * 1.20))
-        else:
-            lower = max(0, minimum - 5.0)
-            upper = min(100, maximum + 10.0)
-            ax.set_xlim(lower, upper)
+            ax.set_xlim(0, nice_ceiling(maximum * 1.18))
+        else:  # Total Compliance
+            ax.set_xlim(0, 104)
+            ax.set_xticks([0, 20, 40, 60, 80, 100])
+
+        ax.set_ylim(y.min() - 1.00, y.max() + 1.00)
 
         if index == 1:
             ax.tick_params(labelleft=False)
 
-    fig.supxlabel("Rate (%)", y=0.095, color="black", fontsize=points * 1.05)
-    handles, labels = axes[0].get_legend_handles_labels()
+    # Centre the shared x-axis label over the actual two-panel plotting area,
+    # not over the full page. The large left margin for model names means
+    # figure coordinate x=0.5 is visibly too far left.
+    fig.canvas.draw()
+    left_edge = axes[0].get_position().x0
+    right_edge = axes[1].get_position().x1
+    panels_centre = (left_edge + right_edge) / 2.0
+
+    fig.text(
+        panels_centre,
+        0.125,
+        "Rate (%)",
+        ha="center",
+        va="center",
+        color="black",
+        fontsize=points * 1.02,
+    )
+
+    handles = [
+        Patch(
+            facecolor=mpl.colors.to_rgba(colour[scenario], 0.28),
+            edgecolor=colour[scenario],
+            linewidth=1.15,
+            label=scenario,
+        )
+        for scenario in SCENARIOS
+    ]
     fig.legend(
         handles,
-        labels,
+        [h.get_label() for h in handles],
         ncol=4,
         frameon=False,
-        bbox_to_anchor=(0.5, 0.02),
+        bbox_to_anchor=(panels_centre, 0.02),
         loc="lower center",
-        fontsize=points * 0.94,
-        handlelength=2.0,
+        fontsize=points * 0.95,
+        handlelength=1.9,
         handletextpad=0.6,
-        columnspacing=1.4,
+        columnspacing=1.35,
     )
+
     return save(fig, filename)
 
 
@@ -1032,10 +1084,7 @@ def forest(ax, table, points):
         ax.axhline(split, color="0.80", linewidth=0.8, zorder=1)
 
     ax.set_yticks(y, [MODEL_AXIS[model] for model in table["model"]])
-    ax.grid(axis="y", visible=False)
-    ax.grid(axis="x", linewidth=0.6, alpha=0.25, color=analysis.MUTED)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
+    panel(ax, None, points)
 
 
 def draw_primary(register, display):
@@ -1095,16 +1144,27 @@ def dynamic_ylim(values):
 
 def draw_controls(returned, display):
     """
-    Four scenario panels, so small Benign/Rights movements are not compressed
-    by the much larger Age Restricted/Harmful ranges.
+    Four scenario panels, with separate y-scales so the small Benign/Rights
+    movements remain visible without compressing Age Restricted/Harmful.
     """
     points = styled(display)
+
+    # Keep the original compact 2x2 geometry, but reserve explicit space
+    # between rows and below the panels for the shared x-label and legend.
     fig, axes = plt.subplots(
         2,
         2,
-        figsize=(13.5, 8.0),
+        figsize=(13.5, 8.15),
         sharex=True,
-        constrained_layout=True,
+        constrained_layout=False,
+    )
+    fig.subplots_adjust(
+        left=0.075,
+        right=0.992,
+        top=0.955,
+        bottom=0.205,
+        wspace=0.045,
+        hspace=0.145,
     )
 
     for index, (ax, scenario) in enumerate(zip(axes.flat, SCENARIOS)):
@@ -1147,9 +1207,48 @@ def draw_controls(returned, display):
                 zorder=1,
             )
 
-    outer_labels(fig, axes, "Age", "Refusal Rate (%)", points)
+    # Only the bottom row needs x tick labels; only the left column needs y labels.
+    for ax in axes[0, :]:
+        ax.tick_params(labelbottom=False)
+    for ax in axes[:, 1]:
+        ax.tick_params(labelleft=False)
+
+    # Use fixed figure coordinates rather than supxlabel/supylabel so
+    # bbox_inches="tight" cannot pull the labels into the panels.
+    fig.text(
+        0.535,
+        0.132,
+        "Age",
+        ha="center",
+        va="center",
+        fontsize=points * 1.08,
+        color="black",
+    )
+    fig.text(
+        0.022,
+        0.535,
+        "Refusal Rate (%)",
+        ha="center",
+        va="center",
+        rotation=90,
+        fontsize=points * 1.12,
+        color="black",
+    )
+
     handles, labels = axes.flat[0].get_legend_handles_labels()
-    legend(fig, handles, labels, points, 3)
+    fig.legend(
+        handles,
+        labels,
+        ncol=3,
+        loc="lower center",
+        frameon=False,
+        bbox_to_anchor=(0.535, 0.018),
+        fontsize=points * 1.00,
+        handlelength=2.0,
+        handletextpad=0.6,
+        columnspacing=1.45,
+    )
+
     return save(fig, FIGURESPEC["controls"][1])
 
 
@@ -1301,6 +1400,7 @@ def draw_field_slice(returned, display, kind):
         constrained_layout=True,
     )
 
+    map_panel(ax, None, points)
     image = ax.imshow(
         values,
         cmap="Blues",
@@ -1364,7 +1464,8 @@ def draw_field_slice(returned, display, kind):
 def failure_series(returned):
     harmful = returned[returned["scenario_type"].eq("Harmful")]
     age_restricted = returned[returned["scenario_type"].eq("Age Restricted")]
-    benign_rights = returned[returned["scenario_type"].isin(["Benign", "Rights"])]
+    benign = returned[returned["scenario_type"].eq("Benign")]
+    rights = returned[returned["scenario_type"].eq("Rights")]
 
     return {
         "Harmful Delivery": rate_by_model(harmful, "delivered"),
@@ -1378,49 +1479,34 @@ def failure_series(returned):
             "refusal",
             ADULT_AGE_CONDITIONS,
         ),
-        "Benign / Rights Refusal": rate_by_model(
-            benign_rights,
+        "Benign Refusal": rate_by_model(
+            benign,
+            "refusal",
+        ),
+        "Rights Refusal": rate_by_model(
+            rights,
             "refusal",
         ),
     }
 
 
-def paired_failure_panel(
-    ax,
-    first,
-    second,
-    points,
-    title,
-    first_label,
-    second_label,
-    first_colour,
-    second_colour,
-):
-    y = np.arange(len(analysis.ORDER))[::-1]
-    height = 0.30
+def grouped_failure_panel(ax, series_items, points, title):
+    """Grouped horizontal bars using the same layout grammar as safety_outcomes."""
+    # Match safety_outcomes exactly for model spacing.
+    group_gap = 2.02
+    y = np.arange(len(analysis.ORDER))[::-1] * group_gap
+    n = len(series_items)
 
-    bars_a = ax.barh(
-        y + height / 2,
-        first.to_numpy(dtype=float),
-        height=height,
-        facecolor=first_colour,
-        edgecolor=first_colour,
-        linewidth=0.9,
-        alpha=0.88,
-        label=first_label,
-        zorder=3,
-    )
-    bars_b = ax.barh(
-        y - height / 2,
-        second.to_numpy(dtype=float),
-        height=height,
-        facecolor=second_colour,
-        edgecolor=second_colour,
-        linewidth=0.9,
-        alpha=0.72,
-        label=second_label,
-        zorder=3,
-    )
+    # Same narrow-bin style as safety_outcomes.
+    height = 0.14
+
+    # Preserve the requested visual order from top to bottom.
+    if n == 2:
+        offsets = np.array([0.15, -0.15])
+    elif n == 3:
+        offsets = np.array([0.30, 0.00, -0.30])
+    else:
+        offsets = np.linspace(0.45, -0.45, n)
 
     panel(ax, title, points)
     ax.set_yticks(
@@ -1429,33 +1515,43 @@ def paired_failure_panel(
     )
     ax.tick_params(axis="x", labelsize=points * 0.90)
     ax.tick_params(axis="y", labelsize=points * 0.90)
-    ax.grid(
-        axis="x",
-        linewidth=0.6,
-        alpha=0.25,
-        color=analysis.MUTED,
-    )
-    ax.grid(axis="y", visible=False)
-
-    maximum = max(
-        float(first.max()),
-        float(second.max()),
-    )
-    ax.set_xlim(0, maximum * 1.26 + 0.2)
+    all_arrays = [series.to_numpy(dtype=float) for _, series, _ in series_items]
+    maximum = max(float(np.nanmax(arr)) for arr in all_arrays) if all_arrays else 1.0
+    ax.set_xlim(0, nice_ceiling(maximum * 1.18))
     ax.xaxis.set_major_locator(MaxNLocator(nbins=5))
+    ax.set_ylim(y.min() - 1.00, y.max() + 1.00)
 
-    for b_idx, bars in enumerate((bars_a, bars_b)):
-        for row_idx, bar in enumerate(bars):
+    legend_handles = []
+
+    for offset, (label, series, colour) in zip(offsets, series_items):
+        values = series.to_numpy(dtype=float)
+        bars = ax.barh(
+            y + offset,
+            values,
+            height=height,
+            facecolor=mpl.colors.to_rgba(colour, 0.28),
+            edgecolor=colour,
+            linewidth=1.10,
+            label=label,
+            zorder=3,
+        )
+
+        legend_handles.append(
+            Patch(
+                facecolor=mpl.colors.to_rgba(colour, 0.28),
+                edgecolor=colour,
+                linewidth=1.10,
+                label=label,
+            )
+        )
+
+        for bar in bars:
             value = bar.get_width()
             if not np.isfinite(value):
                 continue
 
-            x_text = value + max(0.06, maximum * 0.014)
+            x_text = value + max(0.08, maximum * 0.014)
             y_text = bar.get_y() + bar.get_height() / 2
-
-            if value < 2.0:
-                y_text = y_text + (0.07 if b_idx == 0 else -0.07)
-                x_text = value + 0.25 + 0.02 * row_idx
 
             note = ax.text(
                 x_text,
@@ -1466,97 +1562,111 @@ def paired_failure_panel(
                 fontsize=points * 0.68,
                 color="black",
                 zorder=5,
+                clip_on=False,
             )
             note.set_path_effects([
-                pe.withStroke(linewidth=2.0, foreground="white"),
+                pe.withStroke(linewidth=1.4, foreground="white"),
                 pe.Normal(),
             ])
 
-    handles = [
-        Patch(facecolor=first_colour, edgecolor=first_colour, alpha=0.88, label=first_label),
-        Patch(facecolor=second_colour, edgecolor=second_colour, alpha=0.72, label=second_label),
-    ]
-    return handles
+    return legend_handles
 
 
 def draw_failures(returned, display):
+    """Directional failures using the same 1x2 layout as safety_outcomes."""
     points = styled(
         display,
-        width_inches=10.5,
-        label_points=9.4,
+        width_inches=11.0,
+        label_points=9.6,
     )
     series = failure_series(returned)
 
+    # Match safety_outcomes canvas, margins, and panel spacing.
     fig, axes = plt.subplots(
         1,
         2,
-        figsize=(12.2, 5.9),
+        figsize=(15.3, 8.9),
         sharey=True,
         constrained_layout=False,
     )
     fig.subplots_adjust(
-        left=0.15,
+        left=0.18,
         right=0.985,
         top=0.86,
-        bottom=0.24,
-        wspace=0.035,
+        bottom=0.225,
+        wspace=0.12,
     )
 
-    handles_left = paired_failure_panel(
+    # Global visual order:
+    # Benign -> Rights -> Age Restricted -> Harmful.
+    # Each panel shows only the categories relevant to that failure direction.
+    grouped_failure_panel(
         axes[0],
-        series["Harmful Delivery"],
-        series["Age Restricted Delivery"],
+        [
+            ("Age Restricted", series["Age Restricted Delivery"], "#72B7B2"),
+            ("Harmful", series["Harmful Delivery"], "#4C78A8"),
+        ],
         points,
         "Over-Permissive",
-        "Harmful",
-        "Age Restricted",
-        "#355C9A",
-        "#54B6A7",
     )
-    handles_right = paired_failure_panel(
+    grouped_failure_panel(
         axes[1],
-        series["Age Restricted Refusal"],
-        series["Benign / Rights Refusal"],
+        [
+            ("Benign", series["Benign Refusal"], "#F2A65A"),
+            ("Rights", series["Rights Refusal"], "#8E7CC3"),
+            ("Age Restricted", series["Age Restricted Refusal"], "#72B7B2"),
+        ],
         points,
         "Over-Restrictive",
-        "Age Restricted",
-        "Benign / Rights",
-        "#7B6FD0",
-        "#D98C3F",
     )
 
     axes[1].tick_params(labelleft=False)
 
-    fig.legend(
-        handles_left,
-        [h.get_label() for h in handles_left],
-        ncol=2,
-        frameon=False,
-        bbox_to_anchor=(0.29, 0.082),
-        loc="lower center",
-        fontsize=points * 0.92,
-        handlelength=1.8,
-        handletextpad=0.6,
-        columnspacing=1.2,
-    )
-    fig.legend(
-        handles_right,
-        [h.get_label() for h in handles_right],
-        ncol=2,
-        frameon=False,
-        bbox_to_anchor=(0.77, 0.082),
-        loc="lower center",
-        fontsize=points * 0.92,
-        handlelength=1.8,
-        handletextpad=0.6,
-        columnspacing=1.2,
-    )
-    fig.supxlabel(
+    # Same centering logic as safety_outcomes.
+    fig.canvas.draw()
+    left_edge = axes[0].get_position().x0
+    right_edge = axes[1].get_position().x1
+    panels_centre = (left_edge + right_edge) / 2.0
+
+    fig.text(
+        panels_centre,
+        0.125,
         "Rate (%)",
-        y=0.03,
+        ha="center",
+        va="center",
         color="black",
         fontsize=points * 1.02,
     )
+
+    legend_order = [
+        ("Benign", "#F2A65A"),
+        ("Rights", "#8E7CC3"),
+        ("Age Restricted", "#72B7B2"),
+        ("Harmful", "#4C78A8"),
+    ]
+    legend_handles = [
+        Patch(
+            facecolor=mpl.colors.to_rgba(colour, 0.28),
+            edgecolor=colour,
+            linewidth=1.15,
+            label=label,
+        )
+        for label, colour in legend_order
+    ]
+
+    fig.legend(
+        legend_handles,
+        [label for label, _ in legend_order],
+        ncol=4,
+        frameon=False,
+        bbox_to_anchor=(panels_centre, 0.02),
+        loc="lower center",
+        fontsize=points * 0.95,
+        handlelength=1.9,
+        handletextpad=0.6,
+        columnspacing=1.35,
+    )
+
     return save(fig, FIGURESPEC["failures"][1])
 
 
@@ -1587,6 +1697,7 @@ def draw_age_steps(focus, display):
 
     fig, ax = plt.subplots(figsize=(10.7, 4.9), constrained_layout=False)
     fig.subplots_adjust(left=0.18, right=0.93, top=0.87, bottom=0.18)
+    map_panel(ax, None, points)
     image = ax.imshow(magnitude, cmap="Blues", vmin=0, vmax=vmax, aspect="auto")
     ax.set_xticks(range(len(labels)), labels)
     ax.set_yticks(range(len(table.index)), y_labels)
@@ -1612,7 +1723,7 @@ def draw_age_steps(focus, display):
             color=text_colour,
         )
 
-    panel(ax, "Age-to-Age Changes in Refusal Rate", points)
+    map_panel(ax, "Age-to-Age Changes in Refusal Rate", points)
     ax.set_xlabel("Adjacent Exact-Age Transitions")
     bar = add_single_colorbar(fig, ax, image, points)
     bar.set_label("Absolute Change in Refusal Rate (pp)", fontsize=points * 0.86)
@@ -1620,8 +1731,9 @@ def draw_age_steps(focus, display):
 
 
 def draw_tradeoff(returned, display):
-    """Model-level trade-off between harmful delivery and benign/rights refusal."""
+    """Model-level trade-off between over-permissive and over-restrictive failure."""
     points = styled(display, width_inches=8.8, label_points=9.4)
+
     harmful = rate_by_model(
         returned[returned["scenario_type"].eq("Harmful")],
         "delivered",
@@ -1631,49 +1743,171 @@ def draw_tradeoff(returned, display):
         "refusal",
     )
 
-    fig, ax = plt.subplots(figsize=(9.0, 5.8), constrained_layout=False)
-    fig.subplots_adjust(left=0.16, right=0.98, top=0.88, bottom=0.16)
-    panel(ax, "Over-Permissive vs Over-Restrictive Trade-Off", points)
-
-    offsets = {
-        "GPT-5.6 Luna": (6, 5),
-        "Claude Haiku 4.5": (7, 5),
-        "Gemini 3.5 Flash Lite": (6, 3),
-        "DeepSeek-V4 Flash": (7, 5),
-        "Mistral Small 4": (6, 6),
-        "Gemma 4 31B": (6, 5),
+    # Name offsets: move GPT label to the LEFT, keep others to the right.
+    name_offsets = {
+        "GPT-5.6 Luna": (-10, -5),
+        "Claude Haiku 4.5": (10, -7),
+        "Gemini 3.5 Flash Lite": (10, -4),
+        "DeepSeek-V4 Flash": (10, -7),
+        "Mistral Small 4": (10, -5),
+        "Gemma 4 31B": (10, -5),
     }
+
+    # Alignment for labels.
+    name_align = {
+        "GPT-5.6 Luna": "right",
+        "Claude Haiku 4.5": "left",
+        "Gemini 3.5 Flash Lite": "left",
+        "DeepSeek-V4 Flash": "left",
+        "Mistral Small 4": "left",
+        "Gemma 4 31B": "left",
+    }
+
+    # Value labels above points.
+    value_offsets = {
+        "GPT-5.6 Luna": (0, 14),
+        "Claude Haiku 4.5": (0, 14),
+        "Gemini 3.5 Flash Lite": (0, 14),
+        "DeepSeek-V4 Flash": (0, 14),
+        "Mistral Small 4": (0, 14),
+        "Gemma 4 31B": (0, 14),
+    }
+
+    fig, ax = plt.subplots(figsize=(9.2, 5.9), constrained_layout=False)
+    fig.subplots_adjust(left=0.15, right=0.985, top=0.88, bottom=0.16)
+
+    panel(ax, "Safety Failure Trade-Off", points)
+
+    x_mean = float(harmful.mean())
+    y_mean = float(restrictive.mean())
+
+    ax.axvline(
+        x_mean,
+        color=MUTED,
+        linestyle="--",
+        linewidth=1.0,
+        zorder=1,
+    )
+    ax.axhline(
+        y_mean,
+        color=MUTED,
+        linestyle="--",
+        linewidth=1.0,
+        zorder=1,
+    )
+
+    # More right padding so GPT and the bottom-right corner label both fit cleanly.
+    x_min = float(harmful.min()) - 0.9
+    x_max = float(harmful.max()) + 2.4
+
+    # Small negative lower bound so GPT is fully visible.
+    y_min = -0.16
+    y_max = float(restrictive.max()) + 0.22
+
+    ax.set_xlim(x_min, x_max)
+    ax.set_ylim(y_min, y_max)
+
+    quadrant_style = dict(
+        fontsize=points * 0.52,
+        color=MUTED,
+    )
+
+    ax.text(
+        0.02, 0.965, "Over-Restrictive",
+        transform=ax.transAxes,
+        ha="left", va="top",
+        **quadrant_style,
+    )
+    ax.text(
+        0.98, 0.965, "High on Both",
+        transform=ax.transAxes,
+        ha="right", va="top",
+        **quadrant_style,
+    )
+    ax.text(
+        0.02, 0.055, "Low on Both",
+        transform=ax.transAxes,
+        ha="left", va="bottom",
+        **quadrant_style,
+    )
+    ax.text(
+        0.98, 0.055, "Over-Permissive",
+        transform=ax.transAxes,
+        ha="right", va="bottom",
+        **quadrant_style,
+    )
 
     for model in analysis.ORDER:
         x = float(harmful.loc[model])
         y = float(restrictive.loc[model])
+        colour = analysis.COLOUR[model]
+
         ax.scatter(
-            x, y,
-            s=60,
+            x,
+            y,
+            s=88,
             marker=analysis.MARKER[model],
-            color=analysis.COLOUR[model],
+            color=colour,
+            edgecolor="white",
+            linewidth=0.8,
             zorder=3,
         )
-        dx, dy = offsets.get(model, (6, 5))
+
+        vdx, vdy = value_offsets.get(model, (0, 14))
+        ax.annotate(
+            f"H: {x:.1f}\nR: {y:.1f}",
+            xy=(x, y),
+            xytext=(vdx, vdy),
+            textcoords="offset points",
+            ha="center",
+            va="bottom",
+            fontsize=points * 0.52,
+            color=colour,
+            linespacing=1.0,
+            zorder=4,
+            clip_on=False,
+        )
+
+        ndx, ndy = name_offsets.get(model, (10, -5))
         ax.annotate(
             model,
             xy=(x, y),
-            xytext=(dx, dy),
+            xytext=(ndx, ndy),
             textcoords="offset points",
-            fontsize=points * 0.64,
-            color="black",
-            bbox=dict(facecolor="white", edgecolor="none", alpha=0.82, pad=0.15),
+            fontsize=points * 0.60,
+            color=colour,
+            ha=name_align.get(model, "left"),
+            va="center",
+            fontweight="semibold",
+            zorder=4,
+            clip_on=False,
         )
 
-    ax.axvline(float(harmful.mean()), color=analysis.MUTED, linestyle="--", linewidth=0.9)
-    ax.axhline(float(restrictive.mean()), color=analysis.MUTED, linestyle="--", linewidth=0.9)
-    ax.set_xlim(float(harmful.min()) - 0.9, float(harmful.max()) + 1.1)
-    ax.set_ylim(max(0.0, float(restrictive.min()) - 0.12), float(restrictive.max()) + 0.18)
-    ax.set_xlabel("Over-Permissive: Harmful Delivery Rate (%)")
-    ax.set_ylabel("Over-Restrictive: Benign / Rights Refusal Rate (%)")
+    ax.text(
+        x_mean + 0.06,
+        y_max - 0.02,
+        "Mean",
+        fontsize=points * 0.52,
+        color=MUTED,
+        ha="left",
+        va="top",
+    )
+    ax.text(
+        x_max - 0.02,
+        y_mean + 0.01,
+        "Mean",
+        fontsize=points * 0.52,
+        color=MUTED,
+        ha="right",
+        va="bottom",
+    )
+
+    ax.set_xlabel("Harmful Delivery (%)")
+    ax.set_ylabel("Benign / Rights Refusal (%)")
+
     ax.tick_params(axis="x", labelsize=points * 0.88)
     ax.tick_params(axis="y", labelsize=points * 0.88)
-    ax.grid(axis="both", linewidth=0.6, alpha=0.25, color=analysis.MUTED)
+
     return save(fig, FIGURESPEC["tradeoff"][1])
 
 
@@ -1729,8 +1963,6 @@ def draw_safeguards_macro(returned, display):
     ax.set_xlabel("Conditional Rate (%)")
     ax.tick_params(axis="x", labelsize=points * 0.88)
     ax.tick_params(axis="y", labelsize=points * 0.88)
-    ax.grid(axis="x", linewidth=0.6, alpha=0.25, color=analysis.MUTED)
-    ax.grid(axis="y", visible=False)
     ax.legend(frameon=False, loc="lower right", fontsize=points * 0.76)
     return save(fig, FIGURESPEC["safeguards_macro"][1])
 

@@ -93,7 +93,7 @@ for _folder in (METHODS, MAIN, SUPPLEMENT, MACHINE, FIGURES):
 # behaviour, so that is the one comparison a reader must never have to squint at.
 PANEL = {
     'gpt-5.6-luna':              ('GPT-5.6 Luna',          '#117733', 'o'),
-    'claude-haiku-4-5-20251001': ('Claude Haiku 4.5',      '#DDCC77', 's'),
+    'claude-haiku-4-5-20251001': ('Claude Haiku 4.5',      '#C58F16', 's'),
     'gemini-3.5-flash-lite':     ('Gemini 3.5 Flash Lite', '#332288', '^'),
     'deepseek-v4-flash':         ('DeepSeek-V4 Flash',     '#88CCEE', 'D'),
     'mistral-small-2603':        ('Mistral Small 4',       '#AA4499', 'v'),
