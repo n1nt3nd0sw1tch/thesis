@@ -93,7 +93,7 @@ SUPTITLE = 1.00
 LEGEND_BELOW = dict(loc="outside lower center", frameon=False,
                     handlelength=2.2, handletextpad=0.7, columnspacing=1.5)
 
-MONO = {"family": "monospace"}
+MONO = {}
 AGES = [STATED_AGE[name] for name in STATED]
 
 # The boolean column behind each outcome cell, named as
@@ -111,9 +111,11 @@ PRIMARY = [TRAJECTORY, THRESHOLD_CONTRAST, SIGNAL]
 # ever collided with its neighbours. The names themselves are in the caption.
 # Set on two lines: a panel is about 205 points wide once the model names are
 # allowed for, and one line of this at body size is not.
-PANEL = {TRAJECTORY: "(a) Minor\nagainst Adult",
-         THRESHOLD_CONTRAST: "(b) 17\nagainst 18",
-         SIGNAL: "(c) Minor Age\nagainst Cue"}
+PANEL = {
+    TRAJECTORY: "(a) Minor Ages\nvs Adult Ages",
+    THRESHOLD_CONTRAST: "(b) Age 17\nvs Age 18",
+    SIGNAL: "(c) Minor (Age)\nvs Minor (Cue)",
+}
 
 # Per-stratum axis limits for the four-panel trajectory. Benign and Rights sit
 # under nine per cent and Age Restricted and Harmful run the full range, so a
@@ -142,6 +144,13 @@ OUTCOME_FILLS = [INK, MUTED, PALE, "0.93"]
 # the label overhangs the segment and collides with its neighbour, so the
 # smaller cells are read from Table 4.3 instead, which sits beside the figure.
 VALUE_FLOOR = 5.0
+
+def display_label(value):
+    """Canonical display spelling for figure labels."""
+    return "Macro-Average" if value == MACRO else value
+PANEL_FILL = "#F5F5F5"
+GRID_COLOUR = "#D7DCE2"
+SPINE_COLOUR = "#BFC5CC"
 
 
 # ---------------------------------------------------------------------
@@ -231,6 +240,20 @@ def phrase(name):
     return name.replace(" vs ", " against ")
 
 
+def panel(axes, grid_axis="x"):
+    """Shared publication-style panel used by all safety figures."""
+    axes.set_facecolor(PANEL_FILL)
+    axes.grid(axis=grid_axis, linestyle="-", linewidth=0.6,
+              alpha=0.32, color=GRID_COLOUR)
+    axes.set_axisbelow(True)
+    axes.spines["top"].set_visible(False)
+    axes.spines["right"].set_visible(False)
+    axes.spines["left"].set_color(SPINE_COLOUR)
+    axes.spines["bottom"].set_color(SPINE_COLOUR)
+    axes.tick_params(color=SPINE_COLOUR)
+
+
+
 # ---------------------------------------------------------------------
 # Shared drawing helpers
 # ---------------------------------------------------------------------
@@ -249,24 +272,46 @@ def ladder(panel):
 # diamond and separated by a rule, because it is a summary of the six rows above
 # it and not a seventh model.
 def forest(axes, part, rows, positions):
+    """Draw one compact model-level forest panel."""
     for position, model in zip(positions, rows):
         if model not in part.index:
             continue
+
         colour = INK if model == MACRO else COLOUR[model]
-        axes.plot([part.at[model, "low"], part.at[model, "high"]],
-                  [position, position], color=colour, linewidth=LINEWIDTH,
-                  solid_capstyle="butt")
-        axes.plot(part.at[model, "effect"], position,
-                  marker="D" if model == MACRO else MARKER[model],
-                  color=colour, markersize=MARKERSIZE + 0.5)
-    axes.axvline(0, color=PALE, linewidth=1.0, linestyle=":")
+        effect = float(part.at[model, "effect"])
+        low = float(part.at[model, "low"])
+        high = float(part.at[model, "high"])
+
+        axes.plot(
+            [low, high], [position, position],
+            color=colour,
+            linewidth=LINEWIDTH,
+            solid_capstyle="butt",
+            zorder=2,
+        )
+        axes.plot(
+            effect, position,
+            marker="D" if model == MACRO else MARKER[model],
+            color=colour,
+            markersize=MARKERSIZE + 0.5,
+            linestyle="none",
+            zorder=3,
+        )
+
+    axes.axvline(
+        0, color=MUTED, linewidth=1.0,
+        linestyle="--", alpha=0.70, zorder=1
+    )
+
     if MACRO in rows:
-        axes.axhline(0.5, color="0.8", linewidth=0.8)
+        axes.axhline(0.5, color="0.80", linewidth=0.8)
+
     axes.set_yticks(positions)
-    axes.set_yticklabels(rows, **MONO)
+    axes.set_yticklabels([display_label(row) for row in rows])
     axes.set_ylim(-0.7, len(rows) - 0.3)
-    axes.set_xlabel("Effect on Refusal Rate (pp)")
+    axes.set_xlabel("Difference in refusal rate (pp)")
     axes.grid(axis="y", visible=False)
+    panel(axes, grid_axis="x")
 
 
 # ---------------------------------------------------------------------
@@ -283,17 +328,18 @@ def draw_trajectory(focus, display):
                   linewidth=LINEWIDTH, color=COLOUR[label], label=label)
 
     axes.axvline(THRESHOLD, color=PALE, linewidth=1.0, linestyle="--")
-    axes.annotate("statutory boundary", (THRESHOLD, 96),
+    axes.annotate("Age 18 threshold", (THRESHOLD, 96),
                   fontsize=points * ANNOTATION, color=MUTED, ha="right",
                   xytext=(-4, 0), textcoords="offset points")
     axes.set_xticks(AGES)
     axes.set_xlim(6.0, 22.0)
     axes.set_ylim(-6, 106)
     axes.set_yticks(range(0, 101, 20))
-    axes.set_xlabel("Age (years)")
-    axes.set_ylabel("Refusal Rate (%)")
-    axes.set_title("Age Restricted", loc="left")
-    figure.legend(ncol=3, prop=dict(MONO, size=points * 0.95),
+    axes.set_xlabel("Age")
+    axes.set_ylabel("Refusal rate (%)")
+    axes.set_title("Age Restricted scenarios", loc="left")
+    panel(axes, grid_axis="y")
+    figure.legend(ncol=3, fontsize=points * 0.95,
                   **LEGEND_BELOW)
     return save(figure, "safety_trajectory", points)
 
@@ -324,12 +370,13 @@ def draw_trajectory_all(returned, display):
         axes.set_ylim(*SCALE[stratum])
         axes.set_yticks(list(TICKS[stratum]))
         axes.set_title(f"({letter}) {stratum}", loc="left")
+        panel(axes, grid_axis="y")
 
     # One label a side rather than one a panel, as figureread.py does on its
     # grids. The axis text is identical in all four, so four copies of it spend
     # a quarter of the figure saying the same thing.
-    figure.supxlabel("Age (years)", fontsize=points * 1.08)
-    figure.supylabel("Refusal Rate (%)", fontsize=points * 1.15)
+    figure.supxlabel("Age", fontsize=points * 1.08)
+    figure.supylabel("Refusal rate (%)", fontsize=points * 1.15)
 
     # Below body size, and the one place in this file that is. Six released
     # names on three columns is 795 points at 0.95 against a 756 point canvas,
@@ -337,7 +384,7 @@ def draw_trajectory_all(returned, display):
     # a legend.
     handles, labels = panels.flat[0].get_legend_handles_labels()
     figure.legend(handles, labels, loc="outside upper center", ncol=3,
-                  prop=dict(MONO, size=points * 0.80), frameon=False)
+                  fontsize=points * 0.80, frameon=False)
     return save(figure, "safety_trajectory_all", points)
 
 
@@ -359,9 +406,9 @@ def draw_primary(register, display):
         axes.set_title(PANEL[name], loc="left")
         axes.set_xlabel("")
 
-    figure.supxlabel("Effect on Refusal Rate (pp)", fontsize=points * 1.08)
+    figure.supxlabel("Difference in refusal rate (pp)", fontsize=points * 1.08)
     figure.suptitle(
-        "Age Restricted, 95 Per Cent Bootstrap Intervals Over Scenarios",
+        "Age Restricted scenarios",
         x=0.015, ha="left", fontsize=points * SUPTITLE)
     return save(figure, "safety_primary", points)
 
@@ -395,15 +442,16 @@ def draw_outcome(returned, display):
         left = left + share[cellname].to_numpy()
 
     axes.set_yticks(np.arange(len(ORDER)))
-    axes.set_yticklabels(ORDER, **MONO)
+    axes.set_yticklabels(ORDER)
     axes.invert_yaxis()
     axes.set_xlim(0, 104)
     axes.set_xticks(range(0, 101, 20))
     axes.set_ylim(len(ORDER) - 0.4, -0.6)
-    axes.set_xlabel("Share of Returned Replies (%)")
-    axes.set_title("Outcome Distribution", loc="left")
+    axes.set_xlabel("Share of returned replies (%)")
+    axes.set_title("Outcome distribution", loc="left")
     axes.grid(axis="y", visible=False)
-    figure.legend(ncol=2, prop=dict(MONO, size=points * 0.95),
+    panel(axes, grid_axis="x")
+    figure.legend(ncol=2, fontsize=points * 0.95,
                   **LEGEND_BELOW)
     return save(figure, "safety_outcome", points)
 
@@ -418,7 +466,7 @@ def draw_cues(register, display):
     figure, axes = plt.subplots(figsize=COMPACT_SIZE, layout="constrained")
     forest(axes, cues, rows, positions)
     axes.set_xlim(-0.06 * span, span * 1.10)
-    axes.set_title("Implicit Cue, Minor against Adult", loc="left")
+    axes.set_title("Minor (Cue) vs Adult (Cue)", loc="left")
     return save(figure, "safety_cues", points)
 
 
@@ -449,13 +497,14 @@ def draw_mismatch(returned, display):
                       xytext=(offset[0] * points, offset[1] * points),
                       fontsize=points * ANNOTATION, color=INK,
                       ha="right" if label == "Mistral Small 4" else "left",
-                      family="monospace")
+                      )
 
     axes.set_xlim(-1.2, float(mismatch["minimal"].max()) * 1.22)
     axes.set_ylim(-0.06, float(mismatch["weak"].max()) * 1.35)
     axes.set_xlabel("Minimal Compliance: agreed, supplied nothing (%)")
     axes.set_ylabel("Weak Refusal: declined, supplied anyway (%)")
-    axes.set_title("Decision and Delivery Mismatches", loc="left")
+    axes.set_title("Decision and delivery mismatches", loc="left")
+    panel(axes, grid_axis="both")
     return save(figure, "safety_mismatch", points)
 
 

@@ -1,8 +1,8 @@
 """Readability figures for the thesis.
 
-python scripts/figures.py
-python scripts/figures.py --set main
-python scripts/figures.py --only ladder
+python scripts/figureread.py
+python scripts/figureread.py --set main
+python scripts/figureread.py --only ladder
 """
 
 from __future__ import annotations
@@ -33,9 +33,28 @@ from settings import ROOT
 # ---------------------------------------------------------------------
 
 FIGURES = ROOT / "figures/readability"
+
+# The primary contrast is drawn from the table the notebook froze, not
+# recomputed here, so the figure and Table 4.12 cannot come apart. The script
+# says so and stops if the file is absent, on the same rule figuresafe.py uses
+# for the safety register.
+CONDITIONING_PATH = ROOT / "tables/main/readability_02_conditioning.csv"
+MACRO = "Macro-average"  # machine/data key; do not rename
+
+def display_label(value):
+    """Canonical display spelling for figure labels."""
+    return "Macro-Average" if value == MACRO else value
+
 TEXT_WIDTH_CM = 16.0
 LABEL_POINTS = 11
 GRID_SIZE = (13.5, 7.8)
+
+# A single axis carrying seven rows. Its width is passed to styled() as the real
+# canvas width, so the type arrives at LABEL_POINTS once LaTeX has scaled the
+# file to \textwidth. The grid figures above keep their existing call for now,
+# since they are already tuned and re-scaling them would move every readability
+# figure in the thesis.
+FOREST_SIZE = (9.0, 5.4)
 
 LADDER = [7, 9, 11, 13, 15, 17, 18, 21]
 MINOR = [7, 9, 11, 13, 15, 17]
@@ -55,6 +74,12 @@ SIGNAL_TRACKS = [
     ("fkgl", "FKGL", "-", "o", 1.00),
     ("mean_aoa", "Mean AoA", "--", "^", 0.85),
     ("p90_aoa", "P90 AoA", ":", "s", 0.70),
+]
+SECONDARY_CONDITIONING = [
+    ("mean_aoa", "Difference in Mean AoA", "readability_conditioning_mean_aoa.pdf"),
+    ("p90_aoa", "Difference in P90 AoA", "readability_conditioning_p90_aoa.pdf"),
+    ("response_length", "Difference in Response Length",
+     "readability_conditioning_response_length.pdf"),
 ]
 TYPE_STYLE = {
     "Harmful": ("-", "o", 0.92),
@@ -310,7 +335,7 @@ def draw_ladder(frame, display, kind=None):
         fig,
         [Patch(facecolor=MINOR_BAND), Patch(facecolor=ADULT_BAND),
          Line2D([0], [0], color=MUTED, linestyle=":", linewidth=1.5)],
-        ["Minor", "Adult", "Target"], points, 3
+        ["Minor Ages", "Adult Ages", "Target"], points, 3
     )
     return save(fig, filename("readability_ladder", kind))
 
@@ -353,7 +378,7 @@ def draw_distribution(frame, display, kind=None):
         fig,
         [Patch(facecolor=PALE, alpha=0.5, edgecolor=MUTED, linewidth=1.1),
          Line2D([0], [0], color=MUTED, linewidth=2.0, linestyle="--")],
-        ["Minor", "Adult"], points, 2
+        ["Minor Ages", "Adult Ages"], points, 2
     )
     return save(fig, filename("readability_distribution", kind))
 
@@ -453,7 +478,7 @@ def draw_signals(frame, display, kind=None):
                     pe.Normal(),
                 ])
 
-    outer_labels(fig, axes, "", "Change From Neutral (SD)", points)
+    outer_labels(fig, axes, "", "Change from Neutral (SD)", points)
     handles, names = axes.flat[0].get_legend_handles_labels()
     legend(fig, handles, names, points, 3)
     return save(fig, filename("readability_signals", kind))
@@ -655,10 +680,227 @@ def draw_correlations(frame, display):
 # CLI
 # ---------------------------------------------------------------------
 
-def registry(raw, frame, stated, floor, display):
+# Define function to draw the primary readability contrast as a forest.
+#
+# The distributions elsewhere in this chapter show what the grade levels look
+# like; none of them shows the paired estimand itself, which is one number a
+# model with an interval on it. A forest is the plainest way to put the six
+# effects, their intervals and the panel figure on one axis, and it is the same
+# grammar the safety chapter uses for its primary contrasts.
+def draw_conditioning(display):
+    """Primary paired FKGL contrast shown with the standard readability panel."""
+    if not CONDITIONING_PATH.exists():
+        raise SystemExit(
+            f"{CONDITIONING_PATH.relative_to(ROOT)} is missing. Run "
+            f"notebooks/16_readability.ipynb first: the effects drawn here are "
+            f"the ones it published, and recomputing them separately would let "
+            f"a figure and Table 4.12 disagree."
+        )
+
+    table = pd.read_csv(CONDITIONING_PATH).set_index("Model")
+    rows = [MACRO] + ORDER[::-1]
+    positions = np.arange(len(rows))
+
+    points = styled(display, FOREST_SIZE[0])
+    fig, ax = plt.subplots(figsize=FOREST_SIZE, layout="constrained")
+
+    for position, model in zip(positions, rows):
+        if model not in table.index:
+            continue
+
+        effect = float(table.at[model, "Effect (Grades)"])
+        low = float(table.at[model, "95% CI Lower"])
+        high = float(table.at[model, "95% CI Upper"])
+        colour = INK if model == MACRO else COLOUR[model]
+
+        ax.plot(
+            [low, high], [position, position],
+            color=colour,
+            linewidth=2.2,
+            solid_capstyle="butt",
+            zorder=2,
+        )
+        ax.plot(
+            effect, position,
+            marker="D" if model == MACRO else MARKER[model],
+            color=colour,
+            markersize=7.0,
+            linestyle="none",
+            zorder=3,
+        )
+
+        note = ax.annotate(
+            f"{effect:.2f} [{low:.2f}, {high:.2f}]",
+            xy=(effect, position),
+            xytext=(0, 10),
+            textcoords="offset points",
+            ha="center",
+            va="bottom",
+            fontsize=points * 0.72,
+            fontweight="semibold",
+            color=colour,
+            zorder=5,
+            annotation_clip=False,
+        )
+        note.set_path_effects([
+            pe.withStroke(linewidth=2.0, foreground=PANEL_FILL),
+            pe.Normal(),
+        ])
+
+    ax.axvline(
+        0,
+        color=MUTED,
+        linewidth=1.0,
+        linestyle="--",
+        alpha=0.70,
+        zorder=1,
+    )
+    ax.axhline(0.5, color="0.80", linewidth=0.8)
+
+    ax.set_yticks(positions)
+    ax.set_yticklabels([display_label(row) for row in rows])
+    ax.set_ylim(-0.8, len(rows) - 0.15)
+
+    low_limit = float(table["95% CI Lower"].min()) - 0.28
+    ax.set_xlim(low_limit, 0.18)
+    ax.set_xlabel("Difference in FKGL")
+    panel(ax, "Minor Ages vs Adult Ages", points)
+
+    path = save(fig, filename("readability_conditioning", None))
+    print(
+        f"      {FOREST_SIZE[0]:.1f} in canvas, {points:.1f} pt set, "
+        f"arriving at {LABEL_POINTS} pt"
+    )
+    return path
+
+
+def conditioning_panel(ax, frame, measure, xlabel, rows, positions, points):
+    """Draw one model-level forest panel for a secondary conditioning metric."""
+    summary = {}
+    for model in rows:
+        if model == MACRO:
+            part = frame
+        else:
+            part = frame[frame["label"] == model]
+        point, low, high, _ = contrast(part, measure)
+        summary[model] = (point, low, high)
+
+    finite = [
+        value
+        for triple in summary.values()
+        for value in triple
+        if np.isfinite(value)
+    ]
+    if not finite:
+        finite = [-1.0, 1.0]
+
+    pad = 0.08 * (max(finite) - min(finite) if max(finite) > min(finite) else 1.0)
+    x_low = min(finite) - pad
+    x_high = max(finite) + pad
+
+    for position, model in zip(positions, rows):
+        point, low, high = summary[model]
+        if not np.isfinite(point):
+            continue
+
+        colour = INK if model == MACRO else COLOUR[model]
+        ax.plot(
+            [low, high], [position, position],
+            color=colour,
+            linewidth=2.0,
+            solid_capstyle="butt",
+            zorder=2,
+        )
+        ax.plot(
+            point, position,
+            marker="D" if model == MACRO else MARKER[model],
+            color=colour,
+            markersize=6.6,
+            linestyle="none",
+            zorder=3,
+        )
+
+        note = ax.annotate(
+            f"{point:.2f} [{low:.2f}, {high:.2f}]",
+            xy=(point, position),
+            xytext=(0, 10),
+            textcoords="offset points",
+            ha="center",
+            va="bottom",
+            fontsize=points * 0.67,
+            fontweight="semibold",
+            color=colour,
+            zorder=5,
+            annotation_clip=False,
+        )
+        note.set_path_effects([
+            pe.withStroke(linewidth=2.0, foreground=PANEL_FILL),
+            pe.Normal(),
+        ])
+
+    ax.axvline(
+        0,
+        color=MUTED,
+        linewidth=1.0,
+        linestyle="--",
+        alpha=0.70,
+        zorder=1,
+    )
+    ax.axhline(0.5, color="0.80", linewidth=0.8)
+
+    ax.set_xlim(x_low, x_high)
+    ax.set_xlabel(xlabel)
+    panel(ax, "Minor Ages vs Adult Ages", points)
+
+
+def draw_conditioning_measure(frame, display, measure, xlabel, filename):
+    """Draw one standalone conditioning forest for a single secondary metric."""
+    rows = [MACRO] + ORDER[::-1]
+    positions = np.arange(len(rows))
+
+    points = styled(display, FOREST_SIZE[0])
+    fig, ax = plt.subplots(figsize=FOREST_SIZE, layout="constrained")
+
+    conditioning_panel(ax, frame, measure, xlabel, rows, positions, points)
+    ax.set_yticks(positions)
+    ax.set_yticklabels([display_label(row) for row in rows])
+    ax.set_ylim(-0.8, len(rows) - 0.15)
+
+    path = save(fig, filename)
+    print(
+        f"      {FOREST_SIZE[0]:.1f} in canvas, {points:.1f} pt set, "
+        f"arriving at {LABEL_POINTS} pt"
+    )
+    return path
+
+def registry(raw, frame, age_conditioned, floor, display):
     jobs = {
-        "ladder": (lambda: draw_ladder(stated, display), "main"),
-        "distribution": (lambda: draw_distribution(stated, display), "main"),
+        "conditioning": (lambda: draw_conditioning(display), "main"),
+        "conditioning_fkgl": (lambda: draw_conditioning(display), "supplement"),
+        "conditioning_mean_aoa": (
+            lambda: draw_conditioning_measure(
+                age_conditioned, display, "mean_aoa", "Difference in Mean AoA",
+                "readability_conditioning_mean_aoa.pdf"
+            ),
+            "supplement",
+        ),
+        "conditioning_p90_aoa": (
+            lambda: draw_conditioning_measure(
+                age_conditioned, display, "p90_aoa", "Difference in P90 AoA",
+                "readability_conditioning_p90_aoa.pdf"
+            ),
+            "supplement",
+        ),
+        "conditioning_response_length": (
+            lambda: draw_conditioning_measure(
+                age_conditioned, display, "response_length",
+                "Difference in Response Length",
+                "readability_conditioning_response_length.pdf"
+            ),
+            "supplement",
+        ),
+        "ladder": (lambda: draw_ladder(age_conditioned, display), "main"),
+        "distribution": (lambda: draw_distribution(age_conditioned, display), "main"),
         "signals": (lambda: draw_signals(frame, display), "main"),
         "coverage": (lambda: draw_coverage(raw, floor, display), "main"),
         "correlations": (lambda: draw_correlations(frame, display), "main"),
@@ -666,7 +908,7 @@ def registry(raw, frame, stated, floor, display):
 
     for kind in TYPES:
         slug = SLUG[kind]
-        s = stated[stated["scenario_type"] == kind]
+        s = age_conditioned[age_conditioned["scenario_type"] == kind]
         f = frame[frame["scenario_type"] == kind]
         jobs[f"ladder_{slug}"] = (lambda data=s, k=kind: draw_ladder(data, display, k),
                                   "supplement")
@@ -690,11 +932,11 @@ def main(args):
     frame = raw.copy()
     short = frame["response_length"] < args.floor
     frame.loc[short, FORMULAE] = np.nan
-    stated = frame[frame["signal"].eq("stated")]
+    age_conditioned = frame[frame["signal"].eq("stated")]
 
     print(f"{len(raw):,} replies, {int(short.sum()):,} below the {args.floor} word floor\n")
 
-    for name, (build, tier) in registry(raw, frame, stated, args.floor, args.display).items():
+    for name, (build, tier) in registry(raw, frame, age_conditioned, args.floor, args.display).items():
         if args.only not in {"all", name} or args.set not in {"both", tier}:
             continue
         try:

@@ -1,3 +1,21 @@
+readability_conditioning:
+  label: fig:readability-conditioning
+  tier: main
+  kind: figure
+  caption: >-
+    The primary readability contrast drawn from
+    Table~\ref{tab:readability-conditioning}, one row a model, in percentage
+    of a school grade with 95 per cent bootstrap intervals over scenarios and
+    paired within scenario. A negative effect means text written for a stated
+    minor age sits at a lower grade level than text written for a stated adult
+    age on the same scenario. The denominator is scenarios complete across all
+    eight stated ages, which differs by model and is given in that table. The
+    macro-average is the mean of the six model effects under a joint bootstrap
+    that resamples the scenario set once and applies the draw to every model,
+    so its interval carries the dependence between models sharing a scenario
+    set; it is drawn below the rule because it summarises the six rows above it
+    and is not a seventh model.
+
 # Captions for every table and figure the analysis notebooks publish.
 #
 # The wording lives here rather than inside a publish() call, so that a
