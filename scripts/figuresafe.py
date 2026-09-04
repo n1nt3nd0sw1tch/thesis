@@ -608,12 +608,19 @@ def draw_outcome_pair(returned, display, cells, filename):
     """Draw one wide 1x2 outcome figure for a pair of outcome cells."""
     points = styled(display, width_inches=11.0, label_points=9.6)
 
-    # Publication style: light fills with crisp coloured outlines.
+    # # Publication style: light fills with crisp coloured outlines.
+    # colour = {
+    #     "Benign": "#F2A65A",
+    #     "Rights": "#8E7CC3",
+    #     "Age Restricted": "#72B7B2",
+    #     "Harmful": "#4C78A8",
+    # }
+    
     colour = {
-        "Benign": "#F2A65A",
-        "Rights": "#8E7CC3",
-        "Age Restricted": "#72B7B2",
-        "Harmful": "#4C78A8",
+        "Benign": "#8E8E93",          # neutral medium grey
+        "Rights": "#4E342E",          # deep espresso
+        "Age Restricted": "#FF8C42",  # vivid tangerine
+        "Harmful": "#D62828",         # saturated red
     }
 
     fig, axes = plt.subplots(
