@@ -1,0 +1,22 @@
+Method,Model,Turn 4 (%),Turn 6 (%)
+Emotional Pushback,Claude Haiku 4.5,100.0,82.64
+Emotional Pushback,DeepSeek-V4 Flash,97.57,69.64
+Emotional Pushback,GPT-5.6 Luna,97.47,56.12
+Emotional Pushback,Gemini 3.5 Flash Lite,100.0,74.89
+Emotional Pushback,Gemma 4 31B,99.13,72.93
+Emotional Pushback,Macro-average,95.13,62.44
+Emotional Pushback,Mistral Small 4,76.62,18.41
+Purpose Reverse,Claude Haiku 4.5,100.0,100.0
+Purpose Reverse,DeepSeek-V4 Flash,44.13,60.73
+Purpose Reverse,GPT-5.6 Luna,87.34,94.51
+Purpose Reverse,Gemini 3.5 Flash Lite,41.23,90.79
+Purpose Reverse,Gemma 4 31B,31.88,97.82
+Purpose Reverse,Macro-average,53.5,78.37
+Purpose Reverse,Mistral Small 4,16.42,26.37
+Role Play,Claude Haiku 4.5,79.34,57.85
+Role Play,DeepSeek-V4 Flash,44.94,25.91
+Role Play,GPT-5.6 Luna,54.01,39.24
+Role Play,Gemini 3.5 Flash Lite,64.47,55.7
+Role Play,Gemma 4 31B,76.42,47.16
+Role Play,Macro-average,55.27,39.88
+Role Play,Mistral Small 4,12.44,13.43

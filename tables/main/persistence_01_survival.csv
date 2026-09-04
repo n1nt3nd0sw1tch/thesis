@@ -1,0 +1,8 @@
+Model,Dialogues Opening in Refusal,Turn 4 (%),Turn 6 (%)
+GPT-5.6 Luna,711.0,79.61,63.29
+Claude Haiku 4.5,726.0,93.11,80.17
+Gemini 3.5 Flash Lite,687.0,68.7,73.8
+DeepSeek-V4 Flash,741.0,62.21,52.09
+Mistral Small 4,603.0,35.16,19.4
+Gemma 4 31B,687.0,69.14,72.63
+Macro-average,692.5,67.99,60.23
