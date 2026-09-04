@@ -1,65 +1,117 @@
-"""Joint-analysis figures for the thesis.
+"""Joint safety-readability figures for the thesis.
 
-Designed to mirror the grammar of figureread.py and figuresafe.py:
-- same typography scaling idea;
-- restrained panel styling;
-- full model names;
-- bottom legends;
-- outer labels where useful;
-- no decorative titles.
+The script reads only the frozen outputs of notebooks/17_joint.ipynb and uses
+exactly the same project-wide figure grammar as figureread.py and figuresafe.py:
+one model palette, horizontal labels, restrained grey panels, no figure titles,
+and quantitative annotations only where they help interpretation.
+
+Main figures
+------------
+joint_ladders.pdf
+    Raw age trajectories for refusal in Age Restricted scenarios and FKGL over
+    all stated-age replies.
+joint_progression.pdf
+    Within-model cumulative location of the 7-21 age shift on the complete
+    four-age cohort. This is the clearest shape comparison between safety and
+    readability.
+joint_boundary.pdf
+    17-18 step as a share of the full 7-21 shift for both outcomes.
+joint_concordance.pdf
+    Scenario-level Spearman concordance between safety adaptation and linguistic
+    simplification.
+
+Supplementary figures
+---------------------
+joint_phases.pdf
+    Full three-part decomposition of the 7-21 shift.
+joint_concordance_intervals.pdf
+    Bootstrap intervals for the pooled and Age Restricted concordance estimates.
 
 Examples
 --------
 python scripts/figurejoint.py
 python scripts/figurejoint.py --set main
-python scripts/figurejoint.py --only shape
+python scripts/figurejoint.py --only progression
 """
 
 from __future__ import annotations
 
 import argparse
-from pathlib import Path
 import sys
+from pathlib import Path
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from matplotlib import colormaps
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch
+from matplotlib.ticker import MultipleLocator
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
-# ---------------------------------------------------------------------
-# Project imports
-# ---------------------------------------------------------------------
-
-# Use the exact same project configuration as figureread.py / figuresafe.py.
-# Do not define a second model palette here: model identity must have one
-# colour everywhere in the thesis.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import analysis
 from settings import ROOT
 
-COLOUR = analysis.COLOUR
-INK = analysis.INK
-MUTED = analysis.MUTED
-MODEL_ORDER = list(analysis.ORDER)
-MACRO = "Macro-average"  # machine/data key; display as Macro-Average
 
 # ---------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------
 
 FIGURES = ROOT / "figures" / "joint"
+
+LADDERS_PATH = ROOT / "tables" / "main" / "joint_01_ladders.csv"
+SHAPE_PATH = ROOT / "tables" / "main" / "joint_02_shape.csv"
+CONCORDANCE_PATH = ROOT / "tables" / "supplement" / "joint_03_concordance.csv"
+
 TEXT_WIDTH_CM = 16.0
 LABEL_POINTS = 10.2
 GRID_SIZE = (13.5, 7.8)
 WIDE_SIZE = (13.5, 6.2)
-FOREST_SIZE = (13.5, 7.0)
+FOREST_SIZE = (12.4, 5.9)
+MAP_SIZE = (9.6, 5.8)
 
 PANEL_FILL = "#F5F5F5"
 MINOR_BAND = "#E8EDF2"
 ADULT_BAND = "#F2EDE8"
+
+INK = analysis.INK
+MUTED = analysis.MUTED
+COLOUR = analysis.COLOUR
+MARKER = analysis.MARKER
+MODEL_ORDER = list(analysis.ORDER)
+MACRO = analysis.MACRO
+
+LEGEND = dict(
+    loc="lower center",
+    frameon=False,
+    bbox_to_anchor=(0.5, -0.065),
+    handlelength=2.1,
+    handletextpad=0.6,
+    columnspacing=1.35,
+)
+
+AGES = [7, 9, 11, 13, 15, 17, 18, 21]
+SHAPE_AGES = [7, 17, 18, 21]
+
+SAFETY_LADDER = "Refusal Rate (%)"
+READABILITY_LADDER = "Grade Level"
+SAFETY_SHAPE = "Refusal Rate (pp)"
+READABILITY_SHAPE = "Grade Level"
+
+PHASES = [
+    "Across Childhood (7 to 17)",
+    "Step at the Boundary (17 to 18)",
+    "Above the Boundary (18 to 21)",
+]
+PHASE_AXIS = ["7-17", "17-18", "18-21"]
+PHASE_COLOUR = {
+    PHASES[0]: "#AAB7C4",
+    PHASES[1]: "#4F5B66",
+    PHASES[2]: "#D8C9BC",
+}
 
 MODEL_AXIS = {
     "GPT-5.6 Luna": "GPT-5.6\nLuna",
@@ -69,41 +121,62 @@ MODEL_AXIS = {
     "Mistral Small 4": "Mistral\nSmall 4",
     "Gemma 4 31B": "Gemma 4\n31B",
     MACRO: "Macro-\nAverage",
-    "Panel Ratio": "Panel\nRatio",
 }
 
-AGES = [7, 9, 11, 13, 15, 17, 18, 21]
-SHAPE_COLUMNS = [
-    "Across Childhood (7 to 17)",
-    "Step at the Boundary (17 to 18)",
-    "Above the Boundary (18 to 21)",
-]
-COMPONENT_LABEL = {
-    "Across Childhood (7 to 17)": "Across childhood",
-    "Step at the Boundary (17 to 18)": "Step at the boundary",
-    "Above the Boundary (18 to 21)": "Above the boundary",
-}
-COMPONENT_COLOUR = {
-    "Across Childhood (7 to 17)": "#B8C7D9",
-    "Step at the Boundary (17 to 18)": "#4A6C8C",
-    "Above the Boundary (18 to 21)": "#D9BE98",
+CONCORDANCE_SCENARIOS = ["Pooled", "Rights", "Age Restricted", "Harmful"]
+CONCORDANCE_AXIS = {
+    "Pooled": "Pooled",
+    "Rights": "Rights",
+    "Age Restricted": "Age\nRestricted",
+    "Harmful": "Harmful",
 }
 
-CONCORDANCE_ORDER = ["Pooled", "Benign", "Rights", "Age Restricted", "Harmful"]
 FIGURESPEC = {
-    "ladders": ("main", "joint_ladders.pdf", "Age ladders for refusal and grade level"),
-    "shape": ("main", "joint_shape.pdf", "Boundary-shape decomposition"),
-    "concordance": ("main", "joint_concordance.pdf", "Concordance heatmap"),
-    "concordance_forest": (
+    "ladders": (
+        "main",
+        "joint_ladders.pdf",
+        "Raw safety and readability trajectories across age",
+    ),
+    "progression": (
+        "main",
+        "joint_progression.pdf",
+        "Cumulative location of the age shift within each model",
+    ),
+    "boundary": (
+        "main",
+        "joint_boundary.pdf",
+        "Refusal and readability concentration at the 17-18 boundary",
+    ),
+    "concordance": (
+        "main",
+        "joint_concordance.pdf",
+        "Scenario-level safety-readability concordance",
+    ),
+    "phases": (
         "supplement",
-        "joint_concordance_forest.pdf",
-        "Concordance estimates with confidence intervals",
+        "joint_phases.pdf",
+        "Three-part decomposition of the 7-21 age shift",
+    ),
+    "concordance_intervals": (
+        "supplement",
+        "joint_concordance_intervals.pdf",
+        "Bootstrap intervals for pooled and Age Restricted concordance",
     ),
 }
+
+STALE = [
+    "joint_profiles.pdf",
+    "joint_boundary_concentration.pdf",
+    "joint_phase_map.pdf",
+    "joint_focus_forest.pdf",
+    "joint_threshold_scatter.pdf",
+]
+
 
 # ---------------------------------------------------------------------
 # Shared figure grammar
 # ---------------------------------------------------------------------
+
 
 def styled(display, width_inches=7.4, label_points=None):
     scale = display * TEXT_WIDTH_CM / (width_inches * 2.54)
@@ -111,7 +184,7 @@ def styled(display, width_inches=7.4, label_points=None):
     plt.rcParams.update({
         "font.size": points,
         "axes.labelsize": points,
-        "axes.titlesize": points * 1.03,
+        "axes.titlesize": points * 1.05,
         "xtick.labelsize": points * 0.95,
         "ytick.labelsize": points * 0.95,
         "legend.fontsize": points * 0.95,
@@ -127,338 +200,725 @@ def styled(display, width_inches=7.4, label_points=None):
     return points
 
 
-def panel(ax, title=None, points=9, ygrid=True):
+def grid(figsize=GRID_SIZE, **kwargs):
+    return plt.subplots(2, 3, figsize=figsize, **kwargs)
+
+
+def panel(ax, title=None, points=9):
     ax.set_facecolor(PANEL_FILL)
-    if ygrid:
-        ax.grid(axis="y", linestyle="-", linewidth=0.6, alpha=0.25, color=MUTED)
-    else:
-        ax.grid(False)
+    ax.grid(axis="y", linestyle="-", linewidth=0.6, alpha=0.25, color=MUTED)
     ax.set_axisbelow(True)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     if title:
-        ax.set_title(title, pad=points * 0.45, color="black")
+        ax.set_title(title, pad=points * 0.5, color="black")
 
 
-def heatmap_panel(ax, title=None, points=9):
+def map_panel(ax, title=None, points=9):
     ax.set_facecolor("white")
     ax.grid(False)
-    ax.spines["top"].set_visible(False)
-    ax.spines["right"].set_visible(False)
+    ax.set_axisbelow(False)
     if title:
-        ax.set_title(title, pad=points * 0.45, color="black")
+        ax.set_title(title, pad=points * 0.5, color="black")
 
 
-def save(fig, name):
+def outer_labels(fig, axes, xlabel, ylabel, points):
+    for ax in np.asarray(axes).flat:
+        ax.label_outer()
+    if xlabel:
+        fig.supxlabel(xlabel, color="black", fontsize=points * 1.05)
+    if ylabel:
+        fig.supylabel(ylabel, color="black", fontsize=points * 1.10)
+
+
+def legend(fig, handles, labels, points, ncol):
+    fig.legend(handles, labels, ncol=ncol, fontsize=points * 1.05, **LEGEND)
+
+
+def save(fig, filename):
     FIGURES.mkdir(parents=True, exist_ok=True)
-    path = FIGURES / name
+    path = FIGURES / filename
     fig.savefig(path, bbox_inches="tight")
     plt.close(fig)
-    print(f"  {path}")
+    print(f"  {path.name}")
     return path
 
 
+def clean_stale():
+    FIGURES.mkdir(parents=True, exist_ok=True)
+    for filename in STALE:
+        path = FIGURES / filename
+        if path.exists():
+            path.unlink()
+
+
+def age_bands(ax):
+    ax.axvspan(6.4, 17.5, color=MINOR_BAND, zorder=0)
+    ax.axvspan(17.5, 21.6, color=ADULT_BAND, zorder=0)
+    ax.axvline(17.5, color=MUTED, linewidth=0.8, linestyle="--", alpha=0.70, zorder=1)
+
+
+def readable_on(rgba):
+    r, g, b = rgba[:3]
+    return "white" if 0.2126 * r + 0.7152 * g + 0.0722 * b < 0.42 else "black"
+
+
 # ---------------------------------------------------------------------
-# Data loading
+# Frozen data
 # ---------------------------------------------------------------------
 
-LADDERS_PATH = ROOT / "tables" / "main" / "joint_01_ladders.csv"
-SHAPE_PATH = ROOT / "tables" / "main" / "joint_02_shape.csv"
-CONCORDANCE_PATH = ROOT / "tables" / "supplement" / "joint_03_concordance.csv"
 
-
-def read_table(path: Path) -> pd.DataFrame:
-    """Read one frozen Notebook 17 table and fail with a useful path."""
+def read_table(path, required):
     if not path.exists():
-        raise FileNotFoundError(
-            f"Required frozen table not found: {path}\n"
-            "Run notebooks/17_joint.ipynb first so the published CSV exists."
+        raise SystemExit(
+            f"{path.relative_to(ROOT)} is missing. Run notebooks/17_joint.ipynb "
+            "before generating the joint figures."
         )
-    return pd.read_csv(path)
+    frame = pd.read_csv(path)
+    missing = [column for column in required if column not in frame.columns]
+    if missing:
+        raise ValueError(f"{path.name} is missing columns: {missing}")
+    return frame
 
 
 def load_ladders():
-    return read_table(LADDERS_PATH)
+    return read_table(
+        LADDERS_PATH,
+        ["Measure", "Model", *[f"Age {age}" for age in AGES]],
+    )
 
 
 def load_shape():
-    return read_table(SHAPE_PATH)
+    return read_table(
+        SHAPE_PATH,
+        [
+            "Measure",
+            "Model",
+            *PHASES,
+            "Full Range (7 to 21)",
+            "Step as Share of Range (%)",
+            "n",
+        ],
+    )
 
 
 def load_concordance():
-    return read_table(CONCORDANCE_PATH)
+    return read_table(
+        CONCORDANCE_PATH,
+        [
+            "Scenario Type",
+            "Model",
+            "n",
+            "rho",
+            "95% CI Lower",
+            "95% CI Upper",
+            "Reason",
+        ],
+    )
 
 
 # ---------------------------------------------------------------------
-# Figures
+# Reductions derived only from the frozen tables
 # ---------------------------------------------------------------------
 
-def figure_ladders():
-    df = load_ladders()
-    points = styled(display=1, width_inches=WIDE_SIZE[0])
+
+def ordered_rows(frame, models):
+    out = frame[frame["Model"].isin(models)].copy()
+    out["Model"] = pd.Categorical(out["Model"], categories=models, ordered=True)
+    return out.sort_values("Model").reset_index(drop=True)
+
+
+def shape_rows(measure, include_macro=False):
+    models = MODEL_ORDER + ([MACRO] if include_macro else [])
+    frame = load_shape()
+    return ordered_rows(frame[frame["Measure"].eq(measure)], models)
+
+
+def phase_shares(measure, include_macro=False):
+    out = shape_rows(measure, include_macro=include_macro).copy()
+    full = out["Full Range (7 to 21)"].astype(float).replace(0, np.nan)
+    for phase in PHASES:
+        out[phase] = 100.0 * out[phase].astype(float) / full
+    return out
+
+
+def progression_table(measure):
+    out = phase_shares(measure, include_macro=False)
+    rows = []
+    for _, row in out.iterrows():
+        first = float(row[PHASES[0]])
+        second = float(row[PHASES[1]])
+        rows.append({
+            "Model": row["Model"],
+            7: 0.0,
+            17: first,
+            18: first + second,
+            21: 100.0,
+            "Boundary": second,
+        })
+    return pd.DataFrame(rows)
+
+
+def boundary_table():
+    safety = shape_rows(SAFETY_SHAPE, include_macro=True)[
+        ["Model", "Step as Share of Range (%)"]
+    ].rename(columns={"Step as Share of Range (%)": "Safety"})
+    reading = shape_rows(READABILITY_SHAPE, include_macro=True)[
+        ["Model", "Step as Share of Range (%)"]
+    ].rename(columns={"Step as Share of Range (%)": "Readability"})
+    return safety.merge(reading, on="Model", how="inner")
+
+
+def ci_excludes_zero(row):
+    low = row["95% CI Lower"]
+    high = row["95% CI Upper"]
+    if pd.isna(low) or pd.isna(high):
+        return False
+    return bool(low > 0 or high < 0)
+
+
+# ---------------------------------------------------------------------
+# Main 1: raw ladders
+# ---------------------------------------------------------------------
+
+
+def draw_ladders(display):
+    frame = load_ladders()
+    points = styled(display, WIDE_SIZE[0])
     fig, axes = plt.subplots(1, 2, figsize=WIDE_SIZE)
 
-    measures = ["Refusal Rate (%)", "Grade Level"]
-    x = np.arange(len(AGES))
+    specs = [
+        (SAFETY_LADDER, "Refusal", "Refusal Rate (%)", (0, 85), 10),
+        (READABILITY_LADDER, "FKGL", "Flesch-Kincaid Grade Level", (4.0, 10.2), 1),
+    ]
 
-    for ax, measure in zip(axes, measures):
-        panel(ax, measure, points=points)
-        ax.axvspan(-0.5, 5.5, color=MINOR_BAND, alpha=0.55, zorder=0)
-        ax.axvspan(5.5, 7.5, color=ADULT_BAND, alpha=0.6, zorder=0)
-        ax.axvline(5.5, color=MUTED, linewidth=0.9, linestyle="--", zorder=1)
+    for ax, (measure, title, ylabel, ylim, tick) in zip(axes, specs):
+        age_bands(ax)
+        sub = frame[frame["Measure"].eq(measure)]
 
-        sub = df[df["Measure"] == measure].copy()
         for model in MODEL_ORDER:
-            row = sub[sub["Model"] == model]
+            row = sub[sub["Model"].eq(model)]
             if row.empty:
                 continue
-            y = row[[f"Age {age}" for age in AGES]].iloc[0].astype(float).to_numpy()
+            values = row[[f"Age {age}" for age in AGES]].iloc[0].astype(float).to_numpy()
             ax.plot(
-                x, y,
+                AGES,
+                values,
                 color=COLOUR[model],
-                marker="o",
-                linewidth=1.9,
-                markersize=4.1,
-                label=model,
+                marker=MARKER[model],
+                markersize=4.6,
+                markerfacecolor="white",
+                markeredgecolor=COLOUR[model],
+                markeredgewidth=1.05,
+                linewidth=1.8,
                 zorder=3,
             )
+            # The predeclared legal boundary is the comparison of interest.
+            for age in (17, 18):
+                idx = AGES.index(age)
+                ax.plot(
+                    age,
+                    values[idx],
+                    marker=MARKER[model],
+                    markersize=6.1,
+                    color=COLOUR[model],
+                    markeredgecolor="white",
+                    markeredgewidth=0.6,
+                    linestyle="none",
+                    zorder=4,
+                )
 
-        ax.set_xticks(x)
-        ax.set_xticklabels([str(age) for age in AGES], rotation=0)
-        ax.set_xlabel("Stated age")
-        ax.set_xlim(-0.3, 7.3)
+        panel(ax, title, points)
+        ax.set_xticks(AGES)
+        ax.set_xlim(6.4, 21.6)
+        ax.set_ylim(*ylim)
+        ax.yaxis.set_major_locator(MultipleLocator(tick))
+        ax.set_xlabel("Age")
+        ax.set_ylabel(ylabel)
 
-        if measure == "Refusal Rate (%)":
-            ax.set_ylabel("Refusal rate (%)")
-            ax.set_ylim(0, max(82, np.nanmax(sub[[f"Age {age}" for age in AGES]].to_numpy()) + 4))
-        else:
-            ax.set_ylabel("Grade level")
-            ax.set_ylim(4.0, max(10.2, np.nanmax(sub[[f"Age {age}" for age in AGES]].to_numpy()) + 0.35))
-
-    handles = [Line2D([0], [0], color=COLOUR[m], marker='o', linewidth=1.9, markersize=4.5)
-               for m in MODEL_ORDER]
-    labels = MODEL_ORDER
-    fig.legend(handles, labels, ncol=3, loc="lower center", frameon=False,
-               bbox_to_anchor=(0.5, -0.02), handlelength=2.2,
-               handletextpad=0.6, columnspacing=1.4)
-    fig.subplots_adjust(bottom=0.25, wspace=0.25)
+    handles = [
+        Line2D(
+            [0], [0], color=COLOUR[model], marker=MARKER[model],
+            markerfacecolor="white", markeredgecolor=COLOUR[model],
+            linewidth=1.8, markersize=4.8,
+        )
+        for model in MODEL_ORDER
+    ]
+    legend(fig, handles, MODEL_ORDER, points, 3)
+    fig.subplots_adjust(left=0.08, right=0.99, top=0.94, bottom=0.29, wspace=0.24)
     return save(fig, FIGURESPEC["ladders"][1])
 
 
-def figure_shape():
-    df = load_shape()
-    points = styled(display=1, width_inches=WIDE_SIZE[0])
-    fig, axes = plt.subplots(1, 2, figsize=WIDE_SIZE)
+# ---------------------------------------------------------------------
+# Main 2: cumulative location of the age shift
+# ---------------------------------------------------------------------
 
-    panel_rows = [
-        ("Refusal Rate (pp)", "Change in refusal rate (pp)"),
-        ("Grade Level", "Change in grade level"),
-    ]
 
-    for ax, (measure, xlabel) in zip(axes, panel_rows):
-        panel(ax, measure, points=points)
-        sub = df[(df["Measure"] == measure) & (df["Model"] != "Panel Ratio")].copy()
-        order = MODEL_ORDER + [MACRO]
-        sub["Model"] = pd.Categorical(sub["Model"], categories=order, ordered=True)
-        sub = sub.sort_values("Model")
-        y = np.arange(len(sub))
+def boundary_badge(ax, model, safety, reading, points):
+    text = f"17-18:  Refusal {safety:.1f}%\n          FKGL {reading:.1f}%"
+    ax.text(
+        0.035,
+        0.955,
+        text,
+        transform=ax.transAxes,
+        ha="left",
+        va="top",
+        fontsize=points * 0.78,
+        fontweight="semibold",
+        color=COLOUR[model],
+        linespacing=1.15,
+        zorder=7,
+        bbox=dict(
+            boxstyle="round,pad=0.22",
+            facecolor="white",
+            alpha=0.92,
+            edgecolor="#D0D0D0",
+            linewidth=0.55,
+        ),
+    )
 
+
+def draw_progression(display):
+    safety = progression_table(SAFETY_SHAPE).set_index("Model")
+    reading = progression_table(READABILITY_SHAPE).set_index("Model")
+
+    points = styled(display)
+    fig, axes = grid(
+        figsize=GRID_SIZE,
+        sharex=True,
+        sharey=True,
+        constrained_layout=True,
+    )
+
+    for ax, model in zip(axes.flat, MODEL_ORDER):
+        age_bands(ax)
+        s = safety.loc[model, SHAPE_AGES].astype(float).to_numpy()
+        r = reading.loc[model, SHAPE_AGES].astype(float).to_numpy()
+
+        ax.plot(
+            SHAPE_AGES,
+            s,
+            color=COLOUR[model],
+            marker="o",
+            markersize=5.1,
+            linewidth=2.0,
+            zorder=3,
+        )
+        ax.plot(
+            SHAPE_AGES,
+            r,
+            color=COLOUR[model],
+            linestyle="--",
+            marker="s",
+            markersize=4.8,
+            markerfacecolor="white",
+            markeredgecolor=COLOUR[model],
+            markeredgewidth=1.2,
+            linewidth=1.8,
+            zorder=3,
+        )
+
+        panel(ax, model, points)
+        boundary_badge(
+            ax,
+            model,
+            float(safety.loc[model, "Boundary"]),
+            float(reading.loc[model, "Boundary"]),
+            points,
+        )
+
+        ax.set_xticks(SHAPE_AGES)
+        ax.set_xlim(6.4, 21.6)
+        ax.set_ylim(-3, 106)
+        ax.yaxis.set_major_locator(MultipleLocator(20))
+
+    outer_labels(fig, axes, "Age", "Cumulative Share of 7-21 Shift (%)", points)
+    legend(
+        fig,
+        [
+            Line2D([0], [0], color=INK, marker="o", linewidth=2.0),
+            Line2D(
+                [0], [0], color=INK, linestyle="--", marker="s",
+                markerfacecolor="white", markeredgecolor=INK, linewidth=1.8,
+            ),
+        ],
+        ["Refusal", "FKGL"],
+        points,
+        2,
+    )
+    return save(fig, FIGURESPEC["progression"][1])
+
+
+# ---------------------------------------------------------------------
+# Main 3: 17-18 boundary concentration
+# ---------------------------------------------------------------------
+
+
+def draw_boundary(display):
+    frame = boundary_table()
+    order = MODEL_ORDER + [MACRO]
+    frame = ordered_rows(frame, order)
+
+    points = styled(display, width_inches=10.0)
+    fig, ax = plt.subplots(figsize=(10.0, 5.8), constrained_layout=True)
+    panel(ax, None, points)
+    ax.grid(axis="x", linestyle="-", linewidth=0.6, alpha=0.25, color=MUTED)
+    ax.grid(axis="y", visible=False)
+
+    y = np.arange(len(frame))
+    for yi, row in frame.iterrows():
+        model = row["Model"]
+        safety = float(row["Safety"])
+        reading = float(row["Readability"])
+        colour = INK if model == MACRO else COLOUR[model]
+        marker = "D" if model == MACRO else MARKER[model]
+        linewidth = 2.3 if model == MACRO else 1.6
+
+        ax.plot(
+            [reading, safety], [yi, yi],
+            color=colour, linewidth=linewidth, alpha=0.72, zorder=2,
+        )
+        ax.plot(
+            safety, yi, marker=marker, markersize=6.4,
+            color=colour, linestyle="none", zorder=4,
+        )
+        ax.plot(
+            reading, yi, marker="s", markersize=6.0,
+            markerfacecolor="white", markeredgecolor=colour,
+            markeredgewidth=1.5, linestyle="none", zorder=4,
+        )
+
+        # Exact values are the point of this figure. Stagger only the one pair
+        # whose values almost coincide.
+        if abs(safety - reading) < 5:
+            ax.annotate(
+                f"{safety:.1f}", (safety, yi), xytext=(6, 7),
+                textcoords="offset points", ha="left", va="bottom",
+                fontsize=points * 0.73, fontweight="bold", color=colour,
+            )
+            ax.annotate(
+                f"{reading:.1f}", (reading, yi), xytext=(6, -8),
+                textcoords="offset points", ha="left", va="top",
+                fontsize=points * 0.73, fontweight="bold", color=colour,
+            )
+        else:
+            ax.annotate(
+                f"{reading:.1f}", (reading, yi), xytext=(-6, 0),
+                textcoords="offset points", ha="right", va="center",
+                fontsize=points * 0.73, fontweight="bold", color=colour,
+            )
+            ax.annotate(
+                f"{safety:.1f}", (safety, yi), xytext=(6, 0),
+                textcoords="offset points", ha="left", va="center",
+                fontsize=points * 0.73, fontweight="bold", color=colour,
+            )
+
+    # Visually separate the panel summary without changing model order.
+    ax.axhline(len(MODEL_ORDER) - 0.5, color="#D0D0D0", linewidth=0.8)
+    ax.set_yticks(y)
+    ax.set_yticklabels([MODEL_AXIS[model] for model in frame["Model"]])
+    ax.invert_yaxis()
+    ax.set_xlim(0, 76)
+    ax.xaxis.set_major_locator(MultipleLocator(10))
+    ax.set_xlabel("Boundary Share of 7-21 Shift (%)")
+
+    legend(
+        fig,
+        [
+            Line2D([0], [0], marker="o", color=INK, linestyle="none", markersize=6.2),
+            Line2D(
+                [0], [0], marker="s", markerfacecolor="white",
+                markeredgecolor=INK, linestyle="none", markersize=6.0,
+            ),
+        ],
+        ["Refusal", "FKGL"],
+        points,
+        2,
+    )
+    return save(fig, FIGURESPEC["boundary"][1])
+
+
+# ---------------------------------------------------------------------
+# Main 4: scenario concordance
+# ---------------------------------------------------------------------
+
+
+def draw_concordance(display):
+    frame = load_concordance().copy()
+    frame = frame[frame["Scenario Type"].isin(CONCORDANCE_SCENARIOS)]
+    frame["Model"] = pd.Categorical(frame["Model"], categories=MODEL_ORDER, ordered=True)
+    frame["Scenario Type"] = pd.Categorical(
+        frame["Scenario Type"], categories=CONCORDANCE_SCENARIOS, ordered=True,
+    )
+
+    table = frame.pivot(index="Model", columns="Scenario Type", values="rho").reindex(
+        index=MODEL_ORDER,
+        columns=CONCORDANCE_SCENARIOS,
+    )
+    values = table.to_numpy(dtype=float)
+
+    points = styled(display, MAP_SIZE[0], label_points=9.4)
+    fig, ax = plt.subplots(figsize=MAP_SIZE, constrained_layout=True)
+    map_panel(ax, None, points)
+
+    cmap = colormaps["RdBu_r"].copy()
+    cmap.set_bad("#FFFFFF")
+    image = ax.imshow(values, cmap=cmap, vmin=-0.8, vmax=0.8, aspect="auto")
+
+    ax.set_xticks(
+        range(len(CONCORDANCE_SCENARIOS)),
+        [CONCORDANCE_AXIS[value] for value in CONCORDANCE_SCENARIOS],
+        rotation=0,
+    )
+    ax.set_yticks(range(len(MODEL_ORDER)), [MODEL_AXIS[model] for model in MODEL_ORDER])
+    ax.tick_params(length=0)
+    for spine in ax.spines.values():
+        spine.set_visible(False)
+
+    for row_i, model in enumerate(MODEL_ORDER):
+        for col_i, scenario in enumerate(CONCORDANCE_SCENARIOS):
+            row = frame[
+                frame["Model"].eq(model) & frame["Scenario Type"].eq(scenario)
+            ]
+            if row.empty:
+                continue
+            row = row.iloc[0]
+            value = row["rho"]
+            reason = str(row["Reason"])
+
+            if pd.isna(value):
+                text = "const." if "constant" in reason else "n.e."
+                colour = MUTED
+            else:
+                text = f"{float(value):.2f}"
+                if ci_excludes_zero(row):
+                    text += "*"
+                if "small stratum" in reason:
+                    text += "†"
+                colour = readable_on(cmap((float(value) + 0.8) / 1.6))
+
+            ax.text(
+                col_i, row_i, text,
+                ha="center", va="center",
+                fontsize=points * 0.80,
+                fontweight="bold" if not pd.isna(value) else "normal",
+                color=colour,
+            )
+
+    for x in np.arange(-0.5, len(CONCORDANCE_SCENARIOS), 1):
+        ax.axvline(x, color="white", linewidth=1.0)
+    for y in np.arange(-0.5, len(MODEL_ORDER), 1):
+        ax.axhline(y, color="white", linewidth=1.0)
+
+    cax = make_axes_locatable(ax).append_axes("right", size="3.5%", pad=0.18)
+    bar = fig.colorbar(image, cax=cax)
+    bar.outline.set_visible(False)
+    bar.ax.tick_params(labelsize=points * 0.82, length=0, labelcolor="black")
+    bar.ax.set_ylabel(r"Spearman $\rho$", rotation=90)
+
+    fig.text(
+        0.02, 0.012,
+        "* 95% bootstrap CI excludes zero    † n < 20    const. = constant safety shift",
+        ha="left", va="bottom", fontsize=points * 0.67, color=MUTED,
+    )
+    return save(fig, FIGURESPEC["concordance"][1])
+
+
+# ---------------------------------------------------------------------
+# Supplement 1: phase decomposition
+# ---------------------------------------------------------------------
+
+
+def draw_phases(display):
+    points = styled(display, WIDE_SIZE[0], label_points=9.4)
+    fig, axes = plt.subplots(1, 2, figsize=WIDE_SIZE, sharey=True)
+
+    for ax, measure, title in zip(
+        axes,
+        [SAFETY_SHAPE, READABILITY_SHAPE],
+        ["Refusal", "FKGL"],
+    ):
+        sub = phase_shares(measure, include_macro=False)
+        y = np.arange(len(MODEL_ORDER))
         left = np.zeros(len(sub), dtype=float)
-        for column in SHAPE_COLUMNS:
-            values = sub[column].astype(float).to_numpy()
+
+        for phase in PHASES:
+            values = sub[phase].astype(float).to_numpy()
             ax.barh(
                 y,
                 values,
                 left=left,
-                height=0.68,
-                color=COMPONENT_COLOUR[column],
+                height=0.62,
+                color=PHASE_COLOUR[phase],
                 edgecolor="white",
-                linewidth=0.8,
-                label=COMPONENT_LABEL[column],
+                linewidth=0.7,
+                label=phase,
+                zorder=2,
             )
-            left = left + values
+            for yi, start, value in zip(y, left, values):
+                if not np.isfinite(value) or abs(value) < 6:
+                    continue
+                xpos = start + value / 2
+                rgba = mpl.colors.to_rgba(PHASE_COLOUR[phase])
+                ax.text(
+                    xpos, yi, f"{value:.1f}",
+                    ha="center", va="center",
+                    fontsize=points * 0.66,
+                    fontweight="bold",
+                    color=readable_on(rgba),
+                    zorder=3,
+                )
+            left += values
 
-        totals = sub["Full Range (7 to 21)"].astype(float).to_numpy()
-        share = sub["Step as Share of Range (%)"].astype(float).to_numpy()
-        for yi, total, frac in zip(y, totals, share):
-            dx = 0.9 if total >= 0 else -0.9
-            ha = "left" if total >= 0 else "right"
-            ax.text(total + dx, yi, f"{frac:.1f}%", va="center", ha=ha, color=INK)
-
-        ax.axvline(0, color=MUTED, linewidth=0.9)
+        panel(ax, title, points)
+        ax.grid(axis="x", linestyle="-", linewidth=0.6, alpha=0.25, color=MUTED)
+        ax.grid(axis="y", visible=False)
+        ax.set_xlim(0, 100)
+        ax.xaxis.set_major_locator(MultipleLocator(20))
         ax.set_yticks(y)
-        ax.set_yticklabels([MODEL_AXIS.get(m, m) for m in sub["Model"]])
-        ax.invert_yaxis()
-        ax.set_xlabel(xlabel)
+        ax.set_yticklabels([MODEL_AXIS[model] for model in MODEL_ORDER])
 
-        data = sub[SHAPE_COLUMNS + ["Full Range (7 to 21)"]].astype(float).to_numpy().ravel()
-        lim = max(abs(np.nanmin(data)), abs(np.nanmax(data))) + 6
-        ax.set_xlim(-lim if measure == "Grade Level" else -2, lim if measure == "Refusal Rate (pp)" else 1.4)
-
-    handles = [Patch(facecolor=COMPONENT_COLOUR[c], edgecolor="white", label=COMPONENT_LABEL[c])
-               for c in SHAPE_COLUMNS]
-    fig.legend(handles, [COMPONENT_LABEL[c] for c in SHAPE_COLUMNS], ncol=3,
-               loc="lower center", frameon=False, bbox_to_anchor=(0.5, -0.02),
-               handlelength=1.5, handletextpad=0.6, columnspacing=1.5)
-    fig.subplots_adjust(bottom=0.22, wspace=0.32)
-    return save(fig, FIGURESPEC["shape"][1])
+    axes[0].invert_yaxis()
+    fig.supxlabel("Share of 7-21 Shift (%)", color="black", fontsize=points * 1.05, y=0.105)
+    legend(
+        fig,
+        [Patch(facecolor=PHASE_COLOUR[phase]) for phase in PHASES],
+        PHASE_AXIS,
+        points,
+        3,
+    )
+    fig.subplots_adjust(left=0.11, right=0.99, top=0.93, bottom=0.28, wspace=0.14)
+    return save(fig, FIGURESPEC["phases"][1])
 
 
-def figure_concordance():
-    df = load_concordance().copy()
-    points = styled(display=1, width_inches=7.5)
-    fig, ax = plt.subplots(figsize=(7.9, 4.9))
-    heatmap_panel(ax, points=points)
+# ---------------------------------------------------------------------
+# Supplement 2: uncertainty on the two most informative concordances
+# ---------------------------------------------------------------------
 
-    df["Model"] = pd.Categorical(df["Model"], categories=MODEL_ORDER, ordered=True)
-    df["Scenario Type"] = pd.Categorical(df["Scenario Type"], categories=CONCORDANCE_ORDER, ordered=True)
-    df = df.sort_values(["Model", "Scenario Type"])
 
-    pivot = df.pivot(index="Model", columns="Scenario Type", values="rho").reindex(index=MODEL_ORDER, columns=CONCORDANCE_ORDER)
-    values = pivot.to_numpy(dtype=float)
-    cmap = colormaps["RdBu_r"].copy()
-    cmap.set_bad("#FFFFFF")
-    im = ax.imshow(values, aspect="auto", cmap=cmap, vmin=-0.85, vmax=0.85)
+def draw_concordance_intervals(display):
+    frame = load_concordance().copy()
+    points = styled(display, FOREST_SIZE[0])
+    fig, axes = plt.subplots(1, 2, figsize=FOREST_SIZE, sharey=True)
 
-    ax.set_xticks(np.arange(len(CONCORDANCE_ORDER)))
-    ax.set_xticklabels(["Pooled", "Benign", "Rights", "Age\nRestricted", "Harmful"], rotation=0)
-    ax.set_yticks(np.arange(len(MODEL_ORDER)))
-    ax.set_yticklabels([MODEL_AXIS[m] for m in MODEL_ORDER])
+    for ax, scenario in zip(axes, ["Pooled", "Age Restricted"]):
+        sub = ordered_rows(frame[frame["Scenario Type"].eq(scenario)], MODEL_ORDER)
+        y = np.arange(len(MODEL_ORDER))
 
-    for i, model in enumerate(MODEL_ORDER):
-        for j, scenario in enumerate(CONCORDANCE_ORDER):
-            row = df[(df["Model"] == model) & (df["Scenario Type"] == scenario)]
-            if row.empty:
+        ax.axvline(0, color=MUTED, linewidth=0.9, linestyle="--", zorder=1)
+        for yi, row in sub.iterrows():
+            if pd.isna(row["rho"]):
                 continue
-            reason = str(row["Reason"].iloc[0])
-            rho = row["rho"].iloc[0]
-            txt = ""
-            colour = INK
-            if pd.notna(rho):
-                txt = f"{rho:.2f}"
-                if "small stratum" in reason:
-                    txt += "†"
-            elif "constant" in reason:
-                txt = "const."
-            elif "not-estimable" in reason:
-                txt = "n.e."
-            if txt:
-                if pd.notna(rho) and abs(float(rho)) > 0.45:
-                    colour = "white"
-                ax.text(j, i, txt, ha="center", va="center", color=colour)
+            model = row["Model"]
+            rho = float(row["rho"])
+            low = float(row["95% CI Lower"])
+            high = float(row["95% CI Upper"])
+            colour = COLOUR[model]
 
-    for x in np.arange(-0.5, len(CONCORDANCE_ORDER), 1):
-        ax.axvline(x, color="#E5E5E5", linewidth=0.8, zorder=3)
-    for y in np.arange(-0.5, len(MODEL_ORDER), 1):
-        ax.axhline(y, color="#E5E5E5", linewidth=0.8, zorder=3)
+            ax.plot(
+                [low, high], [yi, yi],
+                color=colour, linewidth=2.0, solid_capstyle="butt", zorder=2,
+            )
+            ax.plot(
+                rho, yi,
+                marker=MARKER[model], color=colour,
+                markersize=6.0, linestyle="none", zorder=3,
+            )
 
-    cbar = fig.colorbar(im, ax=ax, fraction=0.045, pad=0.03)
-    cbar.outline.set_linewidth(0.7)
-    cbar.ax.set_ylabel("Spearman rho", rotation=90)
+            note = "†" if "small stratum" in str(row["Reason"]) else ""
+            ax.text(
+                0.88, yi, f"{rho:.2f}{note}",
+                ha="right", va="center",
+                fontsize=points * 0.72,
+                fontweight="semibold",
+                color=colour,
+            )
 
-    ax.text(0.0, -0.18, "Cells marked † are small strata and should be interpreted cautiously.",
-            transform=ax.transAxes, ha="left", va="top", color=INK)
-    fig.subplots_adjust(bottom=0.24, right=0.88)
-    return save(fig, FIGURESPEC["concordance"][1])
-
-
-def figure_concordance_forest():
-    df = load_concordance().copy()
-    points = styled(display=1, width_inches=FOREST_SIZE[0])
-    fig, axes = plt.subplots(2, 3, figsize=FOREST_SIZE, sharex=True)
-    axes = axes.ravel()
-
-    panels = ["Pooled", "Rights", "Age Restricted", "Harmful", "Benign"]
-    xlim = (-0.9, 0.9)
-
-    for ax, scenario in zip(axes, panels + [None]):
-        if scenario is None:
-            ax.axis("off")
-            continue
-        panel(ax, scenario, points=points, ygrid=False)
-        sub = df[df["Scenario Type"] == scenario].copy()
-        sub["Model"] = pd.Categorical(sub["Model"], categories=MODEL_ORDER, ordered=True)
-        sub = sub.sort_values("Model")
-        y = np.arange(len(sub))
-        ax.axvline(0, color=MUTED, linewidth=0.9, linestyle="--")
-
-        if scenario == "Benign":
-            ax.set_xlim(*xlim)
-            ax.set_ylim(-0.5, len(MODEL_ORDER) - 0.5)
-            ax.set_yticks(y)
-            ax.set_yticklabels([MODEL_AXIS[m] for m in sub["Model"]])
-            for yi, reason in zip(y, sub["Reason"].tolist()):
-                label = "Constant" if "constant" in str(reason) else ""
-                ax.text(0, yi, label, ha="center", va="center", color=INK)
-            ax.invert_yaxis()
-            continue
-
-        for yi, row in zip(y, sub.itertuples(index=False)):
-            reason = str(row.Reason)
-            rho = row.rho
-            lo = getattr(row, "_4") if False else None
-            # Safer column access by name for spaces in headers.
-        for yi, (_, row) in zip(y, sub.iterrows()):
-            reason = str(row["Reason"])
-            rho = row["rho"]
-            low = row["95% CI Lower"]
-            high = row["95% CI Upper"]
-            if pd.notna(rho):
-                ax.hlines(yi, low, high, color=COLOUR[row["Model"]], linewidth=1.6)
-                ax.plot(rho, yi, marker="o", color=COLOUR[row["Model"]], markersize=4.4)
-                txt = f"{rho:.2f}"
-                if "small stratum" in reason:
-                    txt += "†"
-                ax.text(xlim[1] - 0.03, yi, txt, ha="right", va="center", color=INK)
-            elif "constant" in reason:
-                ax.text(0, yi, "Constant", ha="center", va="center", color=INK)
-            else:
-                ax.text(0, yi, "n.e.", ha="center", va="center", color=INK)
-
-        ax.set_xlim(*xlim)
+        panel(ax, CONCORDANCE_AXIS[scenario].replace("\n", " "), points)
+        ax.grid(axis="x", linestyle="-", linewidth=0.6, alpha=0.25, color=MUTED)
+        ax.grid(axis="y", visible=False)
+        ax.set_xlim(-0.9, 0.9)
+        ax.xaxis.set_major_locator(MultipleLocator(0.3))
         ax.set_yticks(y)
-        ax.set_yticklabels([MODEL_AXIS[m] for m in sub["Model"]])
-        ax.invert_yaxis()
+        ax.set_yticklabels([MODEL_AXIS[model] for model in MODEL_ORDER])
 
-    for ax in axes[:5]:
-        ax.set_xlabel("Spearman rho")
-
-    fig.text(0.02, 0.01, "† small stratum, interpret cautiously.", ha="left", va="bottom", color=INK)
-    fig.subplots_adjust(bottom=0.10, wspace=0.28, hspace=0.34)
-    return save(fig, FIGURESPEC["concordance_forest"][1])
+    axes[0].invert_yaxis()
+    axes[1].tick_params(labelleft=False)
+    fig.supxlabel(r"Spearman $\rho$", color="black", fontsize=points * 1.05, y=0.095)
+    fig.text(
+        0.02, 0.018,
+        "† n < 20; interval shown but interpreted cautiously.",
+        ha="left", va="bottom", fontsize=points * 0.68, color=MUTED,
+    )
+    fig.subplots_adjust(left=0.20, right=0.99, top=0.90, bottom=0.25, wspace=0.14)
+    return save(fig, FIGURESPEC["concordance_intervals"][1])
 
 
 # ---------------------------------------------------------------------
-# CLI
+# Registry and CLI
 # ---------------------------------------------------------------------
 
-def build(which):
-    if which == "ladders":
-        return figure_ladders()
-    if which == "shape":
-        return figure_shape()
-    if which == "concordance":
-        return figure_concordance()
-    if which == "concordance_forest":
-        return figure_concordance_forest()
-    raise ValueError(which)
+
+def registry(display):
+    return {
+        "ladders": (lambda: draw_ladders(display), "main"),
+        "progression": (lambda: draw_progression(display), "main"),
+        "boundary": (lambda: draw_boundary(display), "main"),
+        "concordance": (lambda: draw_concordance(display), "main"),
+        "phases": (lambda: draw_phases(display), "supplement"),
+        "concordance_intervals": (
+            lambda: draw_concordance_intervals(display), "supplement"
+        ),
+    }
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--set", choices=["main", "supplement", "all"], default="all")
-    parser.add_argument("--only", choices=list(FIGURESPEC), default=None)
-    args = parser.parse_args(argv)
+def print_manifest():
+    print("Joint Figure Set")
+    print("-" * 98)
+    for key, (tier, filename, purpose) in FIGURESPEC.items():
+        print(f"{key:<24}{tier:<12}{filename:<36}{purpose}")
+    print("-" * 98)
 
-    if args.only:
-        build(args.only)
-        return
 
-    for name, (group, _, _) in FIGURESPEC.items():
-        if args.set != "all" and group != args.set:
+def main(args):
+    mpl.rcParams.update(analysis.STYLE)
+    clean_stale()
+
+    # Validate all three frozen notebook outputs before building anything.
+    load_ladders()
+    load_shape()
+    load_concordance()
+
+    print_manifest()
+    jobs = registry(args.display)
+
+    print("\nGenerating")
+    print("-" * 98)
+
+    built = 0
+    for name, (build, tier) in jobs.items():
+        if args.only not in {"all", name}:
             continue
-        build(name)
+        if args.set not in {"both", tier}:
+            continue
+
+        print(f"{name:<24}[{tier}] {FIGURESPEC[name][2]}")
+        build()
+        built += 1
+
+    print(
+        f"\n{built} figure{'s' if built != 1 else ''} "
+        f"written to {FIGURES.relative_to(ROOT)}/."
+    )
+
+
+def parser():
+    cli = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    cli.add_argument("--display", type=float, default=1.0)
+    cli.add_argument("--set", default="both", choices=("both", "main", "supplement"))
+    cli.add_argument("--only", default="all", choices=("all", *FIGURESPEC.keys()))
+    return cli
 
 
 if __name__ == "__main__":
-    main()
+    main(parser().parse_args())

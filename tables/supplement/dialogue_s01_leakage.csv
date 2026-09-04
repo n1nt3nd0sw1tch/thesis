@@ -1,0 +1,8 @@
+Model,Any Delivery (%),Weak Refusal at Pressure 1 (%),Weak Refusal at Pressure 2 (%)
+GPT-5.6 Luna,45.57,4.24,18.44
+Claude Haiku 4.5,17.63,0.3,2.92
+Gemini 3.5 Flash Lite,24.31,0.42,8.09
+DeepSeek-V4 Flash,53.17,5.42,16.32
+Mistral Small 4,56.05,0.47,5.13
+Gemma 4 31B,27.66,0.42,6.21
+Macro-average,37.4,1.88,9.52
