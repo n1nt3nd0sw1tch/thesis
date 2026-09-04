@@ -24,8 +24,11 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import language
-from analysis import (COLOUR, INK, MARKER, MUTED, NAME, ORDER, PALE,
-                      bootstrap_paired, macro_average)
+from analysis import (
+    COLOUR, INK, MARKER, MUTED, NAME, ORDER, PALE, STYLE,
+    SCENARIO_COLOUR, SCENARIO_ORDER,
+    bootstrap_paired, macro_average,
+)
 from settings import ROOT
 
 
@@ -60,7 +63,7 @@ FOREST_SIZE = (9.0, 5.4)
 LADDER = [7, 9, 11, 13, 15, 17, 18, 21]
 MINOR = [7, 9, 11, 13, 15, 17]
 ADULT = [18, 21]
-TYPES = ["Harmful", "Age Restricted", "Rights", "Benign"]
+TYPES = list(SCENARIO_ORDER)
 SLUG = {x: x.lower().replace(" ", "_") for x in TYPES}
 TARGET = {age: min(age - 5, 12) for age in MINOR}
 
@@ -82,11 +85,13 @@ SECONDARY_CONDITIONING = [
     ("response_length", "Difference in Response Length",
      "readability_conditioning_response_length.pdf"),
 ]
+# Scenario line grammar. Colour comes from SCENARIO_COLOUR; line style and
+# marker provide a redundant cue for print and colour-vision accessibility.
 TYPE_STYLE = {
-    "Harmful": ("-", "o", 0.92),
-    "Age Restricted": ("--", "s", 0.72),
-    "Rights": (":", "^", 0.52),
-    "Benign": ("-.", "D", 0.34),
+    "Benign": ("-.", "D"),
+    "Rights": (":", "^"),
+    "Age Restricted": ("--", "s"),
+    "Harmful": ("-", "o"),
 }
 
 MEASURE_GROUPS = [
@@ -176,6 +181,15 @@ def panel(ax, title=None, points=9):
     ax.set_axisbelow(True)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
+    if title:
+        ax.set_title(title, pad=points * 0.5, color="black")
+
+
+def map_panel(ax, title=None, points=9):
+    """Heatmap/map axes: no grey panel fill and no plot grid."""
+    ax.set_facecolor("white")
+    ax.grid(False)
+    ax.set_axisbelow(False)
     if title:
         ax.set_title(title, pad=points * 0.5, color="black")
 
@@ -492,7 +506,6 @@ def draw_signals(frame, display, kind=None):
 def draw_coverage(frame, floor, display):
     points = styled(display)
     frame = frame.assign(short=frame["response_length"] < floor)
-    blues = colormaps["Blues"]
     fig, axes = grid(sharex=True, sharey=True, constrained_layout=True)
 
     # Enough labels to make the plot quantitative without turning every line
@@ -505,7 +518,7 @@ def draw_coverage(frame, floor, display):
         series = {}
 
         for kind in TYPES:
-            style, marker, depth = TYPE_STYLE[kind]
+            style, marker = TYPE_STYLE[kind]
             loss = (
                 part[part["scenario_type"] == kind]
                 .groupby("age")["short"].mean().reindex(LADDER) * 100
@@ -514,8 +527,12 @@ def draw_coverage(frame, floor, display):
 
             ax.plot(
                 LADDER, loss.values, style, marker=marker,
-                markersize=4.0, linewidth=1.6, color=blues(depth),
-                label=kind if index == 0 else None
+                markersize=4.0, linewidth=1.6,
+                color=SCENARIO_COLOUR[kind],
+                markerfacecolor="white",
+                markeredgecolor=SCENARIO_COLOUR[kind],
+                markeredgewidth=0.9,
+                label=kind if index == 0 else None,
             )
 
         panel(ax, model, points)
@@ -535,9 +552,8 @@ def draw_coverage(frame, floor, display):
                 # Suppress tiny values: visually they are already zero and
                 # printing them adds clutter without information.
                 if np.isfinite(value) and value >= 1.5:
-                    _, _, depth = TYPE_STYLE[kind]
                     values.append(float(value))
-                    colours.append(blues(depth))
+                    colours.append(SCENARIO_COLOUR[kind])
 
             if not values:
                 continue
@@ -607,11 +623,11 @@ def draw_coverage_grid(frame, floor, display):
                              values="short", aggfunc="mean")
                 .reindex(index=TYPES, columns=LADDER) * 100)
 
+        map_panel(ax, model, points)
         image = ax.imshow(loss.values, cmap="Blues", vmin=0, vmax=ceiling, aspect="auto")
         ax.set_xticks(range(len(LADDER)),
                       [str(x) for x in LADDER] if index // 3 == 1 else [])
         ax.set_yticks(range(len(TYPES)), TYPES if index % 3 == 0 else [])
-        ax.set_title(model, pad=points * 0.6, color="black")
         ax.tick_params(length=0)
 
         for spine in ax.spines.values():
@@ -647,6 +663,7 @@ def draw_correlations(frame, display):
     blues = colormaps["Blues"]
 
     fig, ax = plt.subplots(figsize=(10.5, 9.0))
+    map_panel(ax, None, points)
     image = ax.imshow(np.abs(matrix.values), cmap="Blues", vmin=0, vmax=1)
     ax.set_xticks(range(len(labels)), labels, rotation=90)
     ax.set_yticks(range(len(labels)), labels)
@@ -936,6 +953,11 @@ def registry(raw, frame, age_conditioned, floor, display):
 
 
 def main(args):
+    # Start from exactly the same global Matplotlib grammar as figuresafe.py.
+    # STYLE enables the shared faint x/y grid; panel() then applies the common
+    # horizontal-grid styling on top. Heatmaps explicitly opt out via map_panel().
+    plt.rcParams.update(STYLE)
+
     raw = language.load()
     raw["label"] = raw["model"].map(NAME)
 

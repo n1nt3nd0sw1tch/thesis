@@ -75,7 +75,8 @@ MODEL_AXIS = {
     analysis.MACRO: "Macro-\nAverage",
 }
 
-SCENARIOS = list(analysis.STRATA)
+SCENARIOS = list(analysis.SCENARIO_ORDER)
+SCENARIO_COLOUR = analysis.SCENARIO_COLOUR
 SCENARIO_AXIS = {
     "Benign": "Benign",
     "Rights": "Rights",
@@ -85,10 +86,10 @@ SCENARIO_AXIS = {
 
 # Same scenario grammar as readability coverage.
 TYPE_STYLE = {
-    "Harmful": ("-", "o", 0.92),
-    "Age Restricted": ("--", "s", 0.72),
-    "Rights": (":", "^", 0.52),
     "Benign": ("-.", "D", 0.34),
+    "Rights": (":", "^", 0.52),
+    "Age Restricted": ("--", "s", 0.72),
+    "Harmful": ("-", "o", 0.92),
 }
 
 AGE_MAP = {
@@ -608,20 +609,8 @@ def draw_outcome_pair(returned, display, cells, filename):
     """Draw one wide 1x2 outcome figure for a pair of outcome cells."""
     points = styled(display, width_inches=11.0, label_points=9.6)
 
-    # # Publication style: light fills with crisp coloured outlines.
-    # colour = {
-    #     "Benign": "#F2A65A",
-    #     "Rights": "#8E7CC3",
-    #     "Age Restricted": "#72B7B2",
-    #     "Harmful": "#4C78A8",
-    # }
-    
-    colour = {
-        "Benign": "#8E8E93",          # neutral medium grey
-        "Rights": "#4E342E",          # deep espresso
-        "Age Restricted": "#FF8C42",  # vivid tangerine
-        "Harmful": "#D62828",         # saturated red
-    }
+    # Same scenario palette as every other figure.
+    colour = SCENARIO_COLOUR
 
     fig, axes = plt.subplots(
         1,
@@ -1610,8 +1599,8 @@ def draw_failures(returned, display):
     grouped_failure_panel(
         axes[0],
         [
-            ("Age Restricted", series["Age Restricted Delivery"], "#72B7B2"),
-            ("Harmful", series["Harmful Delivery"], "#4C78A8"),
+            ("Age Restricted", series["Age Restricted Delivery"], SCENARIO_COLOUR["Age Restricted"]),
+            ("Harmful", series["Harmful Delivery"], SCENARIO_COLOUR["Harmful"]),
         ],
         points,
         "Over-Permissive",
@@ -1619,9 +1608,9 @@ def draw_failures(returned, display):
     grouped_failure_panel(
         axes[1],
         [
-            ("Benign", series["Benign Refusal"], "#F2A65A"),
-            ("Rights", series["Rights Refusal"], "#8E7CC3"),
-            ("Age Restricted", series["Age Restricted Refusal"], "#72B7B2"),
+            ("Benign", series["Benign Refusal"], SCENARIO_COLOUR["Benign"]),
+            ("Rights", series["Rights Refusal"], SCENARIO_COLOUR["Rights"]),
+            ("Age Restricted", series["Age Restricted Refusal"], SCENARIO_COLOUR["Age Restricted"]),
         ],
         points,
         "Over-Restrictive",
@@ -1646,10 +1635,8 @@ def draw_failures(returned, display):
     )
 
     legend_order = [
-        ("Benign", "#F2A65A"),
-        ("Rights", "#8E7CC3"),
-        ("Age Restricted", "#72B7B2"),
-        ("Harmful", "#4C78A8"),
+        (scenario, SCENARIO_COLOUR[scenario])
+        for scenario in SCENARIOS
     ]
     legend_handles = [
         Patch(

@@ -189,12 +189,23 @@ THRESHOLD_CONTRAST = 'Explicit Age (17) vs Explicit Age (18)'
 SIGNAL = 'Explicit Age (Minor) vs Implicit Cue (Minor)'
 CUE_DIRECTION = 'Implicit Cue (Minor) vs Implicit Cue (Adult)'
 
-STRATA = ['Benign', 'Rights', 'Age Restricted', 'Harmful']
+# One scenario type, one colour, one reporting order across the whole thesis.
+# This is deliberately separate from the model palette.
+SCENARIO_ORDER = ['Benign', 'Rights', 'Age Restricted', 'Harmful']
+SCENARIO_COLOUR = {
+    'Benign': '#8E8E93',          # neutral medium grey
+    'Rights': '#4E342E',          # deep espresso
+    'Age Restricted': '#FF8C42',  # vivid tangerine
+    'Harmful': '#D62828',         # saturated red
+}
+
+# Backwards-compatible name used by the existing analysis notebooks.
+STRATA = SCENARIO_ORDER
 # The stratum in which the design says behaviour ought to move with age, and so
 # the stratum the primary hypotheses are tested in. The other three are the
 # planned controls: their expected answer is the same at every age.
 FOCUS = 'Age Restricted'
-CONTROLS = ['Harmful', 'Rights', 'Benign']
+CONTROLS = [scenario for scenario in SCENARIO_ORDER if scenario != FOCUS]
 
 # ----------------------------------------------------------------------------
 # The outcome
