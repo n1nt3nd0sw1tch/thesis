@@ -1,3 +1,58 @@
+joint_01_ladders:
+  label: tab:joint-ladders
+  tier: main
+  index: true
+  caption: >-
+    Refusal Rate and reading grade level at each of the eight stated ages, one
+    row a model. Refusal is read within Age Restricted scenarios, the one
+    stratum whose expected answer moves with age, and grade level over every
+    measurable stated-age reply, so the two are drawn from the same experiment
+    and the same age conditions but not from the same analysis cohort. Both are
+    scenario weighted, and both reproduce the ladders already published in
+    Table~\ref{tab:safety-ladder} and Table~\ref{tab:readability-levels}
+    rather than recomputing them, which is what makes this table an audit of
+    the two chapters against each other.
+
+joint_02_shape:
+  label: tab:joint-shape
+  tier: main
+  index: true
+  caption: >-
+    The stated-age ladder split into the movement across the six minor ages,
+    the single step from seventeen to eighteen, and the movement from eighteen
+    to twenty-one, for both outcome families. Unlike the marginal ladders of
+    Table~\ref{tab:joint-ladders}, each model here is restricted to the
+    scenarios measurable at all four ages the decomposition uses, so that a
+    changing denominator cannot be read as a change of shape, and n gives
+    that cohort. Completeness is required at those four ages
+    only, since no term here reads ages nine to fifteen. The signs differ
+    between the panels because refusal falls as the stated age rises and grade
+    level rises, so a positive entry in the first panel and a negative entry in
+    the second both mean the reply moved in the direction associated with a
+    younger user. Macro-Average is the mean of the six model values in every
+    column, as it is throughout this thesis; Panel Ratio is the
+    macro-averaged step divided by the macro-averaged range, which is a
+    different quantity and is named separately rather than written into a cell
+    whose label would then be wrong.
+
+joint_03_concordance:
+  label: tab:joint-concordance
+  tier: supplement
+  index: true
+  caption: >-
+    Scenario-level rank association between the age-induced change in refusal
+    and the age-induced change in reading grade level, by model and scenario
+    type, with 95 per cent bootstrap intervals over scenarios. Both shifts are
+    signed so that a larger positive value means stronger child-directed
+    adaptation: refusal rises for a stated minor, so safety is minor minus
+    adult, and grade level falls, so reading is adult minus minor. A positive
+    coefficient therefore means the scenarios a model differentiates most on
+    for safety are also the scenarios it simplifies most on. Every model and
+    scenario type is listed, and where a coefficient cannot be formed the
+    Reason column says why rather than the row being dropped. The pooled rows
+    cross strata whose safety movement differs by design and are not read as a
+    panel-wide coupling.
+
 readability_conditioning:
   label: fig:readability-conditioning
   tier: main
