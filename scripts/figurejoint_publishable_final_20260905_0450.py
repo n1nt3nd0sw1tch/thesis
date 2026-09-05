@@ -409,8 +409,10 @@ def draw_association(display):
     ax.set_xlim(-0.85, 0.80)
     ax.xaxis.set_major_locator(MultipleLocator(0.25))
 
-    ax.set_xlabel(r"Spearman $\rho$", labelpad=20)
-    ax.legend(
+    # Keep the axis label and legend in separate vertical bands. The label is
+    # centred on the plotting area; the legend is centred on the full figure.
+    ax.set_xlabel(r"Spearman $\rho$", labelpad=13)
+    fig.legend(
         [
             Line2D([0], [0], color=INK, marker="o", markerfacecolor="white",
                    markeredgecolor=INK, linewidth=1.6, markersize=5.5),
@@ -419,16 +421,16 @@ def draw_association(display):
         ],
         ["Pooled", "Within-Type"],
         ncol=2,
-        loc="upper center",
+        loc="lower center",
         frameon=False,
-        bbox_to_anchor=(0.5, -0.13),
+        bbox_to_anchor=(0.5, 0.035),
         fontsize=points * 0.90,
         handlelength=2.0,
         handletextpad=0.6,
         columnspacing=1.5,
         borderaxespad=0.0,
     )
-    fig.subplots_adjust(left=0.18, right=0.84, top=0.97, bottom=0.23)
+    fig.subplots_adjust(left=0.18, right=0.84, top=0.97, bottom=0.30)
     return save(fig, FIGURESPEC["association"][1])
 
 
