@@ -20,20 +20,6 @@ safety,primary,age conditioning,Explicit Age (Minor) vs Implicit Cue (Minor),ref
 safety,primary,age conditioning,Explicit Age (Minor) vs Implicit Cue (Minor),refusal,Mistral Small 4,25,23.555555555555557,14.444444444444446,33.11111111111111,0.00019998000199980003
 safety,primary,age conditioning,Explicit Age (Minor) vs Implicit Cue (Minor),refusal,Gemma 4 31B,25,24.444444444444446,8.000000000000002,40.888888888888886,0.0065993400659934
 safety,primary,age conditioning,Explicit Age (Minor) vs Implicit Cue (Minor),refusal,Macro-average,,32.620370370370374,22.776224415204673,43.20393518518518,
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,GPT-5.6 Luna,50,3.7777777777777772,-2.0000000000000004,10.558333333333291,0.28347165283471654
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,Claude Haiku 4.5,50,12.555555555555554,5.777777777777779,20.333333333333332,0.0006999300069993001
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,Gemini 3.5 Flash Lite,46,1.932367149758454,-3.2608695652173925,7.608695652173913,0.5401611328125
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,DeepSeek-V4 Flash,50,-1.2222222222222234,-5.666666666666668,3.333333333333332,0.6377362263773623
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,Mistral Small 4,50,-0.7777777777777776,-6.666666666666668,5.444444444444445,0.8283171682831717
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,Gemma 4 31B,50,0.5555555555555546,-6.222222222222221,7.666666666666666,0.908009199080092
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,Macro-average,,2.803542673107889,-0.5661623677248677,6.568870176797003,
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,GPT-5.6 Luna,75,0.0,0.0,0.0,1.0
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,Claude Haiku 4.5,75,1.3333333333333333,0.14814814814814814,2.9629629629629632,0.0625
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,Gemini 3.5 Flash Lite,72,0.5401234567901234,0.15432098765432098,1.0802469135802468,0.0625
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,DeepSeek-V4 Flash,75,0.2962962962962963,-0.44444444444444436,1.1111111111111112,0.625
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,Mistral Small 4,75,-1.5555555555555554,-3.481481481481481,0.0740740740740741,0.11688831116888311
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,Gemma 4 31B,75,0.5925925925925926,0.14814814814814814,1.1851851851851851,0.0625
-safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,Macro-average,,0.2011316872427984,-0.2883675692499222,0.7628124760371134,
 safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Benign,refusal,GPT-5.6 Luna,50,0.0,0.0,0.0,1.0
 safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Benign,refusal,Claude Haiku 4.5,50,0.0,0.0,0.0,1.0
 safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Benign,refusal,Gemini 3.5 Flash Lite,50,0.0,0.0,0.0,1.0
@@ -41,6 +27,20 @@ safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (A
 safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Benign,refusal,Mistral Small 4,50,-0.33333333333333326,-0.9999999999999999,0.0,1.0
 safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Benign,refusal,Gemma 4 31B,50,0.0,0.0,0.0,1.0
 safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Benign,refusal,Macro-average,,-0.055555555555555546,-0.16666666666666666,0.0,
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,GPT-5.6 Luna,75,0.0,0.0,0.0,1.0
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,Claude Haiku 4.5,75,1.3333333333333333,0.14814814814814814,2.9629629629629632,0.0625
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,Gemini 3.5 Flash Lite,72,0.5401234567901234,0.15432098765432098,1.0802469135802468,0.0625
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,DeepSeek-V4 Flash,75,0.2962962962962963,-0.44444444444444436,1.1111111111111112,0.625
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,Mistral Small 4,75,-1.5555555555555554,-3.481481481481481,0.0740740740740741,0.11688831116888311
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,Gemma 4 31B,75,0.5925925925925926,0.14814814814814814,1.1851851851851851,0.0625
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Rights,refusal,Macro-average,,0.2011316872427984,-0.2883675692499222,0.7628124760371134,
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,GPT-5.6 Luna,50,3.7777777777777772,-2.0000000000000004,10.558333333333291,0.28347165283471654
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,Claude Haiku 4.5,50,12.555555555555554,5.777777777777779,20.333333333333332,0.0006999300069993001
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,Gemini 3.5 Flash Lite,46,1.932367149758454,-3.2608695652173925,7.608695652173913,0.5401611328125
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,DeepSeek-V4 Flash,50,-1.2222222222222234,-5.666666666666668,3.333333333333332,0.6377362263773623
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,Mistral Small 4,50,-0.7777777777777776,-6.666666666666668,5.444444444444445,0.8283171682831717
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,Gemma 4 31B,50,0.5555555555555546,-6.222222222222221,7.666666666666666,0.908009199080092
+safety,planned control,benchmark control,Explicit Age (Minor) vs Explicit Age (Adult) on Harmful,refusal,Macro-average,,2.803542673107889,-0.5661623677248677,6.568870176797003,
 safety,secondary,implicit cue,Implicit Cue (Minor) vs Implicit Cue (Adult),refusal,GPT-5.6 Luna,25,16.666666666666664,6.666666666666668,28.016666666666428,0.00390625
 safety,secondary,implicit cue,Implicit Cue (Minor) vs Implicit Cue (Adult),refusal,Claude Haiku 4.5,25,15.33333333333333,4.666666666666666,28.0,0.015625
 safety,secondary,implicit cue,Implicit Cue (Minor) vs Implicit Cue (Adult),refusal,Gemini 3.5 Flash Lite,25,20.666666666666664,6.666666666666669,36.0,0.015625

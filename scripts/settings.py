@@ -80,9 +80,27 @@ JUDGEMENTS_DIR = RESULTS_DIR / 'judgements'
 # rather than a notebook.
 # Where the classifier writes over the whole corpus, one file a model, appended
 # a row at a time so an interrupted run resumes rather than restarts.
-CLASSIFICATION_DIR = RESULTS_DIR / 'classification'
-LABEL_DIR = DATA_DIR / 'label'
-ANNOTATION_DIR = RESULTS_DIR / 'annotation'
+#
+# Experiment 1 and experiment 2 each produce sheets to label, a classification
+# pass over them and an agreement between the two, so the three folders holding
+# those are split into single/ and multi/. The unsuffixed names below keep
+# pointing at experiment 1, which is what every notebook written before the
+# split already asks for, so nothing downstream needs editing: analysis.py
+# reads ANNOTATION_DIR / 'agreement.csv' and now finds it in single/ where it
+# was moved. The MULTI_ names are the dialogue arm, and the _ROOT names are the
+# folder above both, which is what a notebook wants when it is splitting or
+# listing rather than reading one side.
+CLASSIFICATION_ROOT = RESULTS_DIR / 'classification'
+CLASSIFICATION_DIR = CLASSIFICATION_ROOT / 'single'
+MULTI_CLASSIFICATION_DIR = CLASSIFICATION_ROOT / 'multi'
+
+LABEL_ROOT = DATA_DIR / 'label'
+LABEL_DIR = LABEL_ROOT / 'single'
+MULTI_LABEL_DIR = LABEL_ROOT / 'multi'
+
+ANNOTATION_ROOT = RESULTS_DIR / 'annotation'
+ANNOTATION_DIR = ANNOTATION_ROOT / 'single'
+MULTI_ANNOTATION_DIR = ANNOTATION_ROOT / 'multi'
 MANUAL_DIR = ANNOTATION_DIR / 'manual'
 JUDGE_DIR = ANNOTATION_DIR / 'judge'
 LANGUAGE_DIR = RESULTS_DIR / 'language'
