@@ -31,14 +31,39 @@ MODELS = list(analysis.ORDER) + [analysis.MACRO]
 MODEL_LABELS = list(analysis.ORDER) + ["Macro-Average"]
 STRATA = ["Age Restricted", "Harmful"]
 TURNS = ["Turn 1", "Turn 2", "Turn 3"]
+TURN_SHORT = {turn: f"T{i}" for i, turn in enumerate(TURNS, 1)}
+TURN_LABELS = list(TURN_SHORT.values())
 METHODS = ["Emotional Pushback", "Purpose Reverse", "Role Play"]
+RADAR_STRATA = ["All Scenarios", "Age Restricted", "Harmful"]
 CELLS = list(analysis.CELL_ORDER)
 TURN_COLOURS = ["#8E8E93", "#376B8C", "#172F4D"]
+METHOD_LABELS = ["Pushback", "Reverse", "Role Play"]
+RADAR_LABEL = {
+    "All Scenarios": "All",
+    "Age Restricted": "Age Restricted",
+    "Harmful": "Harmful",
+}
+RETIRED = [
+    "dialogue_first_break",
+    "dialogue_methods_age_restricted",
+    "dialogue_methods_harmful",
+    "dialogue_changes_age_restricted",
+    "dialogue_changes_harmful",
+    "dialogue_age_control",
+    "dialogue_age_age_restricted",
+    "dialogue_age_harmful",
+    "dialogue_memory_gap",
+    "dialogue_domains",
+    "dialogue_trajectories_age_restricted",
+    "dialogue_trajectories_harmful",
+    "dialogue_failure_age_restricted",
+    "dialogue_failure_harmful",
+]
 OUTCOME_COLOUR = {
-    "Strong Refusal": "#376B8C",
-    "Weak Refusal": "#9ECAE1",
-    "Minimal Compliance": "#F6C85F",
-    "Total Compliance": "#D55E00",
+    "Strong Refusal": "#006D77",
+    "Weak Refusal": "#83C5BE",
+    "Minimal Compliance": "#E9C46A",
+    "Total Compliance": "#E76F51",
 }
 DIRECTION_COLOUR = {
     "Over-Permissive": "#D62828",
@@ -52,6 +77,11 @@ class Figures:
         self.output.mkdir(parents=True, exist_ok=True)
         self.preview = preview
         self.manifest = []
+
+    def clean_retired(self):
+        for name in RETIRED:
+            for suffix in (".pdf", ".png"):
+                (self.output / f"{name}{suffix}").unlink(missing_ok=True)
 
     def read(self, name):
         paths = [self.tables / tier / f"{name}.csv" for tier in ("main", "supplement")]
@@ -183,7 +213,9 @@ def forest(ax, frame, estimate, low, high, title, points, percent=False,
     ax.set_xlim((0, 100) if percent else (min(lo.min(), 0)-span*.07,
                                         max(hi.max(), 0)+span*.07))
     ax.axhline(5.5, color=analysis.MUTED, alpha=.35, lw=.7)
-    ax.set_xlabel(xlabel or ("Held both (%)" if percent else "Change (pp)"))
+    if xlabel is None:
+        xlabel = "Held both (%)" if percent else "Change (pp)"
+    ax.set_xlabel(xlabel)
     ax.tick_params(axis="y", length=0)
 
 
@@ -194,6 +226,138 @@ def zero_frame():
         "Lower": np.zeros(len(MODELS)),
         "Upper": np.zeros(len(MODELS)),
     })
+
+
+def radar_panel(ax, title, points):
+    """Polar version of the shared figuresafe panel."""
+    ax.set_facecolor(house.PANEL_FILL)
+    ax.grid(color=analysis.MUTED, linewidth=.6, alpha=.25)
+    ax.set_axisbelow(True)
+    ax.spines["polar"].set_color(analysis.MUTED)
+    ax.spines["polar"].set_linewidth(.7)
+    ax.set_title(title, pad=points * 1.25, color="black")
+
+
+def draw_methods_radar(f):
+    """SafeDialBench-style model profiles across the three dialogue methods."""
+    d = f.read("dialogue_05_methods")
+    d = d[
+        d["Scenario Type"].isin(RADAR_STRATA)
+        & d["Method"].isin(METHODS)
+        & d["Model"].isin(analysis.ORDER)
+    ].copy()
+
+    expected = len(RADAR_STRATA) * len(METHODS) * len(analysis.ORDER)
+    if len(d) != expected:
+        raise ValueError(
+            f"Method radar expects {expected} stratum-method-model rows; found {len(d)}"
+        )
+    if d.duplicated(["Scenario Type", "Method", "Model"]).any():
+        raise ValueError("Duplicate stratum-method-model row in method radar")
+
+    # The three method branches share their opening. Enforce that design before
+    # drawing Turn 1 as the common baseline in every radar.
+    opening_spread = d.groupby(["Scenario Type", "Model"])[
+        "Defect Turn 1 (%)"
+    ].agg(lambda values: values.max() - values.min())
+    if not np.allclose(opening_spread, 0, atol=.03):
+        raise ValueError("Matched method branches do not share the same Turn 1 rate")
+
+    plt.rcParams.update(analysis.STYLE)
+    points = house.styled(1.0, 13.5, label_points=8.7)
+    fig, axes = plt.subplots(
+        3,
+        3,
+        figsize=(13.5, 13.6),
+        subplot_kw={"projection": "polar"},
+        squeeze=False,
+        layout="constrained",
+    )
+    fig.get_layout_engine().set(
+        w_pad=.13, h_pad=.16, wspace=.10, hspace=.18
+    )
+
+    angles = np.linspace(0, 2 * np.pi, len(METHODS), endpoint=False)
+    closed_angles = np.r_[angles, angles[0]]
+
+    for row, stratum in enumerate(RADAR_STRATA):
+        part = subset(d, **{"Scenario Type": stratum})
+        for col, turn in enumerate(TURNS):
+            ax = axes[row, col]
+            radar_panel(
+                ax,
+                f"{RADAR_LABEL[stratum]} ({TURN_SHORT[turn]})",
+                points,
+            )
+            ax.set_theta_offset(np.pi / 2)
+            ax.set_theta_direction(-1)
+            ax.set_xticks(angles, METHOD_LABELS)
+            ax.tick_params(axis="x", pad=7, labelsize=points * .78, colors="black")
+            ax.set_ylim(0, 100)
+            ax.set_yticks([25, 50, 75, 100])
+            ax.set_yticklabels(["25", "50", "75", "100"],
+                               fontsize=points * .66, color=analysis.MUTED)
+            ax.set_rlabel_position(205)
+
+            for model in analysis.ORDER:
+                model_part = subset(part, Model=model).set_index("Method").reindex(METHODS)
+                if model_part.isna().all(axis=1).any():
+                    raise ValueError(f"Missing method value for {stratum}: {model}")
+                if turn == "Turn 1":
+                    defect = model_part["Defect Turn 1 (%)"].to_numpy(float)
+                else:
+                    defect = (
+                        model_part["Defect Turn 1 (%)"]
+                        + model_part[f"Defect Change {turn} (pp)"]
+                    ).to_numpy(float)
+                alignment = 100 - defect
+                if ((alignment < -.03) | (alignment > 100.03)).any():
+                    raise ValueError(f"Action Alignment outside 0 to 100 for {stratum}: {model}")
+                alignment = np.clip(alignment, 0, 100)
+                closed = np.r_[alignment, alignment[0]]
+                colour = analysis.COLOUR[model]
+                ax.plot(
+                    closed_angles,
+                    closed,
+                    color=colour,
+                    marker=analysis.MARKER[model],
+                    markersize=3.8,
+                    linewidth=1.45,
+                    label=model,
+                    zorder=3,
+                )
+                ax.fill(closed_angles, closed, color=colour, alpha=.035, zorder=2)
+
+    handles = [
+        Line2D(
+            [], [], color=analysis.COLOUR[model], marker=analysis.MARKER[model],
+            linewidth=1.45, markersize=4.5, label=model
+        )
+        for model in analysis.ORDER
+    ]
+    fig.supylabel(r"Action Alignment, $A_t$ (%)",fontsize=points*.82)
+    fig.legend(
+        handles,
+        analysis.ORDER,
+        ncol=3,
+        fontsize=points * .72,
+        loc="lower center",
+        frameon=False,
+        bbox_to_anchor=(.5, -.075),
+        handlelength=2.0,
+        handletextpad=.55,
+        columnspacing=1.2,
+    )
+    f.save(
+        fig,
+        "methods_radar",
+        "main",
+        "Action Alignment, A_t, for all six models across Emotional Pushback, Purpose "
+        "Reverse and Role Play. Panels show all scenarios, Age Restricted and Harmful at "
+        "T1, T2 and T3. T1 is the matched common opening. Higher values indicate stronger "
+        "benchmark-aligned action.",
+        "dialogue_05_methods",
+    )
 
 
 def draw_outcomes(f):
@@ -223,7 +387,7 @@ def draw_outcomes(f):
             bottom += values
         if not np.allclose(total, 100, atol=.03):
             raise ValueError(f"Outcome distribution does not sum to 100 for {model}")
-        ax.set_xticks(x, TURNS, rotation=0)
+        ax.set_xticks(x, TURN_LABELS, rotation=0)
         ax.set_ylim(0, 100)
         ax.set_yticks([0, 25, 50, 75, 100])
         ax.label_outer()
@@ -253,10 +417,10 @@ def draw_defects(f):
                 ax.annotate(f"{v:.1f}", (i, v), (0, 11 if above else -15),
                             textcoords="offset points", ha="center", va="center",
                             color=analysis.SCENARIO_COLOUR[s], fontsize=p*.66, fontweight="bold")
-        ax.set_xticks(range(3), TURNS, rotation=0)
+        ax.set_xticks(range(3), TURN_LABELS, rotation=0)
         ax.set_xlim(-.25, 2.25); ax.set_ylim(-7, 107)
         ax.set_yticks([0,25,50,75,100]); ax.label_outer()
-    fig.supylabel("Action Defect (%)", fontsize=p)
+    fig.supylabel(r"Action Defect, $D_t$ (%)", fontsize=p)
     handles=[Line2D([], [], color=analysis.SCENARIO_COLOUR[s], marker="s" if i==0 else "o",
                     ls="--" if i==0 else "-") for i,s in enumerate(STRATA)]
     house.legend(fig,handles,STRATA,p,ncol=2)
@@ -276,9 +440,9 @@ def draw_memory(f):
             "Turn 3":part["Held Both (%)"],
         },index=part.index)
         block.index=MODEL_LABELS
-        im=heatmap(fig,ax,block,s,p,labels=TURNS)
-    colourbar(fig,axes,im,"Unbroken boundaries (%)",p)
-    f.save(fig,"memory","main","Unbroken Strong-Refusal memory among dialogues that "
+        im=heatmap(fig,ax,block,s,p,labels=TURN_LABELS)
+    colourbar(fig,axes,im,r"Safety Memory, $M_t$ (%)",p)
+    f.save(fig,"memory","main","Safety Memory among dialogues that "
            "expected refusal and had Strong Refusal at Turn 1. Turn 1 is 100% by cohort "
            "definition; Turn 3 requires the boundary to hold at both later turns.",
            "dialogue_03_memory")
@@ -326,25 +490,25 @@ def draw_methods(f):
                "dialogue_05_methods")
 
 
-def draw_age_stratum(f, s):
-    d=f.read("dialogue_04_age")
-    fig,axes,p=f.layout(1,3,height=6.8)
-    for i,(ax,t) in enumerate(zip(axes.flat,TURNS)):
-        forest(ax,subset(d,Measure="Strong Refusal",Turn=t,**{"Scenario Type":s}),
-               "Gap (pp)","Gap CI Lower","Gap CI Upper",t,p,show_labels=i==0,
-               xlabel="Minor minus Age 18 (pp)")
-    f.save(fig,"age_"+slug(s),"main" if s==STRATA[0] else "supplement",
-           f"{s}: minor-minus-age-18 Strong-Refusal gap at all three turns. "
-           "Whiskers are paired scenario-bootstrap "
-           "95% intervals; each model retains its available scenario cohort.","dialogue_04_age")
-
-
 def draw_age(f):
-    draw_age_stratum(f, "Age Restricted")
-
-
-def draw_age_control(f):
-    draw_age_stratum(f, "Harmful")
+    d=f.read("dialogue_04_age")
+    fig,axes,p=f.layout(2,3,height=10.8)
+    for row,s in enumerate(STRATA):
+        for col,t in enumerate(TURNS):
+            forest(
+                axes[row,col],
+                subset(d,Measure="Strong Refusal",Turn=t,**{"Scenario Type":s}),
+                "Gap (pp)","Gap CI Lower","Gap CI Upper",
+                f"{s} ({TURN_SHORT[t]})",p,show_labels=col==0,xlabel="",
+            )
+    fig.supxlabel(r"$G_t=S_{\mathrm{minor},t}-S_{18,t}$ (pp)",fontsize=p)
+    f.save(
+        fig,"age","main",
+        "Strong-Refusal age gap, G_t, for Age Restricted and Harmful scenarios. "
+        "S_minor,t is the mean Strong-Refusal rate across minor ages and S_18,t is the "
+        "age-18 rate at turn t. Whiskers are paired scenario-bootstrap 95% intervals.",
+        "dialogue_04_age",
+    )
 
 
 def draw_roleplay(f):
@@ -359,10 +523,11 @@ def draw_roleplay(f):
                 f"Change {t} CI Upper":"Upper",
             })
             forest(axes[row,col],frame,"Estimate","Lower","Upper",
-                   f"{arm} vs Neutral, {t}",p,show_labels=col==0,
-                   xlabel="Age-gap change (pp)")
-    f.save(fig,"roleplay","main","Role Play: change from Turn 1 in each "
-           "age-minus-neutral Strong-Refusal gap on common scenarios. Turn 1 is the zero "
+                   f"{arm} ({TURN_SHORT[t]})",p,show_labels=col==0,
+                   xlabel="")
+    fig.supxlabel(r"$\Delta_t G_a=G_{a,t}-G_{a,1}$ (pp)",fontsize=p)
+    f.save(fig,"roleplay","main","Role Play: change from T1 in the age-control "
+           "Strong-Refusal gap, where G_a,t = S_a,t - S_control,t. T1 is the zero "
            "reference; later whiskers are paired scenario-bootstrap 95% intervals. This is "
            "descriptive gap erosion, not proof of a displaced internal age state.",
            "dialogue_06_roleplay")
@@ -413,13 +578,12 @@ def draw_ladder(f):
         cols=[f"Age {a} (%)" for a in [7,9,11,13,15,17,18]]
         matrix=b[cols].T
         matrix.index=[7,9,11,13,15,17,18]
-        im=heatmap(fig,ax,matrix,label,p,labels=TURNS)
+        im=heatmap(fig,ax,matrix,label,p,labels=TURN_LABELS)
         ax.set_ylabel("Age",fontsize=p*.8)
-        ax.set_xlabel(f"n = {int(b['Ladder Scenarios'].iloc[0])} scenarios",fontsize=p*.75)
-    colourbar(fig,axes,im,"Strong Refusal (%)",p)
+    colourbar(fig,axes,im,r"Strong Refusal, $S_t$ (%)",p)
     f.save(fig,"ladder","supplement","Strong Refusal across seven ages and three turns, "
-           "on each model's balanced age cohort. Gemini uses 20 scenarios; the other models use "
-           "25. This cohort is separate from the paired statutory-boundary figure.","dialogue_s08_ladder")
+           "on each model's balanced age cohort. This cohort is separate from the paired "
+           "statutory-boundary figure.","dialogue_s08_ladder")
 
 
 def draw_boundary(f):
@@ -427,9 +591,9 @@ def draw_boundary(f):
     fig,axes,p=f.layout(1,3,width=13.5,height=6.8)
     for i,(ax,t) in enumerate(zip(axes.flat,TURNS)):
         forest(ax,subset(d,Measure="Strong Refusal",Turn=t),"17 minus 18 (pp)",
-               "CI Lower","CI Upper",t,p,show_labels=i==0)
+               "CI Lower","CI Upper",TURN_SHORT[t],p,show_labels=i==0)
         ax.set_xlabel("")
-    fig.supxlabel("Age 17 minus Age 18 (pp)",fontsize=p)
+    fig.supxlabel(r"$S_{17,t}-S_{18,t}$ (pp)",fontsize=p)
     f.save(fig,"boundary","supplement","Strong-Refusal difference between ages 17 and 18 "
            "with paired scenario-bootstrap 95% intervals. Cohorts require these two ages only: "
            "24 Gemini scenarios and 25 for every other model.","dialogue_s14_boundary")
@@ -441,8 +605,12 @@ def draw_adjusted(f):
     for i,(ax,t) in enumerate(zip(axes.flat,TURNS)):
         frame=zero_frame() if t=="Turn 1" else subset(d,Measure="Strong Refusal",Turn=t).rename(
             columns={"Erosion Difference (pp)":"Estimate","CI Lower":"Lower","CI Upper":"Upper"})
-        forest(ax,frame,"Estimate","Lower","Upper",t,p,show_labels=i==0,
-               xlabel="Erosion difference (pp)")
+        forest(ax,frame,"Estimate","Lower","Upper",TURN_SHORT[t],p,show_labels=i==0,
+               xlabel="")
+    fig.supxlabel(
+        r"$\Delta_t G_{\mathrm{AR}}-\Delta_t G_{\mathrm{H}}$ (pp)",
+        fontsize=p,
+    )
     f.save(fig,"adjusted","supplement","Age-Restricted minus Harmful Strong-Refusal gap "
            "erosion from Turn 1 across all turns. Turn 1 is the zero reference. Later whiskers "
            "are scenario-bootstrap 95% intervals. Strata comprise different scenario sets, so "
@@ -467,9 +635,9 @@ def draw_memory_gap(f):
     fig,axes,p=f.layout(1,1,width=8.2,height=6.8,maps=True)
     im=heatmap(fig,axes[0,0],block,"Age Restricted vs Harmful",p,
                signed=True,limit=45,labels=TURNS)
-    colourbar(fig,axes,im,"Unbroken-memory difference (pp)",p)
+    colourbar(fig,axes,im,r"$M_{\mathrm{AR},t}-M_{\mathrm{H},t}$ (pp)",p)
     f.save(fig,"memory_gap","supplement","Age-Restricted minus Harmful difference in "
-           "unbroken Strong-Refusal memory. Turn 1 is 0 by cohort definition; Turn 3 requires "
+           "Safety Memory. Turn 1 is 0 by cohort definition; Turn 3 requires "
            "the boundary to hold at both later turns. Negative values indicate weaker "
            "age-conditioned memory.","dialogue_03_memory; dialogue_s13_memory_gap")
 
@@ -495,9 +663,9 @@ def draw_directional(f):
                 ax.annotate(f"{value:.1f}",(x,value),xytext=(0,9 if above else -13),
                             textcoords="offset points",ha="center",fontsize=p*.62,
                             color=DIRECTION_COLOUR[direction],fontweight="bold")
-        ax.set_xticks(range(3),TURNS,rotation=0)
+        ax.set_xticks(range(3),TURN_LABELS,rotation=0)
         ax.set_ylim(-5,105);ax.set_yticks([0,25,50,75,100]);ax.label_outer()
-    fig.supylabel("Action Defect (%)",fontsize=p*1.10,color="black")
+    fig.supylabel(r"Action Defect, $D_t$ (%)",fontsize=p*1.10,color="black")
     handles=[Line2D([],[],color=DIRECTION_COLOUR[k],lw=2,
                     marker="o" if k=="Over-Permissive" else "s",
                     ls="-" if k=="Over-Permissive" else "--") for k in DIRECTION_COLOUR]
@@ -510,23 +678,22 @@ def draw_directional(f):
 
 def draw_failure(f):
     d=f.read("dialogue_s09_failure")
-    for s in STRATA:
-        fig,axes,p=f.layout(1,3,height=7.0,maps=True)
+    fig,axes,p=f.layout(2,3,height=10.8,maps=True)
+    for row,s in enumerate(STRATA):
         for col,t in enumerate(TURNS):
             columns=[c+" (%)" for c in CELLS]
-            if t=="Turn 1":
-                b=pd.DataFrame(0.0,index=MODELS,columns=columns)
-                b["Strong Refusal (%)"]=100.0
-            else:
-                b=model_frame(subset(d,Turn=t,**{"Scenario Type":s}))[columns]
+            b=model_frame(subset(d,Turn=t,**{"Scenario Type":s}))[columns]
+            if not np.allclose(b.sum(axis=1),100,atol=.03):
+                raise ValueError(f"Failure composition does not sum to 100: {s}, {t}")
             b.index=MODEL_LABELS
-            im=heatmap(fig,axes[0,col],b,t,p,
+            im=heatmap(fig,axes[row,col],b,f"{s} ({TURN_SHORT[t]})",p,
                        labels=["Strong","Weak","Minimal","Total"])
-        colourbar(fig,axes,im,"Established boundaries (%)",p)
-        f.save(fig,"failure_"+slug(s),"supplement",f"{s}: outcome composition within the "
-               "initially protective cohort at all three turns. Strong and Weak denote refusal; "
-               "Minimal and Total denote compliance. Turn-3 Strong Refusal is endpoint memory "
-               "and does not necessarily indicate an unbroken boundary.","dialogue_s09_failure")
+    colourbar(fig,axes,im,"Replies in cohort (%)",p)
+    f.save(fig,"failure","supplement","Outcome composition within the initially protective "
+           "cohort for Age Restricted and Harmful scenarios at T1, T2 and T3. Strong and Weak "
+           "denote refusal; Minimal and Total denote compliance. Strong Refusal at T3 is "
+           "endpoint memory and does not necessarily indicate an unbroken boundary.",
+           "dialogue_s09_failure")
 
 
 def draw_domains(f):
@@ -547,11 +714,10 @@ def slug(s):
 
 
 MAIN={"outcomes":draw_outcomes,"defects":draw_defects,"memory":draw_memory,
-      "first_break":draw_first_break,"methods":draw_methods,"age":draw_age,"roleplay":draw_roleplay}
-SUPPLEMENT={"changes":draw_changes,"trajectories":draw_trajectories,"ladder":draw_ladder,
-            "boundary":draw_boundary,"age_control":draw_age_control,"adjusted":draw_adjusted,
-            "memory_gap":draw_memory_gap,"directional":draw_directional,"failure":draw_failure,
-            "domains":draw_domains}
+      "methods_radar":draw_methods_radar,"age":draw_age,"roleplay":draw_roleplay}
+SUPPLEMENT={"adjusted":draw_adjusted,"ladder":draw_ladder,
+            "boundary":draw_boundary,"directional":draw_directional,
+            "failure":draw_failure}
 
 
 def main():
@@ -567,6 +733,7 @@ def main():
     if args.only:jobs={k:v for k,v in jobs.items() if k in args.only}
     if not jobs:parser.error("No figures match --set and --only")
     f=Figures(args.tables,args.output,args.png,not args.no_preview)
+    f.clean_retired()
     try:
         for job in jobs.values():job(f)
     finally:

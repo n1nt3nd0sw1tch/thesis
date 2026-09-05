@@ -60,7 +60,8 @@ BATCHES_DIR = DATA_DIR / 'batches'
 # repeated or discarded without touching the others.
 RESULTS_DIR = ROOT / 'results'
 ADAPTATION_DIR = RESULTS_DIR / 'adaptation'
-DIALOGUE_DIR = RESULTS_DIR / 'dialogue'
+# DIALOGUE_DIR = RESULTS_DIR / 'dialogue'
+DIALOGUE_DIR = RESULTS_DIR / 'classification' / 'multi'
 JUDGEMENTS_DIR = RESULTS_DIR / 'judgements'
 
 # Where labels live, in the order they are made. Blank sheets are data, because

@@ -15,79 +15,25 @@
     "figure": "dialogue_memory",
     "tier": "main",
     "source": "dialogue_03_memory",
-    "caption": "Unbroken Strong-Refusal memory among dialogues that expected refusal and had Strong Refusal at Turn 1. Turn 1 is 100% by cohort definition; Turn 3 requires the boundary to hold at both later turns."
+    "caption": "Safety Memory among dialogues that expected refusal and had Strong Refusal at Turn 1. Turn 1 is 100% by cohort definition; Turn 3 requires the boundary to hold at both later turns."
   },
   {
-    "figure": "dialogue_first_break",
-    "tier": "main",
-    "source": "dialogue_03_memory",
-    "caption": "Cumulative first loss of Strong Refusal among established protective boundaries. Turn 1 is 0% by cohort definition. A later return does not erase an earlier break."
-  },
-  {
-    "figure": "dialogue_methods_age_restricted",
+    "figure": "dialogue_methods_radar",
     "tier": "main",
     "source": "dialogue_05_methods",
-    "caption": "Age Restricted: change in Action Defect from Turn 1, matched across all three methods on shared opening seeds. Positive values mean more defects. Purpose Reverse endpoint improvements do not establish recovery."
+    "caption": "Action Alignment, A_t, for all six models across Emotional Pushback, Purpose Reverse and Role Play. Panels show all scenarios, Age Restricted and Harmful at T1, T2 and T3. T1 is the matched common opening. Higher values indicate stronger benchmark-aligned action."
   },
   {
-    "figure": "dialogue_methods_harmful",
-    "tier": "main",
-    "source": "dialogue_05_methods",
-    "caption": "Harmful: change in Action Defect from Turn 1, matched across all three methods on shared opening seeds. Positive values mean more defects. Purpose Reverse endpoint improvements do not establish recovery."
-  },
-  {
-    "figure": "dialogue_age_age_restricted",
+    "figure": "dialogue_age",
     "tier": "main",
     "source": "dialogue_04_age",
-    "caption": "Age Restricted: minor-minus-age-18 Strong-Refusal gap at all three turns. Whiskers are paired scenario-bootstrap 95% intervals; each model retains its available scenario cohort."
+    "caption": "Strong-Refusal age gap, G_t, for Age Restricted and Harmful scenarios. S_minor,t is the mean Strong-Refusal rate across minor ages and S_18,t is the age-18 rate at turn t. Whiskers are paired scenario-bootstrap 95% intervals."
   },
   {
     "figure": "dialogue_roleplay",
     "tier": "main",
     "source": "dialogue_06_roleplay",
-    "caption": "Role Play: change from Turn 1 in each age-minus-neutral Strong-Refusal gap on common scenarios. Turn 1 is the zero reference; later whiskers are paired scenario-bootstrap 95% intervals. This is descriptive gap erosion, not proof of a displaced internal age state."
-  },
-  {
-    "figure": "dialogue_changes_age_restricted",
-    "tier": "supplement",
-    "source": "dialogue_02_defects",
-    "caption": "Age Restricted: Action Defect change from Turn 1 across all turns. Turn 1 is the zero reference; later whiskers are paired scenario-bootstrap 95% intervals."
-  },
-  {
-    "figure": "dialogue_changes_harmful",
-    "tier": "supplement",
-    "source": "dialogue_02_defects",
-    "caption": "Harmful: Action Defect change from Turn 1 across all turns. Turn 1 is the zero reference; later whiskers are paired scenario-bootstrap 95% intervals."
-  },
-  {
-    "figure": "dialogue_trajectories_age_restricted",
-    "tier": "supplement",
-    "source": "dialogue_s01_trajectories",
-    "caption": "Age Restricted: protective trajectories by method. All begin aligned. Columns correspond to A-A-A, A-D-D, A-D-A and A-A-D at Turns 1/2/3; each row sums to 100%. Method cohorts here are descriptive, not the all-method matched contrast cohort."
-  },
-  {
-    "figure": "dialogue_trajectories_harmful",
-    "tier": "supplement",
-    "source": "dialogue_s01_trajectories",
-    "caption": "Harmful: protective trajectories by method. All begin aligned. Columns correspond to A-A-A, A-D-D, A-D-A and A-A-D at Turns 1/2/3; each row sums to 100%. Method cohorts here are descriptive, not the all-method matched contrast cohort."
-  },
-  {
-    "figure": "dialogue_ladder",
-    "tier": "supplement",
-    "source": "dialogue_s08_ladder",
-    "caption": "Strong Refusal across seven ages and three turns, on each model's balanced age cohort. Gemini uses 20 scenarios; the other models use 25. This cohort is separate from the paired statutory-boundary figure."
-  },
-  {
-    "figure": "dialogue_boundary",
-    "tier": "supplement",
-    "source": "dialogue_s14_boundary",
-    "caption": "Strong-Refusal difference between ages 17 and 18 with paired scenario-bootstrap 95% intervals. Cohorts require these two ages only: 24 Gemini scenarios and 25 for every other model."
-  },
-  {
-    "figure": "dialogue_age_harmful",
-    "tier": "supplement",
-    "source": "dialogue_04_age",
-    "caption": "Harmful: minor-minus-age-18 Strong-Refusal gap at all three turns. Whiskers are paired scenario-bootstrap 95% intervals; each model retains its available scenario cohort."
+    "caption": "Role Play: change from T1 in the age-control Strong-Refusal gap, where G_a,t = S_a,t - S_control,t. T1 is the zero reference; later whiskers are paired scenario-bootstrap 95% intervals. This is descriptive gap erosion, not proof of a displaced internal age state."
   },
   {
     "figure": "dialogue_adjusted",
@@ -96,10 +42,16 @@
     "caption": "Age-Restricted minus Harmful Strong-Refusal gap erosion from Turn 1 across all turns. Turn 1 is the zero reference. Later whiskers are scenario-bootstrap 95% intervals. Strata comprise different scenario sets, so this is a descriptive control comparison, not causal identification."
   },
   {
-    "figure": "dialogue_memory_gap",
+    "figure": "dialogue_ladder",
     "tier": "supplement",
-    "source": "dialogue_03_memory; dialogue_s13_memory_gap",
-    "caption": "Age-Restricted minus Harmful difference in unbroken Strong-Refusal memory. Turn 1 is 0 by cohort definition; Turn 3 requires the boundary to hold at both later turns. Negative values indicate weaker age-conditioned memory."
+    "source": "dialogue_s08_ladder",
+    "caption": "Strong Refusal across seven ages and three turns, on each model's balanced age cohort. This cohort is separate from the paired statutory-boundary figure."
+  },
+  {
+    "figure": "dialogue_boundary",
+    "tier": "supplement",
+    "source": "dialogue_s14_boundary",
+    "caption": "Strong-Refusal difference between ages 17 and 18 with paired scenario-bootstrap 95% intervals. Cohorts require these two ages only: 24 Gemini scenarios and 25 for every other model."
   },
   {
     "figure": "dialogue_directional",
@@ -108,21 +60,9 @@
     "caption": "Age Restricted: directional Action Defect rates at all three turns. Over-Permissive means failure to maintain Strong Refusal when refusal is expected; Over-Restrictive means failure to provide Total Compliance when compliance is expected."
   },
   {
-    "figure": "dialogue_failure_age_restricted",
+    "figure": "dialogue_failure",
     "tier": "supplement",
     "source": "dialogue_s09_failure",
-    "caption": "Age Restricted: outcome composition within the initially protective cohort at all three turns. Strong and Weak denote refusal; Minimal and Total denote compliance. Turn-3 Strong Refusal is endpoint memory and does not necessarily indicate an unbroken boundary."
-  },
-  {
-    "figure": "dialogue_failure_harmful",
-    "tier": "supplement",
-    "source": "dialogue_s09_failure",
-    "caption": "Harmful: outcome composition within the initially protective cohort at all three turns. Strong and Weak denote refusal; Minimal and Total denote compliance. Turn-3 Strong Refusal is endpoint memory and does not necessarily indicate an unbroken boundary."
-  },
-  {
-    "figure": "dialogue_domains",
-    "tier": "supplement",
-    "source": "dialogue_s10_domains",
-    "caption": "Macro-Average Action Defect by harm category and turn. Domains are ordered by Turn-3 defect rate. Scenario counts differ by domain, so this figure is descriptive."
+    "caption": "Outcome composition within the initially protective cohort for Age Restricted and Harmful scenarios at T1, T2 and T3. Strong and Weak denote refusal; Minimal and Total denote compliance. Strong Refusal at T3 is endpoint memory and does not necessarily indicate an unbroken boundary."
   }
 ]
