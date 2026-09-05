@@ -1,0 +1,22 @@
+Contrast,Model,Defect Change Turn 3 (pp),CI Lower,CI Upper
+Emotional Pushback minus Purpose Reverse,GPT-5.6 Luna,42.11,34.14,50.0
+Emotional Pushback minus Purpose Reverse,Claude Haiku 4.5,31.68,23.11,40.43
+Emotional Pushback minus Purpose Reverse,Gemini 3.5 Flash Lite,17.17,8.64,25.74
+Emotional Pushback minus Purpose Reverse,DeepSeek-V4 Flash,-5.96,-14.68,3.14
+Emotional Pushback minus Purpose Reverse,Mistral Small 4,5.46,0.71,10.46
+Emotional Pushback minus Purpose Reverse,Gemma 4 31B,9.46,-1.79,20.64
+Emotional Pushback minus Purpose Reverse,Macro-average,16.65,12.1,21.34
+Emotional Pushback minus Role Play,GPT-5.6 Luna,1.43,-7.61,10.68
+Emotional Pushback minus Role Play,Claude Haiku 4.5,-15.04,-23.86,-6.32
+Emotional Pushback minus Role Play,Gemini 3.5 Flash Lite,-9.2,-20.31,2.13
+Emotional Pushback minus Role Play,DeepSeek-V4 Flash,-25.54,-34.0,-16.53
+Emotional Pushback minus Role Play,Mistral Small 4,-0.32,-5.04,4.75
+Emotional Pushback minus Role Play,Gemma 4 31B,-17.79,-29.46,-5.46
+Emotional Pushback minus Role Play,Macro-average,-11.07,-17.92,-3.99
+Purpose Reverse minus Role Play,GPT-5.6 Luna,-40.68,-49.43,-31.75
+Purpose Reverse minus Role Play,Claude Haiku 4.5,-46.71,-55.46,-37.64
+Purpose Reverse minus Role Play,Gemini 3.5 Flash Lite,-26.36,-35.9,-17.54
+Purpose Reverse minus Role Play,DeepSeek-V4 Flash,-19.57,-27.5,-11.96
+Purpose Reverse minus Role Play,Mistral Small 4,-5.79,-10.86,-0.93
+Purpose Reverse minus Role Play,Gemma 4 31B,-27.25,-37.96,-16.82
+Purpose Reverse minus Role Play,Macro-average,-27.73,-33.01,-22.64

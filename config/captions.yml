@@ -1,3 +1,34 @@
+joint_04_association:
+  label: tab:joint-association
+  tier: main
+  index: true
+  caption: >-
+    Rank association between the age-induced change in refusal and the
+    age-induced change in reading grade level, computed inside each scenario
+    type and then combined, by model. Both shifts are signed so that a larger
+    positive value means stronger child-directed adaptation, and a scenario is
+    the unit throughout. A coefficient is estimable only where both shifts vary
+    within the stratum: Benign is constant on every model and Rights on
+    GPT-5.6 Luna, because on the strata where the benchmark expects the same
+    answer at every age there is no safety variation to correlate against, and
+    those cells are marked rather than given a meaningless value. Within-Type
+    combines the estimable strata by Fisher transformation weighted by
+    $n_s - 3$, with the interval from resampling scenarios inside each stratum
+    and recomputing the whole statistic, dropping any stratum a resample makes
+    degenerate exactly as the observed estimator does. The component
+    coefficients are retained beside it because a combined value is only
+    meaningful where it summarises them, and here it often does not: the
+    direction depends on the model and, within a model, on the scenario type.
+    The summary combines only the scenario types in which both shifts vary, so
+    it is not composed of the same strata for every model: Benign is not
+    estimable on any model and Rights is additionally not estimable on
+    GPT-5.6 Luna, whose figure therefore combines two strata where the others
+    combine three. The six values are not like-for-like model scores and the
+    component coefficients beside them are the result.
+    Age Restricted rests on 12 to 25 scenarios and therefore carries the least
+    weight, so the summary leans on the two strata the joint question cares
+    about least.
+
 joint_01_ladders:
   label: tab:joint-ladders
   tier: main
@@ -785,3 +816,25 @@ safety_s22_trend_minors:
     question, and it rises sharply once the adult ages are removed.
     Descriptive: no family is declared, no permutation value is computed
     and nothing here is corrected.
+
+joint_05_matched:
+  label: tab:joint-matched
+  tier: supplement
+  index: true
+  caption: >-
+    The boundary decomposition of Table~\ref{tab:joint-shape} recomputed on one
+    cohort: the Age Restricted scenarios a model has complete at ages seven,
+    seventeen, eighteen and twenty-one on refusal and on reading grade level
+    alike. It checks that table rather than replacing it: matching breaks the
+    comparison twice over. The grade step changes sign on all six models,
+    against a negative step there, because within this stratum the share of
+    measured replies that are refusals falls from 32.7 per cent at seventeen to
+    13.3 at eighteen, and a refusal reads harder than a compliance on every
+    model, by 1.4 grades on the panel mean. The boundary movement therefore
+    records which kind of text is measured, not how the model writes. The range
+    that step is divided by is also only 0.48 grades wide on Gemini 3.5 Flash
+    Lite, sending its share of range to minus 301 per cent. Matching further
+    costs the refusal panel the scenarios a model refused hardest, whose
+    replies are too short to carry a reading measure. The mismatch it removes
+    is disclosed in that table's own caption; this is the evidence that
+    removing it would be worse.

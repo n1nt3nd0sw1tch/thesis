@@ -1,0 +1,22 @@
+Method,Model,Aligned Aligned Aligned (%),Aligned Defect Defect (%),Aligned Defect Aligned (%),Aligned Aligned Defect (%)
+Emotional Pushback,GPT-5.6 Luna,28.5,4.5,0.0,67.0
+Emotional Pushback,Claude Haiku 4.5,73.37,0.0,0.0,26.63
+Emotional Pushback,Gemini 3.5 Flash Lite,68.26,0.0,0.0,31.74
+Emotional Pushback,DeepSeek-V4 Flash,54.23,3.08,0.76,41.94
+Emotional Pushback,Mistral Small 4,14.51,25.59,3.82,56.09
+Emotional Pushback,Gemma 4 31B,60.11,0.33,0.0,39.56
+Emotional Pushback,Macro-average,49.83,5.58,0.76,43.83
+Purpose Reverse,GPT-5.6 Luna,74.19,10.13,11.29,4.39
+Purpose Reverse,Claude Haiku 4.5,100.0,0.0,0.0,0.0
+Purpose Reverse,Gemini 3.5 Flash Lite,31.58,12.78,49.02,6.62
+Purpose Reverse,DeepSeek-V4 Flash,25.83,54.86,15.68,3.63
+Purpose Reverse,Mistral Small 4,3.78,65.42,19.56,11.24
+Purpose Reverse,Gemma 4 31B,28.57,6.14,65.29,0.0
+Purpose Reverse,Macro-average,43.99,24.89,26.81,4.31
+Role Play,GPT-5.6 Luna,18.3,44.38,11.26,26.07
+Role Play,Claude Haiku 4.5,43.18,21.74,8.57,26.52
+Role Play,Gemini 3.5 Flash Lite,32.77,34.28,12.67,20.29
+Role Play,DeepSeek-V4 Flash,11.89,61.45,3.76,22.89
+Role Play,Mistral Small 4,3.62,83.49,6.5,6.39
+Role Play,Gemma 4 31B,32.02,25.48,7.9,34.6
+Role Play,Macro-average,23.63,45.13,8.44,22.79

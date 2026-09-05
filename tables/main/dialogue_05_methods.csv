@@ -1,22 +1,22 @@
-Method,Model,Turn 2 (%),Turn 3 (%)
-Emotional Pushback,Claude Haiku 4.5,100.0,82.64
-Emotional Pushback,DeepSeek-V4 Flash,97.57,69.64
-Emotional Pushback,GPT-5.6 Luna,97.47,56.12
-Emotional Pushback,Gemini 3.5 Flash Lite,100.0,74.89
-Emotional Pushback,Gemma 4 31B,99.13,72.93
-Emotional Pushback,Macro-average,95.13,62.44
-Emotional Pushback,Mistral Small 4,76.62,18.41
-Purpose Reverse,Claude Haiku 4.5,100.0,100.0
-Purpose Reverse,DeepSeek-V4 Flash,44.13,60.73
-Purpose Reverse,GPT-5.6 Luna,87.34,94.51
-Purpose Reverse,Gemini 3.5 Flash Lite,41.23,90.79
-Purpose Reverse,Gemma 4 31B,31.88,97.82
-Purpose Reverse,Macro-average,53.5,78.37
-Purpose Reverse,Mistral Small 4,16.42,26.37
-Role Play,Claude Haiku 4.5,79.34,57.85
-Role Play,DeepSeek-V4 Flash,44.94,25.91
-Role Play,GPT-5.6 Luna,54.01,39.24
-Role Play,Gemini 3.5 Flash Lite,64.47,55.7
-Role Play,Gemma 4 31B,76.42,47.16
-Role Play,Macro-average,55.27,39.88
-Role Play,Mistral Small 4,12.44,13.43
+Method,Model,Evaluable Seeds,Defect Turn 1 (%),Defect Change Turn 2 (pp),Defect Change Turn 3 (pp),Refusal Change Turn 2 (pp),Refusal Change Turn 3 (pp)
+Emotional Pushback,GPT-5.6 Luna,375,33.57,-9.93,39.68,14.39,-23.5
+Emotional Pushback,Claude Haiku 4.5,375,31.57,-12.54,10.96,18.5,0.79
+Emotional Pushback,Gemini 3.5 Flash Lite,335,29.31,-7.15,22.35,16.94,-6.52
+Emotional Pushback,DeepSeek-V4 Flash,375,33.07,-10.57,22.07,11.14,-13.0
+Emotional Pushback,Mistral Small 4,375,45.71,4.5,40.0,-2.21,-39.71
+Emotional Pushback,Gemma 4 31B,375,34.82,-15.93,14.18,19.68,0.75
+Emotional Pushback,Macro-average,,34.68,-8.6,24.87,13.07,-13.53
+Purpose Reverse,GPT-5.6 Luna,375,33.57,5.36,-2.43,1.96,10.68
+Purpose Reverse,Claude Haiku 4.5,375,31.57,-16.14,-20.71,23.82,30.43
+Purpose Reverse,Gemini 3.5 Flash Lite,335,29.31,32.0,5.18,-37.85,-1.71
+Purpose Reverse,DeepSeek-V4 Flash,375,33.07,36.79,28.04,-35.11,-23.46
+Purpose Reverse,Mistral Small 4,375,45.71,35.93,34.54,-37.64,-34.57
+Purpose Reverse,Gemma 4 31B,375,34.82,38.43,4.71,-39.25,-0.11
+Purpose Reverse,Macro-average,,34.68,22.06,8.22,-20.68,-3.13
+Role Play,GPT-5.6 Luna,375,33.57,30.0,38.25,-28.11,-37.18
+Role Play,Claude Haiku 4.5,375,31.57,13.04,26.0,-11.32,-24.96
+Role Play,Gemini 3.5 Flash Lite,335,29.31,21.49,31.54,-23.63,-27.27
+Role Play,DeepSeek-V4 Flash,375,33.07,33.0,47.61,-34.5,-47.93
+Role Play,Mistral Small 4,375,45.71,41.64,40.32,-45.07,-43.75
+Role Play,Gemma 4 31B,375,34.82,14.18,31.96,-13.93,-30.25
+Role Play,Macro-average,,34.68,25.56,35.95,-26.09,-35.22
