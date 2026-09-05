@@ -17,8 +17,10 @@ import tempfile
 
 import matplotlib
 matplotlib.use("Agg")
+import matplotlib.patheffects as pe
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 import numpy as np
 import pandas as pd
 
@@ -32,7 +34,16 @@ TURNS = ["Turn 1", "Turn 2", "Turn 3"]
 METHODS = ["Emotional Pushback", "Purpose Reverse", "Role Play"]
 CELLS = list(analysis.CELL_ORDER)
 TURN_COLOURS = ["#8E8E93", "#376B8C", "#172F4D"]
-CAPTIONS = {}
+OUTCOME_COLOUR = {
+    "Strong Refusal": "#376B8C",
+    "Weak Refusal": "#9ECAE1",
+    "Minimal Compliance": "#F6C85F",
+    "Total Compliance": "#D55E00",
+}
+DIRECTION_COLOUR = {
+    "Over-Permissive": "#D62828",
+    "Over-Restrictive": "#4E342E",
+}
 
 
 class Figures:
@@ -63,10 +74,8 @@ class Figures:
         if forests:
             limits = [ax.get_xlim() for ax in forests]
             shared = (min(v[0] for v in limits), max(v[1] for v in limits))
-            for i, ax in enumerate(forests):
+            for ax in forests:
                 ax.set_xlim(shared)
-                if i:
-                    ax.tick_params(axis='y', labelleft=False)
         name = f"dialogue_{key}"
         target = self.output / f"{name}.pdf"
         for attempt in range(3):
@@ -120,21 +129,22 @@ def heatmap(fig, ax, matrix, title, points, signed=False, limit=100, labels=None
     a = np.asarray(matrix, dtype=float)
     if not np.isfinite(a).all():
         raise ValueError(f"Non-finite heatmap cell in {title}")
-    ax.grid(False)
-    ax.set_facecolor("white")
+    house.map_panel(ax, title, points)
     im = ax.imshow(a, aspect="auto", cmap="RdBu_r" if signed else "Blues",
                    vmin=-limit if signed else 0, vmax=limit)
     ax.set_xticks(range(a.shape[1]), labels or list(matrix.columns), rotation=0)
     ax.set_yticks(range(a.shape[0]), list(matrix.index))
-    ax.tick_params(length=0, pad=7, labelsize=points * .83)
-    ax.set_title(title, pad=12)
+    dense = a.shape[1] >= 4
+    ax.tick_params(length=0, pad=7, labelsize=points * (.58 if dense else .83))
     for spine in ax.spines.values():
         spine.set_visible(False)
     for (row, col), v in np.ndenumerate(a):
+        if dense and abs(v) < .05:
+            continue
         colour = house.readable_on(im.cmap(im.norm(v)))
         text = f"{v:+.1f}" if signed else f"{v:.1f}"
         ax.text(col, row, text, ha="center", va="center", color=colour,
-                fontsize=points*.86, fontweight="bold")
+                fontsize=points*(.68 if dense else .82), fontweight="bold")
     if a.shape[0] == 7:
         ax.axhline(5.5, color="white", linewidth=2.5)
     return im
@@ -148,15 +158,14 @@ def colourbar(fig, axes, image, label, points):
     bar.outline.set_visible(False)
 
 
-def forest(ax, frame, estimate, low, high, title, points, percent=False):
+def forest(ax, frame, estimate, low, high, title, points, percent=False,
+           show_labels=True, xlabel=None):
     ax._multi_forest = True
     d = model_frame(frame)
     x, lo, hi = (d[c].to_numpy(float) for c in (estimate, low, high))
     if not np.isfinite(np.r_[x, lo, hi]).all() or (lo > hi).any():
         raise ValueError(f"Invalid interval in {title}")
     house.panel(ax, title, points)
-    ax.grid(False)
-    ax.grid(axis="x", color=analysis.MUTED, alpha=.25, linewidth=.6)
     ax.axvline(0, color=analysis.MUTED, linewidth=.8)
     for y, (label, value, lower, upper) in enumerate(zip(MODELS, x, lo, hi)):
         c = analysis.COLOUR.get(label, "#222222")
@@ -167,24 +176,61 @@ def forest(ax, frame, estimate, low, high, title, points, percent=False):
         ax.text(1.025, y, f"{value:.1f}" if percent else f"{value:+.1f}",
                 transform=ax.get_yaxis_transform(), ha="left", va="center",
                 fontsize=points*.83, color=c, fontweight="bold", clip_on=False)
-    ax.set_yticks(range(7), MODEL_LABELS, fontsize=points*.78)
+    ax.set_yticks(range(7), MODEL_LABELS if show_labels else [""] * 7,
+                  fontsize=points*.78)
     ax.set_ylim(6.65, -.65)
     span = max(hi.max()-lo.min(), 10)
     ax.set_xlim((0, 100) if percent else (min(lo.min(), 0)-span*.07,
                                         max(hi.max(), 0)+span*.07))
     ax.axhline(5.5, color=analysis.MUTED, alpha=.35, lw=.7)
-    ax.set_xlabel("Held both (%)" if percent else "Change (pp)")
+    ax.set_xlabel(xlabel or ("Held both (%)" if percent else "Change (pp)"))
     ax.tick_params(axis="y", length=0)
+
+
+def zero_frame():
+    return pd.DataFrame({
+        "Model": MODELS,
+        "Estimate": np.zeros(len(MODELS)),
+        "Lower": np.zeros(len(MODELS)),
+        "Upper": np.zeros(len(MODELS)),
+    })
 
 
 def draw_outcomes(f):
     d = f.read("dialogue_01_outcomes")
-    fig, axes, p = f.layout(2, 2, height=10, maps=True)
-    for ax, cell in zip(axes.flat, CELLS):
-        block = model_frame(subset(d, Outcome=cell))[TURNS]
-        block.index = MODEL_LABELS
-        im = heatmap(fig, ax, block, cell, p)
-    colourbar(fig, axes, im, "Replies (%)", p)
+    fig, axes, p = f.layout(2, 3, height=8.8)
+    x = np.arange(len(TURNS))
+    for ax, model in zip(axes.flat, analysis.ORDER):
+        house.panel(ax, model, p)
+        bottom = np.zeros(len(TURNS))
+        total = np.zeros(len(TURNS))
+        for cell in CELLS:
+            row = subset(d, Model=model, Outcome=cell)
+            if len(row) != 1:
+                raise ValueError(f"Missing outcome row for {model}: {cell}")
+            values = row[TURNS].iloc[0].to_numpy(float)
+            total += values
+            bars = ax.bar(x, values, bottom=bottom, width=.66,
+                          color=OUTCOME_COLOUR[cell], edgecolor="white",
+                          linewidth=.6, zorder=3)
+            for bar, value, base in zip(bars, values, bottom):
+                if value < 5:
+                    continue
+                note = ax.text(bar.get_x() + bar.get_width()/2, base + value/2,
+                               f"{value:.1f}", ha="center", va="center",
+                               fontsize=p*.62, color="white", fontweight="bold")
+                note.set_path_effects([pe.withStroke(linewidth=1.2, foreground="#303030")])
+            bottom += values
+        if not np.allclose(total, 100, atol=.03):
+            raise ValueError(f"Outcome distribution does not sum to 100 for {model}")
+        ax.set_xticks(x, TURNS, rotation=0)
+        ax.set_ylim(0, 100)
+        ax.set_yticks([0, 25, 50, 75, 100])
+        ax.label_outer()
+    fig.supylabel("Replies (%)", fontsize=p*1.10, color="black")
+    handles = [Patch(facecolor=OUTCOME_COLOUR[cell], edgecolor="white", label=cell)
+               for cell in CELLS]
+    house.legend(fig, handles, CELLS, p, ncol=4)
     f.save(fig, "outcomes", "main", "Four outcomes at each turn on the same complete cohort. "
            "Each model-turn distribution sums to 100%; scenarios and models are equally weighted "
            "at their respective averaging stages.", "dialogue_01_outcomes")
@@ -213,7 +259,7 @@ def draw_defects(f):
     fig.supylabel("Action Defect (%)", fontsize=p)
     handles=[Line2D([], [], color=analysis.SCENARIO_COLOUR[s], marker="s" if i==0 else "o",
                     ls="--" if i==0 else "-") for i,s in enumerate(STRATA)]
-    fig.legend(handles, STRATA, loc="outside lower center", ncol=2, fontsize=p*.85)
+    house.legend(fig,handles,STRATA,p,ncol=2)
     f.save(fig,"defects","main","Action Defect by turn and stratum. Undefined age-neutral "
            "expectations are excluded; lines describe turn-specific rates, not cumulative breaks.",
            "dialogue_02_defects")
@@ -221,40 +267,58 @@ def draw_defects(f):
 
 def draw_memory(f):
     d=f.read("dialogue_03_memory")
-    fig, axes,p=f.layout(height=6.8)
+    fig, axes,p=f.layout(height=6.8,maps=True)
     for ax,s in zip(axes.flat,STRATA):
-        forest(ax,subset(d,**{"Scenario Type":s}),"Held Both (%)","Held Both CI Lower",
-               "Held Both CI Upper",s,p,percent=True)
-    f.save(fig,"memory","main","Strong Refusal retained at both later turns, conditional on "
-           "expected refusal and Strong Refusal at Turn 1. Bars: 95% scenario-bootstrap intervals. "
-           "Strata and models have different eligible opening cohorts.","dialogue_03_memory")
+        part=model_frame(subset(d,**{"Scenario Type":s}))
+        block=pd.DataFrame({
+            "Turn 1":100.0,
+            "Turn 2":part["Held Turn 2 (%)"],
+            "Turn 3":part["Held Both (%)"],
+        },index=part.index)
+        block.index=MODEL_LABELS
+        im=heatmap(fig,ax,block,s,p,labels=TURNS)
+    colourbar(fig,axes,im,"Unbroken boundaries (%)",p)
+    f.save(fig,"memory","main","Unbroken Strong-Refusal memory among dialogues that "
+           "expected refusal and had Strong Refusal at Turn 1. Turn 1 is 100% by cohort "
+           "definition; Turn 3 requires the boundary to hold at both later turns.",
+           "dialogue_03_memory")
 
 
 def draw_first_break(f):
     d=f.read("dialogue_03_memory")
     fig,axes,p=f.layout(height=6.6,maps=True)
-    columns=["First Break Turn 2 (%)","First Break Turn 3 (%)","Held Both (%)"]
     for ax,s in zip(axes.flat,STRATA):
-        block=model_frame(subset(d,**{"Scenario Type":s}))[columns]
-        if not np.allclose(block.sum(axis=1),100,atol=.03):raise ValueError("Break partition")
+        part=model_frame(subset(d,**{"Scenario Type":s}))
+        partition=part[["First Break Turn 2 (%)","First Break Turn 3 (%)","Held Both (%)"]]
+        if not np.allclose(partition.sum(axis=1),100,atol=.03):
+            raise ValueError("First-break partition does not sum to 100")
+        block=pd.DataFrame({
+            "Turn 1":0.0,
+            "Turn 2":part["First Break Turn 2 (%)"],
+            "Turn 3":part["First Break Turn 2 (%)"]+part["First Break Turn 3 (%)"],
+        },index=part.index)
         block.index=MODEL_LABELS
-        im=heatmap(fig,ax,block,s,p,labels=["Turn 2","Turn 3","No break"])
-    colourbar(fig,axes,im,"Established boundaries (%)",p)
-    f.save(fig,"first_break","main","First loss of Strong Refusal among established protective "
-           "boundaries. Turn 2, Turn 3 and no break partition the cohort; a later return does not "
-           "erase an earlier break.","dialogue_03_memory")
+        im=heatmap(fig,ax,block,s,p,labels=TURNS)
+    colourbar(fig,axes,im,"Cumulative first break (%)",p)
+    f.save(fig,"first_break","main","Cumulative first loss of Strong Refusal among "
+           "established protective boundaries. Turn 1 is 0% by cohort definition. A later "
+           "return does not erase an earlier break.","dialogue_03_memory")
 
 
 def draw_methods(f):
     d=f.read("dialogue_05_methods")
     for s in STRATA:
-        fig,axes,p=f.layout(height=6.9,maps=True)
-        for ax,t in zip(axes.flat,TURNS[1:]):
-            block=subset(d,**{"Scenario Type":s}).pivot(index="Model",columns="Method",
-                         values=f"Defect Change {t} (pp)").reindex(index=MODELS,columns=METHODS)
+        fig,axes,p=f.layout(3,1,width=9.2,height=15.5,maps=True)
+        part=subset(d,**{"Scenario Type":s})
+        for ax,method in zip(axes.flat,METHODS):
+            method_part=subset(part,Method=method).set_index("Model").reindex(MODELS)
+            block=pd.DataFrame({
+                "Turn 1":0.0,
+                "Turn 2":method_part["Defect Change Turn 2 (pp)"],
+                "Turn 3":method_part["Defect Change Turn 3 (pp)"],
+            },index=MODELS)
             block.index=MODEL_LABELS
-            im=heatmap(fig,ax,block,t,p,signed=True,limit=65,
-                       labels=["Emotional\nPushback","Purpose\nReverse","Role Play"])
+            im=heatmap(fig,ax,block,method,p,signed=True,limit=65,labels=TURNS)
         colourbar(fig,axes,im,"Action Defect change (pp)",p)
         f.save(fig,"methods_"+slug(s),"main",f"{s}: change in Action Defect from Turn 1, "
                "matched across all three methods on shared opening seeds. Positive values mean "
@@ -264,14 +328,14 @@ def draw_methods(f):
 
 def draw_age_stratum(f, s):
     d=f.read("dialogue_04_age")
-    fig,axes,p=f.layout(height=6.8)
-    for ax,t in zip(axes.flat,TURNS[1:]):
+    fig,axes,p=f.layout(1,3,height=6.8)
+    for i,(ax,t) in enumerate(zip(axes.flat,TURNS)):
         forest(ax,subset(d,Measure="Strong Refusal",Turn=t,**{"Scenario Type":s}),
-               "Erosion (pp)","Erosion CI Lower","Erosion CI Upper",t,p)
-        ax.set_xlabel("Age-gap change (pp)")
+               "Gap (pp)","Gap CI Lower","Gap CI Upper",t,p,show_labels=i==0,
+               xlabel="Minor minus Age 18 (pp)")
     f.save(fig,"age_"+slug(s),"main" if s==STRATA[0] else "supplement",
-           f"{s}: change from Turn 1 in the minor-minus-age-18 Strong-Refusal gap. "
-           "Negative values indicate gap erosion. Whiskers are paired scenario-bootstrap "
+           f"{s}: minor-minus-age-18 Strong-Refusal gap at all three turns. "
+           "Whiskers are paired scenario-bootstrap "
            "95% intervals; each model retains its available scenario cohort.","dialogue_04_age")
 
 
@@ -285,27 +349,42 @@ def draw_age_control(f):
 
 def draw_roleplay(f):
     d=f.read("dialogue_06_roleplay")
-    fig,axes,p=f.layout(height=6.8)
-    for ax,arm in zip(axes.flat,["Age 9","Age 17"]):
-        forest(ax,subset(d,Measure="Strong Refusal",Condition=arm+" minus Control"),
-               "Change Turn 3 (pp)","Change Turn 3 CI Lower","Change Turn 3 CI Upper",
-               arm+" vs Neutral",p)
-        ax.set_xlabel("Age-gap change at Turn 3 (pp)")
-    f.save(fig,"roleplay","main","Role Play: Turn-3 minus Turn-1 change in the "
-           "age-minus-neutral Strong-Refusal gap on common scenarios. 95% paired scenario-bootstrap "
-           "intervals. This is descriptive gap erosion, not proof of a displaced internal age state.",
+    fig,axes,p=f.layout(2,3,height=11.5)
+    for row,arm in enumerate(["Age 9","Age 17"]):
+        part=subset(d,Measure="Strong Refusal",Condition=arm+" minus Control")
+        for col,t in enumerate(TURNS):
+            frame=zero_frame() if t=="Turn 1" else part.rename(columns={
+                f"Change {t} (pp)":"Estimate",
+                f"Change {t} CI Lower":"Lower",
+                f"Change {t} CI Upper":"Upper",
+            })
+            forest(axes[row,col],frame,"Estimate","Lower","Upper",
+                   f"{arm} vs Neutral, {t}",p,show_labels=col==0,
+                   xlabel="Age-gap change (pp)")
+    f.save(fig,"roleplay","main","Role Play: change from Turn 1 in each "
+           "age-minus-neutral Strong-Refusal gap on common scenarios. Turn 1 is the zero "
+           "reference; later whiskers are paired scenario-bootstrap 95% intervals. This is "
+           "descriptive gap erosion, not proof of a displaced internal age state.",
            "dialogue_06_roleplay")
 
 
 def draw_changes(f):
     d=f.read("dialogue_02_defects")
     for s in STRATA:
-        fig,axes,p=f.layout(height=6.8)
-        for ax,t in zip(axes.flat,TURNS[1:]):
-            forest(ax,subset(d,**{"Scenario Type":s}),f"Change {t} (pp)",
-                   f"Change {t} CI Lower",f"Change {t} CI Upper",t,p)
+        fig,axes,p=f.layout(1,3,height=6.8)
+        part=subset(d,**{"Scenario Type":s})
+        for i,(ax,t) in enumerate(zip(axes.flat,TURNS)):
+            if t=="Turn 1":
+                frame=zero_frame()
+                est,lo,hi="Estimate","Lower","Upper"
+            else:
+                frame=part
+                est,lo,hi=f"Change {t} (pp)",f"Change {t} CI Lower",f"Change {t} CI Upper"
+            forest(ax,frame,est,lo,hi,t,p,show_labels=i==0,
+                   xlabel="Action Defect change (pp)")
         f.save(fig,"changes_"+slug(s),"supplement",f"{s}: Action Defect change from Turn 1 "
-               "with paired scenario-bootstrap 95% intervals.","dialogue_02_defects")
+               "across all turns. Turn 1 is the zero reference; later whiskers are paired "
+               "scenario-bootstrap 95% intervals.","dialogue_02_defects")
 
 
 def draw_trajectories(f):
@@ -317,7 +396,8 @@ def draw_trajectories(f):
         for ax,m in zip(axes.flat,METHODS):
             b=model_frame(subset(d,Method=m,**{"Scenario Type":s}))[cols];b.index=MODEL_LABELS
             if not np.allclose(b.sum(axis=1),100,atol=.03):raise ValueError("Route partition")
-            im=heatmap(fig,ax,b,m,p,labels=["Held both","Broke both","Broke,\nreturned","Late break"])
+            im=heatmap(fig,ax,b,m,p,labels=["T1 A\nT2 A\nT3 A","T1 A\nT2 D\nT3 D",
+                                                     "T1 A\nT2 D\nT3 A","T1 A\nT2 A\nT3 D"])
         colourbar(fig,axes,im,"Established boundaries (%)",p)
         f.save(fig,"trajectories_"+slug(s),"supplement",f"{s}: protective trajectories by method. "
                "All begin aligned. Columns correspond to A-A-A, A-D-D, A-D-A and A-A-D at Turns "
@@ -345,9 +425,9 @@ def draw_ladder(f):
 def draw_boundary(f):
     d=f.read("dialogue_s14_boundary")
     fig,axes,p=f.layout(1,3,width=13.5,height=6.8)
-    for ax,t in zip(axes.flat,TURNS):
+    for i,(ax,t) in enumerate(zip(axes.flat,TURNS)):
         forest(ax,subset(d,Measure="Strong Refusal",Turn=t),"17 minus 18 (pp)",
-               "CI Lower","CI Upper",t,p)
+               "CI Lower","CI Upper",t,p,show_labels=i==0)
         ax.set_xlabel("")
     fig.supxlabel("Age 17 minus Age 18 (pp)",fontsize=p)
     f.save(fig,"boundary","supplement","Strong-Refusal difference between ages 17 and 18 "
@@ -357,54 +437,109 @@ def draw_boundary(f):
 
 def draw_adjusted(f):
     d=f.read("dialogue_s12_adjusted")
-    fig,axes,p=f.layout(height=6.8)
-    for ax,t in zip(axes.flat,TURNS[1:]):
-        forest(ax,subset(d,Measure="Strong Refusal",Turn=t),"Erosion Difference (pp)",
-               "CI Lower","CI Upper",t,p)
-        ax.set_xlabel("Erosion difference (pp)")
+    fig,axes,p=f.layout(1,3,height=6.8)
+    for i,(ax,t) in enumerate(zip(axes.flat,TURNS)):
+        frame=zero_frame() if t=="Turn 1" else subset(d,Measure="Strong Refusal",Turn=t).rename(
+            columns={"Erosion Difference (pp)":"Estimate","CI Lower":"Lower","CI Upper":"Upper"})
+        forest(ax,frame,"Estimate","Lower","Upper",t,p,show_labels=i==0,
+               xlabel="Erosion difference (pp)")
     f.save(fig,"adjusted","supplement","Age-Restricted minus Harmful Strong-Refusal gap "
-           "erosion from Turn 1. Scenario-bootstrap 95% intervals. Strata comprise different "
-           "scenario sets; this is a descriptive control comparison, not causal identification.",
+           "erosion from Turn 1 across all turns. Turn 1 is the zero reference. Later whiskers "
+           "are scenario-bootstrap 95% intervals. Strata comprise different scenario sets, so "
+           "this is a descriptive control comparison, not causal identification.",
            "dialogue_s12_adjusted")
 
 
 def draw_memory_gap(f):
-    d=f.read("dialogue_s13_memory_gap")
-    fig,axes,p=f.layout(1,1,width=7.8,height=6.8)
-    forest(axes[0,0],d,"Held Both, Age Restricted Minus Harmful (pp)",
-           "CI Lower","CI Upper","Age Restricted vs Harmful",p)
-    axes[0,0].set_xlabel("Held-both difference (pp)")
-    f.save(fig,"memory_gap","supplement","Difference in unbroken Strong-Refusal memory "
-           "between Age Restricted and Harmful protective cohorts, with scenario-bootstrap "
-           "95% intervals. Negative values indicate weaker age-conditioned memory.",
-           "dialogue_s13_memory_gap")
+    d=f.read("dialogue_03_memory")
+    check=f.read("dialogue_s13_memory_gap")
+    age=model_frame(subset(d,**{"Scenario Type":"Age Restricted"}))
+    harm=model_frame(subset(d,**{"Scenario Type":"Harmful"}))
+    block=pd.DataFrame({
+        "Turn 1":0.0,
+        "Turn 2":age["Held Turn 2 (%)"]-harm["Held Turn 2 (%)"],
+        "Turn 3":age["Held Both (%)"]-harm["Held Both (%)"],
+    },index=age.index)
+    held=model_frame(check)["Held Both, Age Restricted Minus Harmful (pp)"]
+    if not np.allclose(block["Turn 3"],held,atol=.03):
+        raise ValueError("Memory-gap figure does not reconcile with dialogue_s13_memory_gap")
+    block.index=MODEL_LABELS
+    fig,axes,p=f.layout(1,1,width=8.2,height=6.8,maps=True)
+    im=heatmap(fig,axes[0,0],block,"Age Restricted vs Harmful",p,
+               signed=True,limit=45,labels=TURNS)
+    colourbar(fig,axes,im,"Unbroken-memory difference (pp)",p)
+    f.save(fig,"memory_gap","supplement","Age-Restricted minus Harmful difference in "
+           "unbroken Strong-Refusal memory. Turn 1 is 0 by cohort definition; Turn 3 requires "
+           "the boundary to hold at both later turns. Negative values indicate weaker "
+           "age-conditioned memory.","dialogue_03_memory; dialogue_s13_memory_gap")
 
 
 def draw_directional(f):
     d=f.read("dialogue_s04_directional")
-    fig,axes,p=f.layout(height=6.8)
-    for ax,direction in zip(axes.flat,["Over-Permissive","Over-Restrictive"]):
-        forest(ax,subset(d,Direction=direction,**{"Scenario Type":"Age Restricted"}),
-               "Change Turn 3 (pp)","Change Turn 3 CI Lower","Change Turn 3 CI Upper",direction,p)
-    f.save(fig,"directional","supplement","Age Restricted: directional Action Defect change "
-           "at Turn 3 relative to Turn 1, with 95% intervals. Over-Permissive means failure to "
+    fig,axes,p=f.layout(2,3,height=8.8)
+    part=subset(d,**{"Scenario Type":"Age Restricted"})
+    for ax,model in zip(axes.flat,analysis.ORDER):
+        house.panel(ax,model,p)
+        series={}
+        for direction in DIRECTION_COLOUR:
+            row=subset(part,Model=model,Direction=direction)
+            series[direction]=[float(row[f"{t} (%)"].iloc[0]) for t in TURNS]
+        for direction in DIRECTION_COLOUR:
+            values=series[direction]
+            ax.plot(range(3),values,color=DIRECTION_COLOUR[direction],lw=2,
+                    marker="o" if direction=="Over-Permissive" else "s",
+                    ls="-" if direction=="Over-Permissive" else "--")
+            for x,value in enumerate(values):
+                other=next(k for k in DIRECTION_COLOUR if k!=direction)
+                above=value>=series[other][x]
+                ax.annotate(f"{value:.1f}",(x,value),xytext=(0,9 if above else -13),
+                            textcoords="offset points",ha="center",fontsize=p*.62,
+                            color=DIRECTION_COLOUR[direction],fontweight="bold")
+        ax.set_xticks(range(3),TURNS,rotation=0)
+        ax.set_ylim(-5,105);ax.set_yticks([0,25,50,75,100]);ax.label_outer()
+    fig.supylabel("Action Defect (%)",fontsize=p*1.10,color="black")
+    handles=[Line2D([],[],color=DIRECTION_COLOUR[k],lw=2,
+                    marker="o" if k=="Over-Permissive" else "s",
+                    ls="-" if k=="Over-Permissive" else "--") for k in DIRECTION_COLOUR]
+    house.legend(fig,handles,list(DIRECTION_COLOUR),p,ncol=2)
+    f.save(fig,"directional","supplement","Age Restricted: directional Action Defect rates "
+           "at all three turns. Over-Permissive means failure to "
            "maintain Strong Refusal when refusal is expected; Over-Restrictive means failure to "
            "provide Total Compliance when compliance is expected.","dialogue_s04_directional")
 
 
 def draw_failure(f):
     d=f.read("dialogue_s09_failure")
-    fig,axes,p=f.layout(2,2,height=11,maps=True)
-    for row,s in enumerate(STRATA):
-        for col,t in enumerate(TURNS[1:]):
-            b=model_frame(subset(d,Turn=t,**{"Scenario Type":s}))[[c+" (%)" for c in CELLS]]
+    for s in STRATA:
+        fig,axes,p=f.layout(1,3,height=7.0,maps=True)
+        for col,t in enumerate(TURNS):
+            columns=[c+" (%)" for c in CELLS]
+            if t=="Turn 1":
+                b=pd.DataFrame(0.0,index=MODELS,columns=columns)
+                b["Strong Refusal (%)"]=100.0
+            else:
+                b=model_frame(subset(d,Turn=t,**{"Scenario Type":s}))[columns]
             b.index=MODEL_LABELS
-            im=heatmap(fig,axes[row,col],b,s+" / "+t,p,
-                       labels=["Strong\nRefusal","Weak\nRefusal","Minimal\nCompliance","Total\nCompliance"])
-    colourbar(fig,axes,im,"Established boundaries (%)",p)
-    f.save(fig,"failure","supplement","Later outcomes within the initially protective cohort. "
-           "Rows partition that cohort at each turn; Strong Refusal matches endpoint memory, "
-           "not necessarily unbroken memory.","dialogue_s09_failure")
+            im=heatmap(fig,axes[0,col],b,t,p,
+                       labels=["Strong","Weak","Minimal","Total"])
+        colourbar(fig,axes,im,"Established boundaries (%)",p)
+        f.save(fig,"failure_"+slug(s),"supplement",f"{s}: outcome composition within the "
+               "initially protective cohort at all three turns. Strong and Weak denote refusal; "
+               "Minimal and Total denote compliance. Turn-3 Strong Refusal is endpoint memory "
+               "and does not necessarily indicate an unbroken boundary.","dialogue_s09_failure")
+
+
+def draw_domains(f):
+    d=f.read("dialogue_s10_domains").sort_values("Defect Turn 3 (%)",ascending=False)
+    block=d.set_index("Domain")[[f"Defect {t} (%)" for t in TURNS]]
+    block.columns=TURNS
+    fig,axes,p=f.layout(1,1,width=8.8,height=8.2,maps=True)
+    im=heatmap(fig,axes[0,0],block,"Harm category",p,labels=TURNS)
+    axes[0,0].set_ylabel("Domain",fontsize=p)
+    colourbar(fig,axes,im,"Action Defect (%)",p)
+    f.save(fig,"domains","supplement","Macro-Average Action Defect by harm category and "
+           "turn. Domains are ordered by Turn-3 defect rate. Scenario counts differ by domain, "
+           "so this figure is descriptive.","dialogue_s10_domains")
 
 
 def slug(s):
@@ -415,7 +550,8 @@ MAIN={"outcomes":draw_outcomes,"defects":draw_defects,"memory":draw_memory,
       "first_break":draw_first_break,"methods":draw_methods,"age":draw_age,"roleplay":draw_roleplay}
 SUPPLEMENT={"changes":draw_changes,"trajectories":draw_trajectories,"ladder":draw_ladder,
             "boundary":draw_boundary,"age_control":draw_age_control,"adjusted":draw_adjusted,
-            "memory_gap":draw_memory_gap,"directional":draw_directional,"failure":draw_failure}
+            "memory_gap":draw_memory_gap,"directional":draw_directional,"failure":draw_failure,
+            "domains":draw_domains}
 
 
 def main():
