@@ -161,13 +161,13 @@ def styled(display, width_inches=7.4, label_points=None):
 
 def panel(ax, title=None, points=9):
     ax.set_facecolor(PANEL_FILL)
-    ax.grid(axis="x", linestyle="-", linewidth=0.6, alpha=0.25, color=MUTED)
-    ax.grid(axis="y", visible=False)
+    # Keep the exact panel grammar used by figureread.py and figuresafe.py.
+    ax.grid(axis="y", linestyle="-", linewidth=0.6, alpha=0.25, color=MUTED)
     ax.set_axisbelow(True)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     if title:
-        ax.set_title(title, pad=points * 0.45, color="black")
+        ax.set_title(title, pad=points * 0.5, color="black")
 
 
 def save(fig, filename):
