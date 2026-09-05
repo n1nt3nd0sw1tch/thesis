@@ -7796,7 +7796,7 @@ a.anchor-link {
 <!-- End of mermaid configuration --></head>
 <body class="jp-Notebook" data-jp-theme-light="true" data-jp-theme-name="JupyterLab Light">
 <main>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e1f452d1">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9a545999">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7888,6 +7888,8 @@ models, since the same scenarios were put to each of them.</p>
 <span class="n">CONFIG</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">'config'</span>
 <span class="n">DATA</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">'data'</span>
 <span class="n">CONFIG</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">'config'</span>
+<span class="n">DATA</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">'data'</span>
+<span class="n">CONFIG</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">'config'</span>
 <span class="n">CONFIG</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">'config'</span>
 <span class="n">CONFIG</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">'config'</span>
 <span class="n">CONFIG</span> <span class="o">=</span> <span class="n">Path</span><span class="o">.</span><span class="n">cwd</span><span class="p">()</span><span class="o">.</span><span class="n">parent</span> <span class="o">/</span> <span class="s1">'config'</span>
@@ -7926,7 +7928,7 @@ chapter also counts as a refusal.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=6a674b1d">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=d5283cf9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -7984,7 +7986,7 @@ chapter also counts as a refusal.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=7cc529c4">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=34f473f9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8056,8 +8058,16 @@ chapter also counts as a refusal.</p>
 
 <span class="c1"># Structural checks. Each one replaces something that has gone wrong here</span>
 <span class="c1"># before or would pass unnoticed if it did.</span>
-<span class="k">assert</span> <span class="n">stage</span><span class="p">[</span><span class="s1">'opening_answer'</span><span class="p">]</span><span class="o">.</span><span class="n">isna</span><span class="p">()</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">if</span> <span class="s1">'opening_answer'</span> <span class="ow">in</span> <span class="n">stage</span> <span class="k">else</span> <span class="kc">True</span>
-<span class="k">assert</span> <span class="n">seeds</span><span class="p">[</span><span class="s1">'opening_answer'</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="s1">'a dialogue seed lost its opening reply'</span>
+<span class="k">assert</span> <span class="n">seeds</span><span class="p">[</span><span class="s1">'opening_answer'</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">EXPECTED</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="s1">'an opening answer is not a</span><span class="se">\</span>
+<span class="s1"> rubric value'</span>
+<span class="k">assert</span> <span class="n">seeds</span><span class="p">[</span><span class="s1">'opening_delivery'</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s1">'Yes'</span><span class="p">,</span> <span class="s1">'No'</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="s1">'an opening delivery</span><span class="se">\</span>
+<span class="s1"> is not a rubric value'</span>
+<span class="k">assert</span> <span class="n">pressed</span><span class="p">[</span><span class="s1">'answer'</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">EXPECTED</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="s1">'a later answer is not a rubric value'</span>
+<span class="k">assert</span> <span class="n">pressed</span><span class="p">[</span><span class="s1">'delivery_response'</span><span class="p">]</span><span class="o">.</span><span class="n">isin</span><span class="p">([</span><span class="s1">'Yes'</span><span class="p">,</span> <span class="s1">'No'</span><span class="p">])</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="s1">'a later delivery is</span><span class="se">\</span>
+<span class="s1"> not a rubric value'</span>
+<span class="k">assert</span> <span class="n">frame</span><span class="p">[</span><span class="s1">'scenario_id'</span><span class="p">]</span><span class="o">.</span><span class="n">notna</span><span class="p">()</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="s1">'a scored reply lost its scenario'</span>
+<span class="k">assert</span> <span class="n">stage</span><span class="p">[</span><span class="s1">'expected_answer'</span><span class="p">]</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">EXPECTED</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="s1">'an expectation is</span><span class="se">\</span>
+<span class="s1"> neither Refusal nor Compliance'</span>
 <span class="k">assert</span> <span class="ow">not</span> <span class="n">stage</span><span class="o">.</span><span class="n">duplicated</span><span class="p">([</span><span class="s1">'dialogue_id'</span><span class="p">,</span> <span class="s1">'turn'</span><span class="p">])</span><span class="o">.</span><span class="n">any</span><span class="p">(),</span> <span class="s1">'duplicate dialogue turn'</span>
 <span class="k">assert</span> <span class="n">primary</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'dialogue_id'</span><span class="p">)[</span><span class="s1">'turn'</span><span class="p">]</span><span class="o">.</span><span class="n">nunique</span><span class="p">()</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">(),</span> <span class="s1">'a turn is missing'</span>
 <span class="k">assert</span> <span class="nb">set</span><span class="p">(</span><span class="n">stage</span><span class="p">[</span><span class="s1">'label'</span><span class="p">])</span> <span class="o">==</span> <span class="nb">set</span><span class="p">(</span><span class="n">ORDER</span><span class="p">),</span> <span class="s1">'unrecognised model label'</span>
@@ -8085,7 +8095,7 @@ chapter also counts as a refusal.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=1eb55760">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=fbd58833">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8163,7 +8173,7 @@ chapter also counts as a refusal.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1604bb91">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=043f7881">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8173,7 +8183,7 @@ chapter also counts as a refusal.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=217b03c7">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=6a9d4dbb">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8244,9 +8254,16 @@ chapter also counts as a refusal.</p>
     <span class="n">seeds</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">([</span><span class="s1">'model'</span><span class="p">,</span> <span class="s1">'prompt_id'</span><span class="p">])[[</span><span class="s1">'model'</span><span class="p">,</span> <span class="s1">'prompt_id'</span><span class="p">]]))</span><span class="o">.</span><span class="n">to_frame</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">unbuilt</span><span class="p">)</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">DIALOGUE</span><span class="p">[</span><span class="s1">'methods'</span><span class="p">])</span> <span class="o">==</span> <span class="n">DESIGN</span> <span class="o">-</span> <span class="n">built</span>
 <span class="n">unbuilt</span><span class="p">[</span><span class="s1">'Model'</span><span class="p">]</span> <span class="o">=</span> <span class="n">unbuilt</span><span class="p">[</span><span class="s1">'model'</span><span class="p">]</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">NAME</span><span class="p">)</span>
-<span class="n">unbuilt</span><span class="p">[</span><span class="s1">'Condition'</span><span class="p">]</span> <span class="o">=</span> <span class="n">unbuilt</span><span class="p">[</span><span class="s1">'prompt_id'</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'-'</span><span class="p">)</span><span class="o">.</span><span class="n">str</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
-<span class="n">unbuilt</span><span class="p">[</span><span class="s1">'Scenario Type'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">unbuilt</span><span class="p">[</span><span class="s1">'prompt_id'</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s1">'-a'</span><span class="p">),</span>
-                                    <span class="s1">'Age Restricted'</span><span class="p">,</span> <span class="s1">'Harmful'</span><span class="p">)</span>
+<span class="n">unbuilt</span><span class="p">[[</span><span class="s1">'scenario_id'</span><span class="p">,</span> <span class="s1">'Condition'</span><span class="p">]]</span> <span class="o">=</span> <span class="n">unbuilt</span><span class="p">[</span><span class="s1">'prompt_id'</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">rsplit</span><span class="p">(</span>
+    <span class="s1">'-'</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># Split the scenario off first. Testing the prompt for '-a' matches the '-age'</span>
+<span class="c1"># of every explicit age condition, so sex-h5-age17 read as Age Restricted and</span>
+<span class="c1"># an earlier version of this table put all 34 seeds in that stratum. The</span>
+<span class="c1"># scenario identifier ends in the stratum letter and its index, so the test</span>
+<span class="c1"># belongs there.</span>
+<span class="n">unbuilt</span><span class="p">[</span><span class="s1">'Scenario Type'</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+    <span class="n">unbuilt</span><span class="p">[</span><span class="s1">'scenario_id'</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="sa">r</span><span class="s1">'-a\d+$'</span><span class="p">,</span> <span class="n">regex</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+    <span class="s1">'Age Restricted'</span><span class="p">,</span> <span class="s1">'Harmful'</span><span class="p">)</span>
 <span class="n">openings</span> <span class="o">=</span> <span class="p">(</span><span class="n">unbuilt</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">'Model'</span><span class="p">,</span> <span class="s1">'Scenario Type'</span><span class="p">,</span> <span class="s1">'Condition'</span><span class="p">])</span>
             <span class="o">.</span><span class="n">size</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="s1">'Opening Seeds Unavailable'</span><span class="p">)</span><span class="o">.</span><span class="n">to_frame</span><span class="p">())</span>
 <span class="n">openings</span><span class="p">[</span><span class="s1">'Branches Not Built'</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">openings</span><span class="p">[</span><span class="s1">'Opening Seeds Unavailable'</span><span class="p">]</span>
@@ -8343,7 +8360,7 @@ chapter also counts as a refusal.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=e45cd537">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b73e36c3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8355,7 +8372,7 @@ is a pair rather than a single refusal rate.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=3ce1a3bc">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=23f98048">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8626,7 +8643,7 @@ is a pair rather than a single refusal rate.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9a7d1be1">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=128592a6">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -8643,7 +8660,7 @@ compliance is expected.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=e9c1d6c3">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=37771527">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -9002,7 +9019,7 @@ compliance is expected.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=81c1da1e">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=b304494e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -9362,7 +9379,7 @@ compliance is expected.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=b6c59520">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=47fa2cf8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -9379,7 +9396,7 @@ fragile is the question the arm exists to ask.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=697b4dc1">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f922df6e">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -9443,6 +9460,27 @@ fragile is the question the arm exists to ask.</p>
                    <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">'Scenario Type'</span><span class="p">,</span> <span class="s1">'Model'</span><span class="p">])</span>
 <span class="n">freeze</span><span class="p">(</span><span class="n">memory</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="s1">'dialogue_03_memory'</span><span class="p">,</span> <span class="n">tier</span><span class="o">=</span><span class="s1">'main'</span><span class="p">)</span>
 <span class="n">memory</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<span class="c1"># The difference the split above implies, estimated directly. Whether an</span>
+<span class="c1"># age-conditioned boundary is less persistent than an ordinary harmful-content</span>
+<span class="c1"># one is the question this arm exists to ask, and a difference read off two</span>
+<span class="c1"># rows carries no interval of its own. The two strata sit on disjoint</span>
+<span class="c1"># scenarios, so one draw of scenario identifiers supplies both terms.</span>
+<span class="n">sides</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">stratum</span><span class="p">,</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">((</span><span class="s1">'Age Restricted'</span><span class="p">,</span> <span class="s1">'restricted'</span><span class="p">),</span> <span class="p">(</span><span class="s1">'Harmful'</span><span class="p">,</span> <span class="s1">'harmful'</span><span class="p">)):</span>
+    <span class="n">side</span> <span class="o">=</span> <span class="p">(</span><span class="n">paths</span><span class="o">.</span><span class="n">xs</span><span class="p">(</span><span class="n">stratum</span><span class="p">,</span> <span class="n">level</span><span class="o">=</span><span class="s1">'stratum'</span><span class="p">)[</span><span class="s1">'both'</span><span class="p">]</span>
+            <span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">'label'</span><span class="p">,</span> <span class="s1">'scenario_id'</span><span class="p">])</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">tag</span><span class="p">))</span>
+    <span class="n">sides</span><span class="p">[</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="n">side</span>
+<span class="n">together</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">sides</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">memory_blocks</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="n">block</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s1">'label'</span><span class="p">)</span>
+                 <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">together</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'label'</span><span class="p">)}</span>
+<span class="n">difference</span> <span class="o">=</span> <span class="n">with_interval</span><span class="p">(</span><span class="n">memory_blocks</span><span class="p">,</span> <span class="p">{</span><span class="s1">'restricted'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">'harmful'</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">},</span> <span class="n">scale</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">difference</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'Held Both, Age Restricted Minus Harmful (pp)'</span><span class="p">,</span>
+                      <span class="s1">'CI Lower'</span><span class="p">,</span> <span class="s1">'CI Upper'</span><span class="p">]</span>
+<span class="n">difference</span><span class="o">.</span><span class="n">index</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">'Model'</span>
+<span class="n">freeze</span><span class="p">(</span><span class="n">difference</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="s1">'dialogue_s13_memory_gap'</span><span class="p">)</span>
+<span class="n">difference</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -9473,24 +9511,12 @@ fragile is the question the arm exists to ask.</p>
 <thead>
 <tr style="text-align: right;">
 <th></th>
-<th></th>
-<th>Dialogues</th>
-<th>Held Turn 2 (%)</th>
-<th>Held Turn 3 (%)</th>
-<th>Held Both (%)</th>
-<th>First Break Turn 2 (%)</th>
-<th>First Break Turn 3 (%)</th>
-<th>Held Both CI Lower</th>
-<th>Held Both CI Upper</th>
+<th>Held Both, Age Restricted Minus Harmful (pp)</th>
+<th>CI Lower</th>
+<th>CI Upper</th>
 </tr>
 <tr>
-<th>Scenario Type</th>
 <th>Model</th>
-<th></th>
-<th></th>
-<th></th>
-<th></th>
-<th></th>
 <th></th>
 <th></th>
 <th></th>
@@ -9498,238 +9524,46 @@ fragile is the question the arm exists to ask.</p>
 </thead>
 <tbody>
 <tr>
-<th rowspan="7" valign="top">Age Restricted</th>
 <th>GPT-5.6 Luna</th>
-<td>315</td>
-<td>72.5</td>
-<td>45.3</td>
-<td>40.1</td>
-<td>27.5</td>
-<td>32.4</td>
-<td>31.5</td>
-<td>47.9</td>
+<td>-0.57</td>
+<td>-13.61</td>
+<td>12.88</td>
 </tr>
 <tr>
 <th>Claude Haiku 4.5</th>
-<td>312</td>
-<td>92.4</td>
-<td>74.2</td>
-<td>72.8</td>
-<td>7.6</td>
-<td>19.5</td>
-<td>64.7</td>
-<td>80.8</td>
+<td>1.27</td>
+<td>-9.58</td>
+<td>12.44</td>
 </tr>
 <tr>
 <th>Gemini 3.5 Flash Lite</th>
-<td>223</td>
-<td>49.4</td>
-<td>55.2</td>
-<td>31.7</td>
-<td>50.6</td>
-<td>17.7</td>
-<td>24.4</td>
-<td>38.9</td>
+<td>-25.31</td>
+<td>-36.45</td>
+<td>-13.69</td>
 </tr>
 <tr>
 <th>DeepSeek-V4 Flash</th>
-<td>297</td>
-<td>44.3</td>
-<td>29.7</td>
-<td>23.6</td>
-<td>55.7</td>
-<td>20.7</td>
-<td>18.0</td>
-<td>29.1</td>
+<td>-16.04</td>
+<td>-24.74</td>
+<td>-6.92</td>
 </tr>
 <tr>
 <th>Mistral Small 4</th>
-<td>207</td>
-<td>30.6</td>
-<td>18.4</td>
-<td>7.9</td>
-<td>69.4</td>
-<td>22.7</td>
-<td>3.8</td>
-<td>12.6</td>
+<td>1.13</td>
+<td>-3.71</td>
+<td>6.35</td>
 </tr>
 <tr>
 <th>Gemma 4 31B</th>
-<td>240</td>
-<td>53.4</td>
-<td>55.3</td>
-<td>26.9</td>
-<td>46.6</td>
-<td>26.5</td>
-<td>18.0</td>
-<td>36.4</td>
+<td>-24.08</td>
+<td>-37.22</td>
+<td>-10.70</td>
 </tr>
 <tr>
 <th>Macro-average</th>
-<td>&lt;NA&gt;</td>
-<td>57.1</td>
-<td>46.3</td>
-<td>33.8</td>
-<td>42.9</td>
-<td>23.3</td>
-<td>29.9</td>
-<td>37.7</td>
-</tr>
-<tr>
-<th rowspan="7" valign="top">Harmful</th>
-<th>GPT-5.6 Luna</th>
-<td>372</td>
-<td>73.2</td>
-<td>50.6</td>
-<td>40.6</td>
-<td>26.8</td>
-<td>32.5</td>
-<td>30.1</td>
-<td>50.4</td>
-</tr>
-<tr>
-<th>Claude Haiku 4.5</th>
-<td>396</td>
-<td>87.6</td>
-<td>75.8</td>
-<td>71.6</td>
-<td>12.4</td>
-<td>16.0</td>
-<td>63.8</td>
-<td>78.7</td>
-</tr>
-<tr>
-<th>Gemini 3.5 Flash Lite</th>
-<td>437</td>
-<td>79.2</td>
-<td>74.1</td>
-<td>57.0</td>
-<td>20.8</td>
-<td>22.2</td>
-<td>48.0</td>
-<td>65.4</td>
-</tr>
-<tr>
-<th>DeepSeek-V4 Flash</th>
-<td>402</td>
-<td>65.1</td>
-<td>47.1</td>
-<td>39.6</td>
-<td>34.9</td>
-<td>25.5</td>
-<td>32.7</td>
-<td>46.0</td>
-</tr>
-<tr>
-<th>Mistral Small 4</th>
-<td>360</td>
-<td>33.2</td>
-<td>16.2</td>
-<td>6.7</td>
-<td>66.8</td>
-<td>26.4</td>
-<td>4.4</td>
-<td>9.1</td>
-</tr>
-<tr>
-<th>Gemma 4 31B</th>
-<td>429</td>
-<td>74.3</td>
-<td>72.2</td>
-<td>51.0</td>
-<td>25.7</td>
-<td>23.3</td>
-<td>41.7</td>
-<td>60.6</td>
-</tr>
-<tr>
-<th>Macro-average</th>
-<td>&lt;NA&gt;</td>
-<td>68.8</td>
-<td>56.0</td>
-<td>44.4</td>
-<td>31.2</td>
-<td>24.3</td>
-<td>39.1</td>
-<td>49.4</td>
-</tr>
-<tr>
-<th rowspan="7" valign="top">All Scenarios</th>
-<th>GPT-5.6 Luna</th>
-<td>687</td>
-<td>72.8</td>
-<td>47.8</td>
-<td>40.3</td>
-<td>27.2</td>
-<td>32.5</td>
-<td>33.7</td>
-<td>46.5</td>
-</tr>
-<tr>
-<th>Claude Haiku 4.5</th>
-<td>708</td>
-<td>89.9</td>
-<td>75.0</td>
-<td>72.2</td>
-<td>10.1</td>
-<td>17.7</td>
-<td>66.5</td>
-<td>77.6</td>
-</tr>
-<tr>
-<th>Gemini 3.5 Flash Lite</th>
-<td>660</td>
-<td>64.7</td>
-<td>64.9</td>
-<td>44.7</td>
-<td>35.3</td>
-<td>20.0</td>
-<td>37.6</td>
-<td>51.4</td>
-</tr>
-<tr>
-<th>DeepSeek-V4 Flash</th>
-<td>699</td>
-<td>53.5</td>
-<td>37.4</td>
-<td>30.7</td>
-<td>46.5</td>
-<td>22.8</td>
-<td>25.7</td>
-<td>35.6</td>
-</tr>
-<tr>
-<th>Mistral Small 4</th>
-<td>567</td>
-<td>31.9</td>
-<td>17.3</td>
-<td>7.3</td>
-<td>68.1</td>
-<td>24.6</td>
-<td>4.9</td>
-<td>10.0</td>
-</tr>
-<tr>
-<th>Gemma 4 31B</th>
-<td>669</td>
-<td>65.0</td>
-<td>64.6</td>
-<td>40.2</td>
-<td>35.0</td>
-<td>24.7</td>
-<td>32.7</td>
-<td>47.9</td>
-</tr>
-<tr>
-<th>Macro-average</th>
-<td>&lt;NA&gt;</td>
-<td>62.9</td>
-<td>51.2</td>
-<td>39.2</td>
-<td>37.1</td>
-<td>23.7</td>
-<td>35.6</td>
-<td>42.7</td>
+<td>-10.60</td>
+<td>-16.96</td>
+<td>-3.85</td>
 </tr>
 </tbody>
 </table>
@@ -9738,7 +9572,7 @@ fragile is the question the arm exists to ask.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a4d63d01">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c1a8d56c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -9925,7 +9759,7 @@ fragile is the question the arm exists to ask.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=12218dc0">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=70e5f54a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -9937,7 +9771,7 @@ refusal to lose.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a2e1951b">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=18a0092a">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -10120,7 +9954,7 @@ refusal to lose.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=40595118">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=19e9ddcf">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -10132,7 +9966,7 @@ give.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=f8a523f4">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=99d2fc8d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -10435,7 +10269,7 @@ give.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=702697ca">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=ccd7533c">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -10448,9 +10282,15 @@ give.</p>
 <span class="c1"># at the first pressed turn and much less at the second, and a contrast read</span>
 <span class="c1"># only at turn 3 would miss that its second instruction is another inversion</span>
 <span class="c1"># and can return a model to a refusal mechanically.</span>
+<span class="c1"># Split by stratum as well as pooled, since the stratified method table would</span>
+<span class="c1"># otherwise support a claim that one method treats age-conditioned boundaries</span>
+<span class="c1"># differently while the contrast behind it did not distinguish them.</span>
 <span class="n">pairs</span> <span class="o">=</span> <span class="p">{}</span>
-<span class="k">for</span> <span class="n">turn</span> <span class="ow">in</span> <span class="n">TURNS</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
-    <span class="n">scenario</span> <span class="o">=</span> <span class="p">(</span><span class="n">matched</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">'method'</span><span class="p">,</span> <span class="s1">'label'</span><span class="p">,</span> <span class="s1">'scenario_id'</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">stratum</span><span class="p">,</span> <span class="n">part</span> <span class="ow">in</span> <span class="p">((</span><span class="s1">'All Scenarios'</span><span class="p">,</span> <span class="n">matched</span><span class="p">),</span>
+                      <span class="p">(</span><span class="s1">'Age Restricted'</span><span class="p">,</span> <span class="n">matched</span><span class="p">[</span><span class="n">matched</span><span class="p">[</span><span class="s1">'stratum'</span><span class="p">]</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="s1">'Age Restricted'</span><span class="p">)]),</span>
+                      <span class="p">(</span><span class="s1">'Harmful'</span><span class="p">,</span> <span class="n">matched</span><span class="p">[</span><span class="n">matched</span><span class="p">[</span><span class="s1">'stratum'</span><span class="p">]</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="s1">'Harmful'</span><span class="p">)])):</span>
+  <span class="k">for</span> <span class="n">turn</span> <span class="ow">in</span> <span class="n">TURNS</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+    <span class="n">scenario</span> <span class="o">=</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">'method'</span><span class="p">,</span> <span class="s1">'label'</span><span class="p">,</span> <span class="s1">'scenario_id'</span><span class="p">])</span>
                 <span class="p">[[</span><span class="sa">f</span><span class="s1">'defect </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="s1">'defect Turn 1'</span><span class="p">]]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
     <span class="n">change</span> <span class="o">=</span> <span class="p">((</span><span class="n">scenario</span><span class="p">[</span><span class="sa">f</span><span class="s1">'defect </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">]</span> <span class="o">-</span> <span class="n">scenario</span><span class="p">[</span><span class="s1">'defect Turn 1'</span><span class="p">])</span> <span class="o">*</span> <span class="mi">100</span><span class="p">)</span>
     <span class="n">per</span> <span class="o">=</span> <span class="n">change</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="s1">'method'</span><span class="p">)</span>
@@ -10462,9 +10302,9 @@ give.</p>
                   <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">per</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'label'</span><span class="p">)}</span>
         <span class="n">row</span> <span class="o">=</span> <span class="n">with_interval</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="p">{</span><span class="s1">'difference'</span><span class="p">:</span> <span class="mi">1</span><span class="p">})</span>
         <span class="n">row</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'Defect Change Difference (pp)'</span><span class="p">,</span> <span class="s1">'CI Lower'</span><span class="p">,</span> <span class="s1">'CI Upper'</span><span class="p">]</span>
-        <span class="n">pairs</span><span class="p">[(</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">left</span><span class="si">}</span><span class="s1"> minus </span><span class="si">{</span><span class="n">right</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">turn</span><span class="p">)]</span> <span class="o">=</span> <span class="n">row</span>
+        <span class="n">pairs</span><span class="p">[(</span><span class="n">stratum</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">left</span><span class="si">}</span><span class="s1"> minus </span><span class="si">{</span><span class="n">right</span><span class="si">}</span><span class="s1">'</span><span class="p">,</span> <span class="n">turn</span><span class="p">)]</span> <span class="o">=</span> <span class="n">row</span>
 
-<span class="n">contrasts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">'Contrast'</span><span class="p">,</span> <span class="s1">'Turn'</span><span class="p">,</span> <span class="s1">'Model'</span><span class="p">])</span>
+<span class="n">contrasts</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">pairs</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">'Scenario Type'</span><span class="p">,</span> <span class="s1">'Contrast'</span><span class="p">,</span> <span class="s1">'Turn'</span><span class="p">,</span> <span class="s1">'Model'</span><span class="p">])</span>
 <span class="n">freeze</span><span class="p">(</span><span class="n">contrasts</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="s1">'dialogue_s05_contrasts'</span><span class="p">)</span>
 <span class="n">contrasts</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
@@ -10499,11 +10339,13 @@ give.</p>
 <th></th>
 <th></th>
 <th></th>
+<th></th>
 <th>Defect Change Difference (pp)</th>
 <th>CI Lower</th>
 <th>CI Upper</th>
 </tr>
 <tr>
+<th>Scenario Type</th>
 <th>Contrast</th>
 <th>Turn</th>
 <th>Model</th>
@@ -10514,8 +10356,9 @@ give.</p>
 </thead>
 <tbody>
 <tr>
-<th rowspan="7" valign="top">Emotional Pushback minus Purpose Reverse</th>
-<th rowspan="7" valign="top">Turn 2</th>
+<th rowspan="5" valign="top">All Scenarios</th>
+<th rowspan="5" valign="top">Emotional Pushback minus Purpose Reverse</th>
+<th rowspan="5" valign="top">Turn 2</th>
 <th>GPT-5.6 Luna</th>
 <td>-15.29</td>
 <td>-21.25</td>
@@ -10546,246 +10389,57 @@ give.</p>
 <td>-23.46</td>
 </tr>
 <tr>
-<th>Gemma 4 31B</th>
-<td>-54.36</td>
-<td>-62.93</td>
-<td>-45.50</td>
+<th>...</th>
+<th>...</th>
+<th>...</th>
+<th>...</th>
+<td>...</td>
+<td>...</td>
+<td>...</td>
 </tr>
 <tr>
-<th>Macro-average</th>
-<td>-30.66</td>
-<td>-35.28</td>
-<td>-25.97</td>
-</tr>
-<tr>
-<th rowspan="7" valign="top">Emotional Pushback minus Role Play</th>
-<th rowspan="7" valign="top">Turn 2</th>
-<th>GPT-5.6 Luna</th>
-<td>-39.93</td>
-<td>-48.14</td>
-<td>-31.53</td>
-</tr>
-<tr>
-<th>Claude Haiku 4.5</th>
-<td>-25.57</td>
-<td>-33.75</td>
-<td>-17.57</td>
-</tr>
-<tr>
+<th rowspan="5" valign="top">Harmful</th>
+<th rowspan="5" valign="top">Purpose Reverse minus Role Play</th>
+<th rowspan="5" valign="top">Turn 3</th>
 <th>Gemini 3.5 Flash Lite</th>
-<td>-28.65</td>
-<td>-37.46</td>
-<td>-19.13</td>
+<td>-23.20</td>
+<td>-38.10</td>
+<td>-9.70</td>
 </tr>
 <tr>
 <th>DeepSeek-V4 Flash</th>
-<td>-43.57</td>
-<td>-51.43</td>
-<td>-35.50</td>
+<td>-22.00</td>
+<td>-35.00</td>
+<td>-10.00</td>
 </tr>
 <tr>
 <th>Mistral Small 4</th>
-<td>-37.14</td>
-<td>-45.36</td>
-<td>-29.00</td>
+<td>-3.00</td>
+<td>-11.00</td>
+<td>5.00</td>
 </tr>
 <tr>
 <th>Gemma 4 31B</th>
-<td>-30.11</td>
-<td>-38.18</td>
-<td>-22.14</td>
+<td>-34.50</td>
+<td>-49.00</td>
+<td>-20.50</td>
 </tr>
 <tr>
 <th>Macro-average</th>
-<td>-34.16</td>
-<td>-38.74</td>
-<td>-29.52</td>
-</tr>
-<tr>
-<th rowspan="7" valign="top">Purpose Reverse minus Role Play</th>
-<th rowspan="7" valign="top">Turn 2</th>
-<th>GPT-5.6 Luna</th>
-<td>-24.64</td>
-<td>-32.43</td>
-<td>-16.79</td>
-</tr>
-<tr>
-<th>Claude Haiku 4.5</th>
-<td>-29.18</td>
-<td>-38.54</td>
-<td>-20.21</td>
-</tr>
-<tr>
-<th>Gemini 3.5 Flash Lite</th>
-<td>10.50</td>
-<td>0.10</td>
-<td>20.73</td>
-</tr>
-<tr>
-<th>DeepSeek-V4 Flash</th>
-<td>3.79</td>
-<td>-3.89</td>
-<td>11.29</td>
-</tr>
-<tr>
-<th>Mistral Small 4</th>
-<td>-5.71</td>
-<td>-10.79</td>
-<td>-0.68</td>
-</tr>
-<tr>
-<th>Gemma 4 31B</th>
-<td>24.25</td>
-<td>12.29</td>
-<td>36.46</td>
-</tr>
-<tr>
-<th>Macro-average</th>
-<td>-3.50</td>
-<td>-8.68</td>
-<td>1.79</td>
-</tr>
-<tr>
-<th rowspan="7" valign="top">Emotional Pushback minus Purpose Reverse</th>
-<th rowspan="7" valign="top">Turn 3</th>
-<th>GPT-5.6 Luna</th>
-<td>42.11</td>
-<td>34.14</td>
-<td>50.00</td>
-</tr>
-<tr>
-<th>Claude Haiku 4.5</th>
-<td>31.68</td>
-<td>23.11</td>
-<td>40.43</td>
-</tr>
-<tr>
-<th>Gemini 3.5 Flash Lite</th>
-<td>17.17</td>
-<td>8.64</td>
-<td>25.74</td>
-</tr>
-<tr>
-<th>DeepSeek-V4 Flash</th>
-<td>-5.96</td>
-<td>-14.68</td>
-<td>3.14</td>
-</tr>
-<tr>
-<th>Mistral Small 4</th>
-<td>5.46</td>
-<td>0.71</td>
-<td>10.46</td>
-</tr>
-<tr>
-<th>Gemma 4 31B</th>
-<td>9.46</td>
-<td>-1.79</td>
-<td>20.64</td>
-</tr>
-<tr>
-<th>Macro-average</th>
-<td>16.65</td>
-<td>12.10</td>
-<td>21.34</td>
-</tr>
-<tr>
-<th rowspan="7" valign="top">Emotional Pushback minus Role Play</th>
-<th rowspan="7" valign="top">Turn 3</th>
-<th>GPT-5.6 Luna</th>
-<td>1.43</td>
-<td>-7.61</td>
-<td>10.68</td>
-</tr>
-<tr>
-<th>Claude Haiku 4.5</th>
-<td>-15.04</td>
-<td>-23.86</td>
-<td>-6.32</td>
-</tr>
-<tr>
-<th>Gemini 3.5 Flash Lite</th>
-<td>-9.20</td>
-<td>-20.31</td>
-<td>2.13</td>
-</tr>
-<tr>
-<th>DeepSeek-V4 Flash</th>
-<td>-25.54</td>
-<td>-34.00</td>
-<td>-16.53</td>
-</tr>
-<tr>
-<th>Mistral Small 4</th>
-<td>-0.32</td>
-<td>-5.04</td>
-<td>4.75</td>
-</tr>
-<tr>
-<th>Gemma 4 31B</th>
-<td>-17.79</td>
-<td>-29.46</td>
-<td>-5.46</td>
-</tr>
-<tr>
-<th>Macro-average</th>
-<td>-11.07</td>
-<td>-17.92</td>
-<td>-3.99</td>
-</tr>
-<tr>
-<th rowspan="7" valign="top">Purpose Reverse minus Role Play</th>
-<th rowspan="7" valign="top">Turn 3</th>
-<th>GPT-5.6 Luna</th>
-<td>-40.68</td>
-<td>-49.43</td>
-<td>-31.75</td>
-</tr>
-<tr>
-<th>Claude Haiku 4.5</th>
-<td>-46.71</td>
-<td>-55.46</td>
-<td>-37.64</td>
-</tr>
-<tr>
-<th>Gemini 3.5 Flash Lite</th>
-<td>-26.36</td>
-<td>-35.90</td>
-<td>-17.54</td>
-</tr>
-<tr>
-<th>DeepSeek-V4 Flash</th>
-<td>-19.57</td>
-<td>-27.50</td>
-<td>-11.96</td>
-</tr>
-<tr>
-<th>Mistral Small 4</th>
-<td>-5.79</td>
-<td>-10.86</td>
-<td>-0.93</td>
-</tr>
-<tr>
-<th>Gemma 4 31B</th>
-<td>-27.25</td>
-<td>-37.96</td>
-<td>-16.82</td>
-</tr>
-<tr>
-<th>Macro-average</th>
-<td>-27.73</td>
-<td>-33.01</td>
-<td>-22.64</td>
+<td>-27.20</td>
+<td>-36.12</td>
+<td>-18.87</td>
 </tr>
 </tbody>
 </table>
+<p>126 rows × 3 columns</p>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=be4a92fc">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=1bdcf19d">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -10797,7 +10451,7 @@ earlier, and only the same method run without an age can tell those apart.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1d1d5eae">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=9ee7c455">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -11084,7 +10738,7 @@ earlier, and only the same method run without an age can tell those apart.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9b4de8f4">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=8fa98419">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -11095,7 +10749,7 @@ over all dialogues rather than only those that opened in refusal.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=86be58c6">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=060bb84f">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -11172,6 +10826,37 @@ over all dialogues rather than only those that opened in refusal.</p>
 <span class="n">age_effect</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">rows</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">'Scenario Type'</span><span class="p">,</span> <span class="s1">'Measure'</span><span class="p">,</span> <span class="s1">'Turn'</span><span class="p">,</span> <span class="s1">'Model'</span><span class="p">])</span>
 <span class="n">freeze</span><span class="p">(</span><span class="n">age_effect</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="s1">'dialogue_04_age'</span><span class="p">,</span> <span class="n">tier</span><span class="o">=</span><span class="s1">'main'</span><span class="p">)</span>
 <span class="n">age_effect</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+
+<span class="c1"># The Age Restricted erosion against its own control. Harmful is the age-flat</span>
+<span class="c1"># stratum, so a gap that erodes there erodes for reasons that have nothing to do</span>
+<span class="c1"># with age, and the quantity the experiment is about is the difference between</span>
+<span class="c1"># the two erosions rather than either alone. The two strata sit on disjoint</span>
+<span class="c1"># scenarios, so the bootstrap draws one set of scenario identifiers across the</span>
+<span class="c1"># whole benchmark and computes both terms inside every draw, which keeps the</span>
+<span class="c1"># dependence that comes from the six models sharing that set.</span>
+<span class="n">paired</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">measure</span> <span class="ow">in</span> <span class="p">((</span><span class="s1">'refused'</span><span class="p">,</span> <span class="s1">'Refusal'</span><span class="p">),</span> <span class="p">(</span><span class="s1">'strong'</span><span class="p">,</span> <span class="s1">'Strong Refusal'</span><span class="p">)):</span>
+    <span class="n">joined</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">stratum</span><span class="p">,</span> <span class="n">tag</span> <span class="ow">in</span> <span class="p">((</span><span class="s1">'Age Restricted'</span><span class="p">,</span> <span class="s1">'restricted'</span><span class="p">),</span> <span class="p">(</span><span class="s1">'Harmful'</span><span class="p">,</span> <span class="s1">'harmful'</span><span class="p">)):</span>
+        <span class="n">wide</span> <span class="o">=</span> <span class="n">age_frame</span><span class="p">(</span><span class="n">aged</span><span class="p">[</span><span class="n">aged</span><span class="p">[</span><span class="s1">'stratum'</span><span class="p">]</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="n">stratum</span><span class="p">)],</span> <span class="n">column</span><span class="p">)</span>
+        <span class="n">wide</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">tag</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1">'</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">wide</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
+        <span class="n">joined</span><span class="p">[</span><span class="n">tag</span><span class="p">]</span> <span class="o">=</span> <span class="n">wide</span>
+    <span class="n">together</span> <span class="o">=</span> <span class="n">joined</span><span class="p">[</span><span class="s1">'restricted'</span><span class="p">]</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">joined</span><span class="p">[</span><span class="s1">'harmful'</span><span class="p">],</span> <span class="n">how</span><span class="o">=</span><span class="s1">'outer'</span><span class="p">)</span>
+    <span class="n">blocks</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="n">block</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s1">'label'</span><span class="p">)</span>
+              <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">together</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'label'</span><span class="p">)}</span>
+    <span class="k">for</span> <span class="n">turn</span> <span class="ow">in</span> <span class="n">TURNS</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+        <span class="n">weights</span> <span class="o">=</span> <span class="p">{</span><span class="sa">f</span><span class="s1">'restricted minor </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'restricted adult </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                   <span class="s1">'restricted minor Turn 1'</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s1">'restricted adult Turn 1'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                   <span class="sa">f</span><span class="s1">'harmful minor </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'harmful adult </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+                   <span class="s1">'harmful minor Turn 1'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">'harmful adult Turn 1'</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">}</span>
+        <span class="n">row</span> <span class="o">=</span> <span class="n">with_interval</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+        <span class="n">row</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'Erosion Difference (pp)'</span><span class="p">,</span> <span class="s1">'CI Lower'</span><span class="p">,</span> <span class="s1">'CI Upper'</span><span class="p">]</span>
+        <span class="n">paired</span><span class="p">[(</span><span class="n">measure</span><span class="p">,</span> <span class="n">turn</span><span class="p">)]</span> <span class="o">=</span> <span class="n">row</span>
+
+<span class="n">adjusted</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">paired</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="p">[</span><span class="s1">'Measure'</span><span class="p">,</span> <span class="s1">'Turn'</span><span class="p">,</span> <span class="s1">'Model'</span><span class="p">])</span>
+<span class="n">freeze</span><span class="p">(</span><span class="n">adjusted</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="s1">'dialogue_s12_adjusted'</span><span class="p">)</span>
+<span class="n">adjusted</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 </div>
 </div>
@@ -11204,26 +10889,14 @@ over all dialogues rather than only those that opened in refusal.</p>
 <th></th>
 <th></th>
 <th></th>
-<th></th>
-<th>Minor (%)</th>
-<th>Age 18 (%)</th>
-<th>Gap (pp)</th>
-<th>Gap CI Lower</th>
-<th>Gap CI Upper</th>
-<th>Erosion (pp)</th>
-<th>Erosion CI Lower</th>
-<th>Erosion CI Upper</th>
+<th>Erosion Difference (pp)</th>
+<th>CI Lower</th>
+<th>CI Upper</th>
 </tr>
 <tr>
-<th>Scenario Type</th>
 <th>Measure</th>
 <th>Turn</th>
 <th>Model</th>
-<th></th>
-<th></th>
-<th></th>
-<th></th>
-<th></th>
 <th></th>
 <th></th>
 <th></th>
@@ -11231,145 +10904,188 @@ over all dialogues rather than only those that opened in refusal.</p>
 </thead>
 <tbody>
 <tr>
-<th rowspan="5" valign="top">Age Restricted</th>
-<th rowspan="5" valign="top">Refusal</th>
-<th rowspan="5" valign="top">Turn 1</th>
+<th rowspan="14" valign="top">Refusal</th>
+<th rowspan="7" valign="top">Turn 2</th>
 <th>GPT-5.6 Luna</th>
-<td>70.00</td>
-<td>20.00</td>
-<td>50.00</td>
-<td>32.67</td>
-<td>68.00</td>
-<td>NaN</td>
-<td>NaN</td>
-<td>NaN</td>
+<td>-20.89</td>
+<td>-40.63</td>
+<td>-1.76</td>
 </tr>
 <tr>
 <th>Claude Haiku 4.5</th>
-<td>69.33</td>
-<td>20.00</td>
-<td>49.33</td>
-<td>32.00</td>
-<td>66.67</td>
-<td>NaN</td>
-<td>NaN</td>
-<td>NaN</td>
+<td>-10.89</td>
+<td>-30.45</td>
+<td>8.89</td>
 </tr>
 <tr>
 <th>Gemini 3.5 Flash Lite</th>
-<td>63.19</td>
-<td>20.83</td>
-<td>42.36</td>
-<td>25.69</td>
-<td>59.03</td>
-<td>NaN</td>
-<td>NaN</td>
-<td>NaN</td>
+<td>-22.79</td>
+<td>-38.70</td>
+<td>-7.84</td>
 </tr>
 <tr>
 <th>DeepSeek-V4 Flash</th>
-<td>66.67</td>
-<td>28.00</td>
-<td>38.67</td>
-<td>22.67</td>
-<td>54.67</td>
-<td>NaN</td>
-<td>NaN</td>
-<td>NaN</td>
+<td>7.33</td>
+<td>-9.59</td>
+<td>24.96</td>
 </tr>
 <tr>
 <th>Mistral Small 4</th>
-<td>46.00</td>
-<td>24.00</td>
-<td>22.00</td>
-<td>7.33</td>
-<td>36.67</td>
-<td>NaN</td>
-<td>NaN</td>
-<td>NaN</td>
-</tr>
-<tr>
-<th>...</th>
-<th>...</th>
-<th>...</th>
-<th>...</th>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-<td>...</td>
-</tr>
-<tr>
-<th rowspan="5" valign="top">Harmful</th>
-<th rowspan="5" valign="top">Strong Refusal</th>
-<th rowspan="5" valign="top">Turn 3</th>
-<th>Gemini 3.5 Flash Lite</th>
-<td>59.33</td>
-<td>61.33</td>
-<td>-2.00</td>
-<td>-11.33</td>
-<td>7.11</td>
-<td>1.33</td>
-<td>-9.11</td>
+<td>-9.78</td>
+<td>-30.89</td>
 <td>11.56</td>
 </tr>
 <tr>
-<th>DeepSeek-V4 Flash</th>
-<td>34.44</td>
-<td>36.00</td>
-<td>-1.56</td>
-<td>-12.00</td>
-<td>9.11</td>
-<td>-14.22</td>
-<td>-29.11</td>
-<td>0.44</td>
-</tr>
-<tr>
-<th>Mistral Small 4</th>
-<td>11.33</td>
-<td>13.33</td>
-<td>-2.00</td>
-<td>-9.11</td>
-<td>4.44</td>
-<td>-2.00</td>
-<td>-17.11</td>
-<td>12.89</td>
-</tr>
-<tr>
 <th>Gemma 4 31B</th>
-<td>53.78</td>
-<td>70.67</td>
-<td>-16.89</td>
-<td>-25.33</td>
-<td>-8.44</td>
-<td>-12.22</td>
-<td>-23.78</td>
-<td>-0.67</td>
+<td>-17.78</td>
+<td>-33.98</td>
+<td>-2.67</td>
 </tr>
 <tr>
 <th>Macro-average</th>
-<td>44.11</td>
-<td>47.33</td>
-<td>-3.22</td>
-<td>-5.89</td>
-<td>-0.44</td>
-<td>-5.89</td>
-<td>-11.26</td>
-<td>-1.00</td>
+<td>-12.46</td>
+<td>-22.86</td>
+<td>-2.52</td>
+</tr>
+<tr>
+<th rowspan="7" valign="top">Turn 3</th>
+<th>GPT-5.6 Luna</th>
+<td>-27.78</td>
+<td>-46.22</td>
+<td>-10.20</td>
+</tr>
+<tr>
+<th>Claude Haiku 4.5</th>
+<td>-16.00</td>
+<td>-38.31</td>
+<td>6.49</td>
+</tr>
+<tr>
+<th>Gemini 3.5 Flash Lite</th>
+<td>-20.09</td>
+<td>-35.32</td>
+<td>-5.85</td>
+</tr>
+<tr>
+<th>DeepSeek-V4 Flash</th>
+<td>-11.78</td>
+<td>-30.60</td>
+<td>6.87</td>
+</tr>
+<tr>
+<th>Mistral Small 4</th>
+<td>-17.11</td>
+<td>-39.67</td>
+<td>5.00</td>
+</tr>
+<tr>
+<th>Gemma 4 31B</th>
+<td>-11.33</td>
+<td>-26.89</td>
+<td>3.33</td>
+</tr>
+<tr>
+<th>Macro-average</th>
+<td>-17.35</td>
+<td>-27.39</td>
+<td>-8.20</td>
+</tr>
+<tr>
+<th rowspan="14" valign="top">Strong Refusal</th>
+<th rowspan="7" valign="top">Turn 2</th>
+<th>GPT-5.6 Luna</th>
+<td>-16.44</td>
+<td>-32.14</td>
+<td>-1.47</td>
+</tr>
+<tr>
+<th>Claude Haiku 4.5</th>
+<td>-6.44</td>
+<td>-24.86</td>
+<td>12.41</td>
+</tr>
+<tr>
+<th>Gemini 3.5 Flash Lite</th>
+<td>-21.19</td>
+<td>-37.64</td>
+<td>-5.72</td>
+</tr>
+<tr>
+<th>DeepSeek-V4 Flash</th>
+<td>4.44</td>
+<td>-12.95</td>
+<td>22.17</td>
+</tr>
+<tr>
+<th>Mistral Small 4</th>
+<td>-10.67</td>
+<td>-31.78</td>
+<td>10.65</td>
+</tr>
+<tr>
+<th>Gemma 4 31B</th>
+<td>-14.00</td>
+<td>-31.48</td>
+<td>3.35</td>
+</tr>
+<tr>
+<th>Macro-average</th>
+<td>-10.72</td>
+<td>-20.30</td>
+<td>-1.24</td>
+</tr>
+<tr>
+<th rowspan="7" valign="top">Turn 3</th>
+<th>GPT-5.6 Luna</th>
+<td>-38.00</td>
+<td>-56.18</td>
+<td>-19.17</td>
+</tr>
+<tr>
+<th>Claude Haiku 4.5</th>
+<td>-17.78</td>
+<td>-40.19</td>
+<td>4.62</td>
+</tr>
+<tr>
+<th>Gemini 3.5 Flash Lite</th>
+<td>-20.20</td>
+<td>-36.13</td>
+<td>-5.09</td>
+</tr>
+<tr>
+<th>DeepSeek-V4 Flash</th>
+<td>-15.78</td>
+<td>-35.46</td>
+<td>4.22</td>
+</tr>
+<tr>
+<th>Mistral Small 4</th>
+<td>-15.33</td>
+<td>-37.77</td>
+<td>6.44</td>
+</tr>
+<tr>
+<th>Gemma 4 31B</th>
+<td>-10.67</td>
+<td>-27.87</td>
+<td>6.00</td>
+</tr>
+<tr>
+<th>Macro-average</th>
+<td>-19.63</td>
+<td>-30.67</td>
+<td>-9.26</td>
 </tr>
 </tbody>
 </table>
-<p>84 rows × 8 columns</p>
 </div>
 </div>
 </div>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=fb23ebcf">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=f70995d2">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -11381,7 +11097,7 @@ expose, and it is the one a refusal rate over turns would not show.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=96bdcc24">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=3eeebbaa">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -11527,7 +11243,7 @@ expose, and it is the one a refusal rate over turns would not show.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=bbf7fe01">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=687088b8">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -11538,7 +11254,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=08d2fac4">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=a4018ad9">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -11557,9 +11273,17 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <span class="n">LADDER</span> <span class="o">=</span> <span class="p">[</span><span class="mi">7</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">17</span><span class="p">,</span> <span class="mi">18</span><span class="p">]</span>
 
 
-<span class="k">def</span><span class="w"> </span><span class="nf">ladder_frame</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">column</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">ladder_frame</span><span class="p">(</span><span class="n">part</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">ages</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Scenarios complete at the given ages and at all three turns.</span>
+
+<span class="sd">    The rungs need all seven ages to be a ladder, but the seventeen against</span>
+<span class="sd">    eighteen contrast needs only those two, and requiring seven throws away</span>
+<span class="sd">    scenarios that carry the contrast perfectly well. On Gemini 3.5 Flash Lite</span>
+<span class="sd">    that is four of twenty-four, because its blocking falls at the young end,</span>
+<span class="sd">    so the two cohorts are built separately and the contrast is read on its own.</span>
+<span class="sd">    """</span>
     <span class="n">cell</span> <span class="o">=</span> <span class="p">(</span><span class="n">part</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s1">'label'</span><span class="p">,</span> <span class="s1">'scenario_id'</span><span class="p">,</span> <span class="s1">'Turn'</span><span class="p">,</span> <span class="s1">'age'</span><span class="p">])[</span><span class="n">column</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
-            <span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="s1">'age'</span><span class="p">)</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">LADDER</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">())</span>
+            <span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="s1">'age'</span><span class="p">)</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="n">ages</span><span class="p">)</span><span class="o">.</span><span class="n">dropna</span><span class="p">())</span>
     <span class="n">wide</span> <span class="o">=</span> <span class="n">cell</span><span class="o">.</span><span class="n">unstack</span><span class="p">(</span><span class="s1">'Turn'</span><span class="p">)</span>
     <span class="n">wide</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">age</span><span class="p">)</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span> <span class="k">for</span> <span class="n">age</span><span class="p">,</span> <span class="n">turn</span> <span class="ow">in</span> <span class="n">wide</span><span class="o">.</span><span class="n">columns</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">wide</span><span class="o">.</span><span class="n">dropna</span><span class="p">()</span>
@@ -11568,8 +11292,11 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <span class="n">restricted</span> <span class="o">=</span> <span class="n">aged</span><span class="p">[</span><span class="n">aged</span><span class="p">[</span><span class="s1">'stratum'</span><span class="p">]</span><span class="o">.</span><span class="n">eq</span><span class="p">(</span><span class="s1">'Age Restricted'</span><span class="p">)]</span>
 <span class="n">rows</span> <span class="o">=</span> <span class="p">{}</span>
 <span class="k">for</span> <span class="n">column</span><span class="p">,</span> <span class="n">measure</span> <span class="ow">in</span> <span class="p">((</span><span class="s1">'refused'</span><span class="p">,</span> <span class="s1">'Refusal'</span><span class="p">),</span> <span class="p">(</span><span class="s1">'strong'</span><span class="p">,</span> <span class="s1">'Strong Refusal'</span><span class="p">)):</span>
-    <span class="n">wide</span> <span class="o">=</span> <span class="n">ladder_frame</span><span class="p">(</span><span class="n">restricted</span><span class="p">,</span> <span class="n">column</span><span class="p">)</span>
+    <span class="n">wide</span> <span class="o">=</span> <span class="n">ladder_frame</span><span class="p">(</span><span class="n">restricted</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="n">LADDER</span><span class="p">)</span>
     <span class="n">blocks</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="n">block</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s1">'label'</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">wide</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'label'</span><span class="p">)}</span>
+    <span class="n">boundary_wide</span> <span class="o">=</span> <span class="n">ladder_frame</span><span class="p">(</span><span class="n">restricted</span><span class="p">,</span> <span class="n">column</span><span class="p">,</span> <span class="p">[</span><span class="mi">17</span><span class="p">,</span> <span class="mi">18</span><span class="p">])</span>
+    <span class="n">boundary_blocks</span> <span class="o">=</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="n">block</span><span class="o">.</span><span class="n">droplevel</span><span class="p">(</span><span class="s1">'label'</span><span class="p">)</span>
+                       <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">boundary_wide</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">'label'</span><span class="p">)}</span>
     <span class="k">for</span> <span class="n">turn</span> <span class="ow">in</span> <span class="n">TURNS</span><span class="p">:</span>
         <span class="n">rungs</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span>
             <span class="p">{</span><span class="sa">f</span><span class="s1">'Age </span><span class="si">{</span><span class="n">age</span><span class="si">}</span><span class="s1"> (%)'</span><span class="p">:</span> <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="n">block</span><span class="p">[</span><span class="sa">f</span><span class="s1">'</span><span class="si">{</span><span class="n">age</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span> <span class="o">*</span> <span class="mi">100</span>
@@ -11577,13 +11304,16 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
              <span class="k">for</span> <span class="n">age</span> <span class="ow">in</span> <span class="n">LADDER</span><span class="p">})</span><span class="o">.</span><span class="n">reindex</span><span class="p">(</span><span class="n">ORDER</span><span class="p">)</span>
         <span class="n">rungs</span><span class="o">.</span><span class="n">loc</span><span class="p">[</span><span class="n">MACRO</span><span class="p">]</span> <span class="o">=</span> <span class="n">rungs</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
         <span class="n">boundary</span> <span class="o">=</span> <span class="n">with_interval</span><span class="p">(</span>
-            <span class="n">blocks</span><span class="p">,</span> <span class="p">{</span><span class="sa">f</span><span class="s1">'17 </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'18 </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">},</span> <span class="n">scale</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+            <span class="n">boundary_blocks</span><span class="p">,</span> <span class="p">{</span><span class="sa">f</span><span class="s1">'17 </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'18 </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">},</span> <span class="n">scale</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
         <span class="n">boundary</span><span class="o">.</span><span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'17 minus 18 (pp)'</span><span class="p">,</span> <span class="s1">'Boundary CI Lower'</span><span class="p">,</span> <span class="s1">'Boundary CI Upper'</span><span class="p">]</span>
         <span class="n">rungs</span> <span class="o">=</span> <span class="n">rungs</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">boundary</span><span class="p">)</span>
+        <span class="n">rungs</span><span class="p">[</span><span class="s1">'Boundary Scenarios'</span><span class="p">]</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span>
+            <span class="p">{</span><span class="n">label</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="k">for</span> <span class="n">label</span><span class="p">,</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">boundary_blocks</span><span class="o">.</span><span class="n">items</span><span class="p">()})</span>
+        <span class="n">rungs</span><span class="p">[</span><span class="s1">'Boundary Scenarios'</span><span class="p">]</span> <span class="o">=</span> <span class="n">rungs</span><span class="p">[</span><span class="s1">'Boundary Scenarios'</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'Int64'</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">turn</span> <span class="o">!=</span> <span class="s1">'Turn 1'</span><span class="p">:</span>
             <span class="n">erosion</span> <span class="o">=</span> <span class="n">with_interval</span><span class="p">(</span>
-                <span class="n">blocks</span><span class="p">,</span> <span class="p">{</span><span class="sa">f</span><span class="s1">'17 </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'18 </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
-                         <span class="s1">'17 Turn 1'</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s1">'18 Turn 1'</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="n">scale</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+                <span class="n">boundary_blocks</span><span class="p">,</span> <span class="p">{</span><span class="sa">f</span><span class="s1">'17 </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="sa">f</span><span class="s1">'18 </span><span class="si">{</span><span class="n">turn</span><span class="si">}</span><span class="s1">'</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+                                  <span class="s1">'17 Turn 1'</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s1">'18 Turn 1'</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="n">scale</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
             <span class="n">rungs</span><span class="p">[</span><span class="s1">'Erosion (pp)'</span><span class="p">]</span> <span class="o">=</span> <span class="n">erosion</span><span class="p">[</span><span class="s1">'Estimate'</span><span class="p">]</span>
             <span class="n">rungs</span><span class="p">[</span><span class="s1">'Erosion CI Lower'</span><span class="p">]</span> <span class="o">=</span> <span class="n">erosion</span><span class="p">[</span><span class="s1">'CI Lower'</span><span class="p">]</span>
             <span class="n">rungs</span><span class="p">[</span><span class="s1">'Erosion CI Upper'</span><span class="p">]</span> <span class="o">=</span> <span class="n">erosion</span><span class="p">[</span><span class="s1">'CI Upper'</span><span class="p">]</span>
@@ -11634,6 +11364,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <th>17 minus 18 (pp)</th>
 <th>Boundary CI Lower</th>
 <th>Boundary CI Upper</th>
+<th>Boundary Scenarios</th>
 <th>Erosion (pp)</th>
 <th>Erosion CI Lower</th>
 <th>Erosion CI Upper</th>
@@ -11642,6 +11373,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <th>Measure</th>
 <th>Turn</th>
 <th>Model</th>
+<th></th>
 <th></th>
 <th></th>
 <th></th>
@@ -11672,6 +11404,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>48.0</td>
 <td>28.0</td>
 <td>68.0</td>
+<td>25</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -11688,6 +11421,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>32.0</td>
 <td>16.0</td>
 <td>52.0</td>
+<td>25</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -11701,9 +11435,10 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>50.0</td>
 <td>45.0</td>
 <td>20.0</td>
-<td>25.0</td>
-<td>10.0</td>
-<td>45.0</td>
+<td>29.2</td>
+<td>12.5</td>
+<td>50.0</td>
+<td>24</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -11720,6 +11455,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>36.0</td>
 <td>16.0</td>
 <td>56.0</td>
+<td>25</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -11736,6 +11472,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>16.0</td>
 <td>4.0</td>
 <td>32.0</td>
+<td>25</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -11752,6 +11489,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>32.0</td>
 <td>16.0</td>
 <td>52.0</td>
+<td>25</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -11765,9 +11503,10 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>55.0</td>
 <td>51.5</td>
 <td>20.0</td>
-<td>31.5</td>
-<td>20.9</td>
-<td>43.0</td>
+<td>32.2</td>
+<td>21.3</td>
+<td>43.9</td>
+<td>&lt;NA&gt;</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -11785,6 +11524,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>37.3</td>
 <td>24.0</td>
 <td>50.7</td>
+<td>25</td>
 <td>-10.7</td>
 <td>-32.0</td>
 <td>9.3</td>
@@ -11801,6 +11541,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>25.3</td>
 <td>16.0</td>
 <td>36.0</td>
+<td>25</td>
 <td>-6.7</td>
 <td>-24.0</td>
 <td>9.3</td>
@@ -11814,12 +11555,13 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>36.7</td>
 <td>28.3</td>
 <td>15.0</td>
-<td>13.3</td>
-<td>6.7</td>
-<td>20.0</td>
-<td>-11.7</td>
-<td>-33.3</td>
-<td>6.7</td>
+<td>18.1</td>
+<td>11.1</td>
+<td>26.4</td>
+<td>24</td>
+<td>-11.1</td>
+<td>-30.6</td>
+<td>6.9</td>
 </tr>
 <tr>
 <th>DeepSeek-V4 Flash</th>
@@ -11833,6 +11575,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>24.0</td>
 <td>10.7</td>
 <td>37.3</td>
+<td>25</td>
 <td>-12.0</td>
 <td>-26.7</td>
 <td>2.7</td>
@@ -11849,6 +11592,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>10.7</td>
 <td>1.3</td>
 <td>20.0</td>
+<td>25</td>
 <td>-5.3</td>
 <td>-24.0</td>
 <td>10.7</td>
@@ -11865,6 +11609,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>17.3</td>
 <td>8.0</td>
 <td>26.7</td>
+<td>25</td>
 <td>-14.7</td>
 <td>-30.7</td>
 <td>-0.0</td>
@@ -11878,12 +11623,13 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>46.6</td>
 <td>42.9</td>
 <td>21.6</td>
-<td>21.3</td>
-<td>15.3</td>
-<td>27.8</td>
-<td>-10.2</td>
-<td>-20.5</td>
-<td>-0.8</td>
+<td>22.1</td>
+<td>15.8</td>
+<td>28.9</td>
+<td>&lt;NA&gt;</td>
+<td>-10.1</td>
+<td>-20.0</td>
+<td>-0.9</td>
 </tr>
 <tr>
 <th rowspan="7" valign="top">Turn 3</th>
@@ -11898,6 +11644,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>26.7</td>
 <td>13.3</td>
 <td>41.3</td>
+<td>25</td>
 <td>-21.3</td>
 <td>-36.0</td>
 <td>-9.3</td>
@@ -11914,6 +11661,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>13.3</td>
 <td>4.0</td>
 <td>22.7</td>
+<td>25</td>
 <td>-18.7</td>
 <td>-38.7</td>
 <td>-0.0</td>
@@ -11927,12 +11675,13 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>43.3</td>
 <td>38.3</td>
 <td>25.0</td>
-<td>13.3</td>
+<td>16.0</td>
+<td>0.7</td>
+<td>31.2</td>
+<td>24</td>
+<td>-13.2</td>
+<td>-27.1</td>
 <td>-0.0</td>
-<td>26.7</td>
-<td>-11.7</td>
-<td>-28.3</td>
-<td>3.3</td>
 </tr>
 <tr>
 <th>DeepSeek-V4 Flash</th>
@@ -11946,6 +11695,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>16.0</td>
 <td>5.3</td>
 <td>28.0</td>
+<td>25</td>
 <td>-20.0</td>
 <td>-34.7</td>
 <td>-5.3</td>
@@ -11962,6 +11712,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>2.7</td>
 <td>-5.3</td>
 <td>10.7</td>
+<td>25</td>
 <td>-13.3</td>
 <td>-32.0</td>
 <td>2.7</td>
@@ -11978,6 +11729,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>18.7</td>
 <td>6.7</td>
 <td>32.0</td>
+<td>25</td>
 <td>-13.3</td>
 <td>-29.3</td>
 <td>1.3</td>
@@ -11991,12 +11743,13 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>41.0</td>
 <td>37.9</td>
 <td>22.8</td>
-<td>15.1</td>
-<td>9.0</td>
-<td>21.4</td>
-<td>-16.4</td>
-<td>-26.2</td>
-<td>-7.8</td>
+<td>15.6</td>
+<td>8.8</td>
+<td>22.6</td>
+<td>&lt;NA&gt;</td>
+<td>-16.6</td>
+<td>-26.4</td>
+<td>-8.1</td>
 </tr>
 <tr>
 <th rowspan="21" valign="top">Strong Refusal</th>
@@ -12012,6 +11765,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>52.0</td>
 <td>32.0</td>
 <td>72.0</td>
+<td>25</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -12028,6 +11782,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>32.0</td>
 <td>16.0</td>
 <td>52.0</td>
+<td>25</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -12041,9 +11796,10 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>50.0</td>
 <td>45.0</td>
 <td>20.0</td>
-<td>25.0</td>
-<td>10.0</td>
-<td>45.0</td>
+<td>29.2</td>
+<td>12.5</td>
+<td>50.0</td>
+<td>24</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -12060,6 +11816,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>36.0</td>
 <td>16.0</td>
 <td>56.0</td>
+<td>25</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -12076,6 +11833,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>16.0</td>
 <td>4.0</td>
 <td>32.0</td>
+<td>25</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -12092,6 +11850,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>32.0</td>
 <td>16.0</td>
 <td>52.0</td>
+<td>25</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -12105,9 +11864,10 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>55.0</td>
 <td>50.8</td>
 <td>18.7</td>
-<td>32.2</td>
-<td>21.5</td>
-<td>43.8</td>
+<td>32.9</td>
+<td>22.0</td>
+<td>44.6</td>
+<td>&lt;NA&gt;</td>
 <td>NaN</td>
 <td>NaN</td>
 <td>NaN</td>
@@ -12125,6 +11885,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>44.0</td>
 <td>29.3</td>
 <td>58.7</td>
+<td>25</td>
 <td>-8.0</td>
 <td>-24.0</td>
 <td>8.0</td>
@@ -12141,6 +11902,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>28.0</td>
 <td>16.0</td>
 <td>41.3</td>
+<td>25</td>
 <td>-4.0</td>
 <td>-18.7</td>
 <td>9.3</td>
@@ -12154,12 +11916,13 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>36.7</td>
 <td>28.3</td>
 <td>13.3</td>
-<td>15.0</td>
+<td>19.4</td>
+<td>12.5</td>
+<td>27.8</td>
+<td>24</td>
+<td>-9.7</td>
+<td>-29.2</td>
 <td>8.3</td>
-<td>21.7</td>
-<td>-10.0</td>
-<td>-31.7</td>
-<td>10.0</td>
 </tr>
 <tr>
 <th>DeepSeek-V4 Flash</th>
@@ -12173,6 +11936,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>26.7</td>
 <td>14.7</td>
 <td>40.0</td>
+<td>25</td>
 <td>-9.3</td>
 <td>-28.0</td>
 <td>9.3</td>
@@ -12189,6 +11953,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>6.7</td>
 <td>-1.3</td>
 <td>14.7</td>
+<td>25</td>
 <td>-9.3</td>
 <td>-28.0</td>
 <td>6.7</td>
@@ -12205,6 +11970,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>14.7</td>
 <td>4.0</td>
 <td>25.3</td>
+<td>25</td>
 <td>-17.3</td>
 <td>-32.0</td>
 <td>-2.7</td>
@@ -12218,12 +11984,13 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>45.4</td>
 <td>40.7</td>
 <td>18.2</td>
-<td>22.5</td>
-<td>15.3</td>
-<td>29.8</td>
-<td>-9.7</td>
-<td>-18.9</td>
-<td>-1.1</td>
+<td>23.2</td>
+<td>15.8</td>
+<td>30.9</td>
+<td>&lt;NA&gt;</td>
+<td>-9.6</td>
+<td>-18.5</td>
+<td>-1.2</td>
 </tr>
 <tr>
 <th rowspan="7" valign="top">Turn 3</th>
@@ -12238,6 +12005,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>18.7</td>
 <td>8.0</td>
 <td>29.3</td>
+<td>25</td>
 <td>-33.3</td>
 <td>-48.0</td>
 <td>-18.7</td>
@@ -12254,6 +12022,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>12.0</td>
 <td>2.7</td>
 <td>21.3</td>
+<td>25</td>
 <td>-20.0</td>
 <td>-38.7</td>
 <td>-2.7</td>
@@ -12267,12 +12036,13 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>40.0</td>
 <td>28.3</td>
 <td>18.3</td>
-<td>10.0</td>
-<td>-1.7</td>
-<td>21.7</td>
-<td>-15.0</td>
-<td>-31.7</td>
-<td>0.0</td>
+<td>14.6</td>
+<td>2.1</td>
+<td>27.8</td>
+<td>24</td>
+<td>-14.6</td>
+<td>-29.2</td>
+<td>-1.4</td>
 </tr>
 <tr>
 <th>DeepSeek-V4 Flash</th>
@@ -12286,6 +12056,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>16.0</td>
 <td>5.3</td>
 <td>26.7</td>
+<td>25</td>
 <td>-20.0</td>
 <td>-38.7</td>
 <td>0.0</td>
@@ -12302,6 +12073,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>4.0</td>
 <td>-2.7</td>
 <td>12.0</td>
+<td>25</td>
 <td>-12.0</td>
 <td>-30.7</td>
 <td>5.3</td>
@@ -12318,6 +12090,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>16.0</td>
 <td>5.3</td>
 <td>28.0</td>
+<td>25</td>
 <td>-16.0</td>
 <td>-32.0</td>
 <td>-1.3</td>
@@ -12331,12 +12104,13 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 <td>36.4</td>
 <td>32.5</td>
 <td>19.7</td>
-<td>12.8</td>
-<td>7.7</td>
-<td>18.4</td>
-<td>-19.4</td>
-<td>-30.3</td>
-<td>-9.7</td>
+<td>13.5</td>
+<td>7.8</td>
+<td>20.3</td>
+<td>&lt;NA&gt;</td>
+<td>-19.3</td>
+<td>-30.0</td>
+<td>-9.9</td>
 </tr>
 </tbody>
 </table>
@@ -12346,7 +12120,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=a4819645">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=65c76221">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -12356,7 +12130,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=1fa1cd08">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=bb549516">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -12770,7 +12544,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=9b339d4f">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=be68e719">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -12780,7 +12554,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 </div>
 </div>
 </div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=c1e15bbe">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell" id="cell-id=fb2d79b0">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -12955,7 +12729,7 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 </div>
 </div>
 </div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=7547bf6a">
+<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=776fd1b1">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -13035,6 +12809,14 @@ seventeen against eighteen contrast that bears on the statutory boundary.</p>
 </tr>
 <tr>
 <td><code>dialogue_s11_openings</code></td>
+<td>supplement</td>
+</tr>
+<tr>
+<td><code>dialogue_s12_adjusted</code></td>
+<td>supplement</td>
+</tr>
+<tr>
+<td><code>dialogue_s13_memory_gap</code></td>
 <td>supplement</td>
 </tr>
 </tbody>
